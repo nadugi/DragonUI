@@ -1,5 +1,5 @@
 ## Interface: 30300
-## Title:  |cfffff0f5DragonUI|r
+## Title: |cff1784d1DragonUI|r
 ## Notes: |cffcaf7faDragonflightUI for 3.3.5a|r
 ## Version: 2.3
 ## Author: NeticSoul
