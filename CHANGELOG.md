@@ -4,6 +4,7 @@
 
 ### Added
 - `DragonUI_Options` as separate addon (loads on demand for faster startup)
+- Advanced individual module control panel 
 - `core/api.lua` with centralized utility functions
 - `core/movers.lua` with unified frame movement system
 - `core/commands.lua` with slash command handling
