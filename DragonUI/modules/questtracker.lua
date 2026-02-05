@@ -4,7 +4,11 @@ local addon = select(2, ...);
 -- DRAGONUI QUEST TRACKER MODULE 
 -- =============================================================================
 
-local QuestTrackerModule = {}
+local QuestTrackerModule = {
+    initialized = false,
+    applied = false,
+    originalWatchFramePoint = nil,
+}
 addon.QuestTrackerModule = QuestTrackerModule
 
 -- Register with ModuleRegistry (if available)
@@ -13,6 +17,19 @@ if addon.RegisterModule then
 end
 
 QuestTrackerModule.questTrackerFrame = nil
+
+-- =============================================================================
+-- MODULE ENABLED CHECK
+-- =============================================================================
+local function GetModuleConfig()
+    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.questtracker
+end
+
+local function IsModuleEnabled()
+    local config = GetModuleConfig()
+    if not config then return true end -- Default to enabled if no config
+    return config.enabled ~= false
+end
 
 -- =============================================================================
 -- CONFIG SYSTEM (DragonUI style using database)
@@ -127,9 +144,21 @@ end
 -- INITIALIZATION 
 -- =============================================================================
 function QuestTrackerModule:Initialize()
+    if self.initialized then return end
+    
+    -- Check if module is enabled
+    if not IsModuleEnabled() then
+        return
+    end
 
     self.questTrackerFrame = CreateFrame('Frame', 'DragonUI_QuestTrackerFrame', UIParent)
     self.questTrackerFrame:SetSize(230, 500)
+
+    -- Save original WatchFrame position for restore
+    if WatchFrame then
+        local point, relativeTo, relativePoint, x, y = WatchFrame:GetPoint()
+        self.originalWatchFramePoint = { point, relativeTo, relativePoint, x, y }
+    end
 
     -- Position the frame
     UpdateQuestTrackerPosition()
@@ -137,8 +166,48 @@ function QuestTrackerModule:Initialize()
     -- Replace Blizzard frame 
     ReplaceBlizzardFrame(self.questTrackerFrame)
 
-    -- NO instalar hooks aquí - esperar a PLAYER_ENTERING_WORLD
-    -- para asegurar que WatchFrame esté completamente inicializado
+    self.initialized = true
+    self.applied = true
+end
+
+-- =============================================================================
+-- APPLY/RESTORE SYSTEM
+-- =============================================================================
+function QuestTrackerModule:ApplySystem()
+    if self.applied then return end
+    if InCombatLockdown() then return end
+    
+    if not self.initialized then
+        self:Initialize()
+        return
+    end
+    
+    if self.questTrackerFrame then
+        ReplaceBlizzardFrame(self.questTrackerFrame)
+        UpdateQuestTrackerPosition()
+        ForceUpdateQuestTracker()
+    end
+    
+    self.applied = true
+end
+
+function QuestTrackerModule:RestoreSystem()
+    if not self.applied then return end
+    if InCombatLockdown() then return end
+    
+    -- Restore original WatchFrame position
+    if WatchFrame and self.originalWatchFramePoint then
+        WatchFrame:ClearAllPoints()
+        local p = self.originalWatchFramePoint
+        WatchFrame:SetPoint(p[1], p[2] or UIParent, p[3], p[4], p[5])
+    end
+    
+    -- Hide our frame's background
+    if self.questTrackerFrame and self.questTrackerFrame.background then
+        self.questTrackerFrame.background:Hide()
+    end
+    
+    self.applied = false
 end
 
 -- Función separada para instalar hooks de forma segura
@@ -215,6 +284,9 @@ end
 local hooksInstalled = false
 
 local function OnPlayerEnteringWorld()
+    -- Check if module is enabled
+    if not IsModuleEnabled() then return end
+    
     if QuestTrackerModule.questTrackerFrame then
         ReplaceBlizzardFrame(QuestTrackerModule.questTrackerFrame)
 
@@ -232,6 +304,9 @@ end
 -- Agregar eventos adicionales para actualizar el tracker
 local lastUpdate = 0
 local function OnQuestLogUpdate()
+    -- Check if module is enabled
+    if not IsModuleEnabled() then return end
+    
     local now = GetTime()
     if now - lastUpdate < 0.1 then return end -- Max 10 updates/seg
     lastUpdate = now
@@ -243,7 +318,9 @@ end
 
 -- Initialize module
 addon.package:RegisterEvents(function()
-    QuestTrackerModule:Initialize()
+    if IsModuleEnabled() then
+        QuestTrackerModule:Initialize()
+    end
 end, 'PLAYER_LOGIN')
 
 -- Register PLAYER_ENTERING_WORLD 
