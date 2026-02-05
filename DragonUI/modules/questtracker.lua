@@ -118,10 +118,10 @@ local function ApplyQuestTrackerStyling()
     watchFrame.background = watchFrame.background or watchFrame:CreateTexture(nil, 'BACKGROUND')
     local background = watchFrame.background
 
-    -- Correct texture positioning
+    -- Fixed header positioning (RetailUI pattern - use SetSize for correct proportions)
     background:ClearAllPoints()
-    background:SetPoint('TOPLEFT', watchFrame, 'TOPLEFT', -8, 4)
-    background:SetPoint('BOTTOMRIGHT', WatchFrameCollapseExpandButton, 'BOTTOMRIGHT', 8, -4)
+    background:SetPoint('RIGHT', WatchFrameCollapseExpandButton, 'RIGHT', 0, 0)
+    background:SetSize(watchFrame:GetWidth(), 36)  -- Fixed height to prevent texture stretching
 
     local success, err = pcall(SetAtlasTexture, background, 'QuestTracker-Header')
     if not success then
