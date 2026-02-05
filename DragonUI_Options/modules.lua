@@ -251,11 +251,19 @@ addon.Options.args.modules = {
 -- DYNAMIC ADVANCED MODULE TOGGLES
 -- ============================================================================
 -- Generate toggles for ALL registered modules from ModuleRegistry.
--- This runs after modules have registered themselves.
+-- Uses a lazy generation approach - creates options when first accessed.
+
+local advancedOptionsGenerated = false
 
 local function GenerateAdvancedModuleOptions()
+    if advancedOptionsGenerated then return end
+    
     local MR = addon.ModuleRegistry
-    if not MR or not MR.loadOrder then return end
+    if not MR or not MR.loadOrder or #MR.loadOrder == 0 then 
+        return 
+    end
+    
+    advancedOptionsGenerated = true
     
     local orderBase = 110
     
@@ -290,14 +298,19 @@ local function GenerateAdvancedModuleOptions()
             }
         end
     end
+    
+    -- Force AceConfigRegistry to update the options
+    if LibStub and LibStub("AceConfigRegistry-3.0", true) then
+        LibStub("AceConfigRegistry-3.0"):NotifyChange("DragonUI")
+    end
 end
 
--- Schedule generation for after all modules have registered
--- This uses a frame's OnUpdate to run once after initial load
-local advancedOptionsFrame = CreateFrame("Frame")
-advancedOptionsFrame:SetScript("OnUpdate", function(self)
-    self:SetScript("OnUpdate", nil)  -- Run only once
+-- Hook into the modules group to generate options when accessed
+-- This ensures modules have had time to register
+local originalGet = addon.Options.args.modules.args.advanced_header.name
+addon.Options.args.modules.args.advanced_header.name = function()
     GenerateAdvancedModuleOptions()
-end)
+    return "Advanced - Individual Module Control"
+end
 
 print("|cFF00FF00[DragonUI]|r Modules options loaded")
