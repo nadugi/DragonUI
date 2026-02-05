@@ -223,10 +223,11 @@ function QuestTrackerModule:Initialize()
     self.questTrackerFrame:SetFrameLevel(100)
     self.questTrackerFrame:SetFrameStrata('FULLSCREEN')
     
-    -- Create green editor overlay (like other editable frames)
+    -- Create green editor overlay that will be anchored to WatchFrame (not auxiliary frame)
+    -- This ensures the overlay matches the actual quest tracker visual area
     do
-        local texture = self.questTrackerFrame:CreateTexture(nil, 'BACKGROUND')
-        texture:SetAllPoints(self.questTrackerFrame)
+        local texture = self.questTrackerFrame:CreateTexture(nil, 'OVERLAY')
+        -- Don't anchor yet - will be updated dynamically in ShowEditorTest
         texture:SetTexture(0, 1, 0, 0.3) -- Semi-transparent green
         texture:Hide()
         self.questTrackerFrame.editorTexture = texture
@@ -234,8 +235,7 @@ function QuestTrackerModule:Initialize()
     
     -- Create text label for editor mode
     do
-        local fontString = self.questTrackerFrame:CreateFontString(nil, "OVERLAY", 'GameFontNormal')
-        fontString:SetPoint("CENTER", self.questTrackerFrame, "TOP", 0, -20)
+        local fontString = self.questTrackerFrame:CreateFontString(nil, "OVERLAY", 'GameFontNormalLarge')
         fontString:SetText("Quest Tracker")
         fontString:Hide()
         self.questTrackerFrame.editorText = fontString
@@ -376,12 +376,26 @@ function QuestTrackerModule:ShowEditorTest()
         self.questTrackerFrame:EnableMouse(true)
         self.questTrackerFrame:RegisterForDrag("LeftButton")
         
-        -- Show green editor overlay
-        if self.questTrackerFrame.editorTexture then
-            self.questTrackerFrame.editorTexture:Show()
+        -- Update overlay to match WatchFrame dimensions
+        if self.questTrackerFrame.editorTexture and WatchFrame then
+            local texture = self.questTrackerFrame.editorTexture
+            texture:ClearAllPoints()
+            -- Anchor to WatchFrame's actual visual area
+            local watchWidth = WatchFrame:GetWidth() or 230
+            local watchHeight = WatchFrame:GetHeight() or 200
+            -- Position at top of quest tracker frame, matching WatchFrame size
+            texture:SetPoint("TOPRIGHT", self.questTrackerFrame, "TOPRIGHT", 0, 0)
+            texture:SetSize(watchWidth, watchHeight)
+            texture:Show()
         end
-        if self.questTrackerFrame.editorText then
-            self.questTrackerFrame.editorText:Show()
+        
+        -- Update text position to match overlay
+        if self.questTrackerFrame.editorText and WatchFrame then
+            local fontString = self.questTrackerFrame.editorText
+            fontString:ClearAllPoints()
+            local watchHeight = WatchFrame:GetHeight() or 200
+            fontString:SetPoint("TOP", self.questTrackerFrame, "TOP", 0, -(watchHeight / 2))
+            fontString:Show()
         end
 
         self.questTrackerFrame:SetScript("OnDragStart", function(frame)
