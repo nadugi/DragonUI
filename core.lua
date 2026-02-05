@@ -115,9 +115,14 @@ function addon.core:OnEnable()
         end
     end
 
-    -- Register slash commands
-    self:RegisterChatCommand("dragonui", "SlashCommand");
-    self:RegisterChatCommand("pi", "SlashCommand");
+    -- Register slash commands (using new commands.lua system)
+    if addon.LoadCommands then
+        addon.LoadCommands()
+    else
+        -- Fallback to legacy registration
+        self:RegisterChatCommand("dragonui", "SlashCommand")
+        self:RegisterChatCommand("pi", "SlashCommand")
+    end
 
     -- Fire custom event to signal that DragonUI is fully initialized
     -- This ensures modules get the correct config values
@@ -175,21 +180,36 @@ function addon:RefreshConfig()
     end
 end
 
+-- Legacy SlashCommand handler (fallback if commands.lua not loaded)
 function addon.core:SlashCommand(input)
-    if not input or input:trim() == "" then
-        LibStub("AceConfigDialog-3.0"):Open("DragonUI");
-    elseif input:lower() == "config" then
-        LibStub("AceConfigDialog-3.0"):Open("DragonUI");
-    elseif input:lower() == "edit" or input:lower() == "editor" then
-        if addon.EditorMode then
-            addon.EditorMode:Toggle();
+    -- Delegate to new command system if available
+    if addon.CommandHandlers then
+        if not input or input:trim() == "" then
+            addon.CommandHandlers.OpenConfig()
+        elseif input:lower() == "config" then
+            addon.CommandHandlers.OpenConfig()
+        elseif input:lower() == "edit" or input:lower() == "editor" then
+            addon.CommandHandlers.ToggleEditorMode()
+        elseif input:lower() == "help" then
+            addon.CommandHandlers.ShowHelp()
         else
-            addon:Print("Editor mode not available. Make sure the editor_mode module is loaded.");
+            addon.CommandHandlers.ShowHelp()
         end
     else
-        addon:Print("Commands:");
-        addon:Print("/dragonui config - Open configuration");
-        addon:Print("/dragonui edit - Toggle editor mode for moving UI elements");
+        -- Original fallback
+        if not input or input:trim() == "" then
+            LibStub("AceConfigDialog-3.0"):Open("DragonUI")
+        elseif input:lower() == "config" then
+            LibStub("AceConfigDialog-3.0"):Open("DragonUI")
+        elseif input:lower() == "edit" or input:lower() == "editor" then
+            if addon.EditorMode then
+                addon.EditorMode:Toggle()
+            else
+                addon:Print("Editor mode not available.")
+            end
+        else
+            addon:Print("Commands: /dragonui config, /dragonui edit")
+        end
     end
 end
 
