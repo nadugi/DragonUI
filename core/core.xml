@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+    
+    <!-- DragonUI Core Files -->
+    <!-- Load order is important: module_base first, then other core files -->
+    
+    <Script file="module_base.lua"/>
+    
+</Ui>
