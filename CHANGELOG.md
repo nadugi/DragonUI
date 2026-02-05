@@ -11,7 +11,7 @@
 - CombatQueue system for safe combat-deferred operations
 - Module Registry system for tracking and managing modules
 - Quest tracker now works in Editor Mode
-<img width="236" height="58" alt="image" src="https://github.com/user-attachments/assets/a6b7239b-fd9e-41f2-b8f4-c2ad7c844e78" />
+
 ### Changed
 - Core utilities reorganized into `core/` folder
 - Action bar modules consolidated in `modules/actionbars/`
