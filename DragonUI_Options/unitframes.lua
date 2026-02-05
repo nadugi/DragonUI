@@ -1,12 +1,15 @@
 --[[
 ================================================================================
-DragonUI - Unit Frames Options
+DragonUI Options - Unit Frames
 ================================================================================
 Options for player, target, focus, pet, party, and ToT unit frames.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
 -- UNIT FRAMES OPTIONS GROUP

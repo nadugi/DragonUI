@@ -6,11 +6,22 @@ DragonUI - Core Initialization
 ================================================================================
 This file handles the main addon initialization using AceAddon-3.0.
 Utility functions have been moved to core/api.lua
+
+Options are loaded on demand from DragonUI_Options addon (ElvUI pattern).
 ================================================================================
 ]]
 
+-- Expose addon globally for DragonUI_Options to access
+_G.DragonUI = addon
+
 -- Create addon object using AceAddon
 addon.core = LibStub("AceAddon-3.0"):NewAddon("DragonUI", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0");
+
+-- Pre-define Options table (will be filled by DragonUI_Options)
+addon.Options = { type = "group", name = "DragonUI", args = {} }
+
+-- Track if options addon is loaded
+addon.OptionsLoaded = false
 
 function addon.core:OnInitialize()
     -- Replace the temporary addon.db with the real AceDB
@@ -33,88 +44,6 @@ function addon.core:OnInitialize()
 end
 
 function addon.core:OnEnable()
-    -- Now we can safely create and register options (after all modules are loaded)
-    
-    addon.options = addon:CreateOptionsTable();
-    
-
-    -- Inject AceDBOptions into the profiles section
-    local profilesOptions = LibStub("AceDBOptions-3.0"):GetOptionsTable(addon.db);
-    addon.options.args.profiles = profilesOptions;
-    addon.options.args.profiles.order = 10;
-
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("DragonUI", addon.options);
-    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("DragonUI", "DragonUI");
-
-    -- Setup custom window size that's resistant to refreshes
-    local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-    if AceConfigDialog then
-        -- Track if user has manually resized the window
-        local userHasResized = false
-        local defaultWidth, defaultHeight = 900, 600
-
-        -- Hook into the status table system that manages window state
-        local function setupDragonUIWindowSize()
-            local configFrame = AceConfigDialog.OpenFrames["DragonUI"]
-            if configFrame and configFrame.frame then
-                -- Check if user has manually resized (status table contains user's size)
-                local statusWidth = configFrame.status.width
-                local statusHeight = configFrame.status.height
-
-                -- If status has size and it's different from our default, user has resized
-                if statusWidth and statusHeight then
-                    if statusWidth ~= defaultWidth or statusHeight ~= defaultHeight then
-                        userHasResized = true
-                    end
-                end
-
-                -- Only apply our custom size if user hasn't manually resized
-                if not userHasResized then
-                    configFrame.frame:SetWidth(defaultWidth)
-                    configFrame.frame:SetHeight(defaultHeight)
-                    configFrame.frame:ClearAllPoints()
-                    configFrame.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-
-                    -- Update AceGUI's internal size tracking
-                    configFrame.status.width = defaultWidth
-                    configFrame.status.height = defaultHeight
-                else
-                    -- User has resized, just maintain their size and center position
-                    configFrame.frame:ClearAllPoints()
-                    configFrame.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-                end
-            end
-        end
-
-        -- Hook the status table application (runs on every refresh)
-        local originalSetStatusTable = AceConfigDialog.SetStatusTable
-        AceConfigDialog.SetStatusTable = function(self, appName, statusTable)
-            local result = originalSetStatusTable(self, appName, statusTable)
-
-            if appName == "DragonUI" then
-                -- Apply our custom size after status is set
-                setupDragonUIWindowSize()
-            end
-
-            return result
-        end
-
-        -- Hook the initial Open to set size immediately
-        local originalOpen = AceConfigDialog.Open
-        AceConfigDialog.Open = function(self, appName, ...)
-            local result = originalOpen(self, appName, ...)
-
-            if appName == "DragonUI" then
-                -- Reset user resize flag on new window opening
-                userHasResized = false
-                -- Apply size IMMEDIATELY without delay
-                setupDragonUIWindowSize()
-            end
-
-            return result
-        end
-    end
-
     -- Register slash commands (using new commands.lua system)
     if addon.LoadCommands then
         addon.LoadCommands()
@@ -127,6 +56,51 @@ function addon.core:OnEnable()
     -- Fire custom event to signal that DragonUI is fully initialized
     -- This ensures modules get the correct config values
     self:SendMessage("DRAGONUI_READY");
+end
+
+-- ============================================================================
+-- OPTIONS UI LOADING (ElvUI Pattern)
+-- ============================================================================
+
+function addon:ToggleOptionsUI()
+    if InCombatLockdown() then
+        print("|cFFFF0000[DragonUI]|r Cannot open options in combat.")
+        return
+    end
+
+    if not IsAddOnLoaded("DragonUI_Options") then
+        local noConfig
+        local _, _, _, _, reason = GetAddOnInfo("DragonUI_Options")
+        
+        if reason ~= "MISSING" and reason ~= "DISABLED" then
+            LoadAddOn("DragonUI_Options")
+            
+            -- Check if it actually loaded
+            if not IsAddOnLoaded("DragonUI_Options") then 
+                noConfig = true 
+            else
+                addon.OptionsLoaded = true
+            end
+        else
+            noConfig = true
+        end
+
+        if noConfig then
+            print("|cFFFF0000[DragonUI]|r Error -- Addon 'DragonUI_Options' not found or is disabled.")
+            return
+        end
+    end
+
+    -- Open the options dialog
+    local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+    if AceConfigDialog then
+        local ConfigOpen = AceConfigDialog.OpenFrames and AceConfigDialog.OpenFrames["DragonUI"]
+        if ConfigOpen then
+            AceConfigDialog:Close("DragonUI")
+        else
+            AceConfigDialog:Open("DragonUI")
+        end
+    end
 end
 
 -- Callback function that refreshes all modules when configuration changes
@@ -185,9 +159,9 @@ function addon.core:SlashCommand(input)
     -- Delegate to new command system if available
     if addon.CommandHandlers then
         if not input or input:trim() == "" then
-            addon.CommandHandlers.OpenConfig()
+            addon:ToggleOptionsUI()
         elseif input:lower() == "config" then
-            addon.CommandHandlers.OpenConfig()
+            addon:ToggleOptionsUI()
         elseif input:lower() == "edit" or input:lower() == "editor" then
             addon.CommandHandlers.ToggleEditorMode()
         elseif input:lower() == "help" then
@@ -198,17 +172,17 @@ function addon.core:SlashCommand(input)
     else
         -- Original fallback
         if not input or input:trim() == "" then
-            LibStub("AceConfigDialog-3.0"):Open("DragonUI")
+            addon:ToggleOptionsUI()
         elseif input:lower() == "config" then
-            LibStub("AceConfigDialog-3.0"):Open("DragonUI")
+            addon:ToggleOptionsUI()
         elseif input:lower() == "edit" or input:lower() == "editor" then
             if addon.EditorMode then
                 addon.EditorMode:Toggle()
             else
-                addon:Print("Editor mode not available.")
+                print("|cFFFF0000[DragonUI]|r Editor mode not available.")
             end
         else
-            addon:Print("Commands: /dragonui config, /dragonui edit")
+            print("|cFF00FF00[DragonUI]|r Commands: /dragonui config, /dragonui edit")
         end
     end
 end

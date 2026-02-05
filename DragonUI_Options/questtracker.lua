@@ -1,12 +1,15 @@
 --[[
 ================================================================================
-DragonUI - Quest Tracker Options
+DragonUI Options - Quest Tracker
 ================================================================================
 Options for quest tracker positioning and behavior.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
 -- QUEST TRACKER OPTIONS GROUP

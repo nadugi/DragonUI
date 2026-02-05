@@ -1,12 +1,15 @@
 --[[
 ================================================================================
-DragonUI - Micro Menu Options
+DragonUI Options - Micro Menu
 ================================================================================
 Options for micro menu, bags, and related UI elements.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
 -- MICRO MENU OPTIONS GROUP

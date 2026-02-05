@@ -15,6 +15,5 @@
 	<!-- All modules -->
 	<Include file="modules\modules.xml"/>
 	
-	<!-- Options UI (loads last) -->
-	<Script file="options.lua"/>
+	<!-- Options are now in DragonUI_Options addon (loaded on demand) -->
 </Ui>

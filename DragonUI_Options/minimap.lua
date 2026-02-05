@@ -1,12 +1,15 @@
 --[[
 ================================================================================
-DragonUI - Minimap Options
+DragonUI Options - Minimap
 ================================================================================
 Options for minimap customization, scale, tracking, and positioning.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
 -- MINIMAP OPTIONS GROUP

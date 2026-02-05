@@ -1,18 +1,21 @@
 --[[
 ================================================================================
-DragonUI - Modules Options
+DragonUI Options - Modules
 ================================================================================
 Module enable/disable toggles for all DragonUI systems.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
--- MODULES OPTIONS GROUP
+-- ADD MODULES OPTIONS TO addon.Options.args
 -- ============================================================================
 
-local modulesOptions = {
+addon.Options.args.modules = {
     type = 'group',
     name = "Modules",
     desc = "Enable or disable specific DragonUI modules",
@@ -228,11 +231,5 @@ local modulesOptions = {
         }
     }
 }
-
--- ============================================================================
--- REGISTER OPTIONS
--- ============================================================================
-
-addon:RegisterOptionsGroup("modules", modulesOptions)
 
 print("|cFF00FF00[DragonUI]|r Modules options loaded")

@@ -1,12 +1,15 @@
 --[[
 ================================================================================
-DragonUI - Cast Bars Options
+DragonUI Options - Cast Bars
 ================================================================================
 Options for player, target, and focus cast bars.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
 -- CAST BARS OPTIONS GROUP

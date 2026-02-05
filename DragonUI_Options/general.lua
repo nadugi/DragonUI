@@ -1,87 +1,79 @@
 --[[
 ================================================================================
-DragonUI - General Options
+DragonUI Options - General
 ================================================================================
 Editor mode button, keybind mode button, and other general UI controls.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
--- GENERAL OPTIONS GROUP
+-- ADD GENERAL OPTIONS TO addon.Options.args
 -- ============================================================================
 
-local generalOptions = {
-    -- Editor Mode Button
-    toggle_editor_mode = {
-        type = 'execute',
-        name = function()
-            if addon.EditorMode then
-                local success, isActive = pcall(function()
-                    return addon.EditorMode:IsActive()
-                end)
-                if success and isActive then
-                    return "|cffFF6347Exit Editor Mode|r"
-                end
+-- Editor Mode Button
+addon.Options.args.toggle_editor_mode = {
+    type = 'execute',
+    name = function()
+        if addon.EditorMode then
+            local success, isActive = pcall(function()
+                return addon.EditorMode:IsActive()
+            end)
+            if success and isActive then
+                return "|cffFF6347Exit Editor Mode|r"
             end
-            return "|cff00FF00Move UI Elements|r"
-        end,
-        desc = "Unlock UI elements to move them with your mouse. A button will appear to exit this mode.",
-        func = function()
-            GameTooltip:Hide()
-            LibStub("AceConfigDialog-3.0"):Close("DragonUI")
-            if addon.EditorMode then
-                addon.EditorMode:Toggle()
-            end
-        end,
-        disabled = false,
-        order = 0
-    },
-    
-    -- Keybinding Mode Button
-    toggle_keybind_mode = {
-        type = 'execute',
-        name = function()
-            if LibStub and LibStub("LibKeyBound-1.0", true) and LibStub("LibKeyBound-1.0"):IsShown() then
-                return "|cffFF6347KeyBind Mode Active|r"
-            else
-                return "|cff00FF00KeyBind Mode|r"
-            end
-        end,
-        desc = "Toggle keybinding mode. Hover over action buttons and press keys to bind them instantly. Press ESC to clear bindings.",
-        func = function()
-            GameTooltip:Hide()
-            LibStub("AceConfigDialog-3.0"):Close("DragonUI")
-            
-            if addon.KeyBindingModule and LibStub and LibStub("LibKeyBound-1.0", true) then
-                local LibKeyBound = LibStub("LibKeyBound-1.0")
-                LibKeyBound:Toggle()
-            else
-                print("|cFFFF0000[DragonUI]|r KeyBinding module not available")
-            end
-        end,
-        disabled = function()
-            return not (addon.KeyBindingModule and addon.KeyBindingModule.enabled)
-        end,
-        order = 0.3
-    },
-    
-    -- Visual Separator
-    editor_separator = {
-        type = 'header',
-        name = ' ',
-        order = 0.5
-    }
+        end
+        return "|cff00FF00Move UI Elements|r"
+    end,
+    desc = "Unlock UI elements to move them with your mouse. A button will appear to exit this mode.",
+    func = function()
+        GameTooltip:Hide()
+        LibStub("AceConfigDialog-3.0"):Close("DragonUI")
+        if addon.EditorMode then
+            addon.EditorMode:Toggle()
+        end
+    end,
+    disabled = false,
+    order = 0
 }
 
--- ============================================================================
--- REGISTER OPTIONS
--- ============================================================================
+-- Keybinding Mode Button
+addon.Options.args.toggle_keybind_mode = {
+    type = 'execute',
+    name = function()
+        if LibStub and LibStub("LibKeyBound-1.0", true) and LibStub("LibKeyBound-1.0"):IsShown() then
+            return "|cffFF6347KeyBind Mode Active|r"
+        else
+            return "|cff00FF00KeyBind Mode|r"
+        end
+    end,
+    desc = "Toggle keybinding mode. Hover over action buttons and press keys to bind them instantly. Press ESC to clear bindings.",
+    func = function()
+        GameTooltip:Hide()
+        LibStub("AceConfigDialog-3.0"):Close("DragonUI")
+        
+        if addon.KeyBindingModule and LibStub and LibStub("LibKeyBound-1.0", true) then
+            local LibKeyBound = LibStub("LibKeyBound-1.0")
+            LibKeyBound:Toggle()
+        else
+            print("|cFFFF0000[DragonUI]|r KeyBinding module not available")
+        end
+    end,
+    disabled = function()
+        return not (addon.KeyBindingModule and addon.KeyBindingModule.enabled)
+    end,
+    order = 0.3
+}
 
--- These are direct args in the root options table, not a group
-function addon:GetGeneralOptions()
-    return generalOptions
-end
+-- Visual Separator
+addon.Options.args.editor_separator = {
+    type = 'header',
+    name = ' ',
+    order = 0.5
+}
 
 print("|cFF00FF00[DragonUI]|r General options loaded")

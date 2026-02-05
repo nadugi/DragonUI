@@ -1,12 +1,15 @@
 --[[
 ================================================================================
-DragonUI - Action Bars Options
+DragonUI Options - Action Bars
 ================================================================================
 Options for main action bars, scales, positions, and button appearance.
+Based on ElvUI_OptionsUI pattern.
 ================================================================================
 ]]
 
-local addon = select(2, ...)
+-- Access the main DragonUI addon
+local addon = DragonUI
+if not addon then return end
 
 -- ============================================================================
 -- ACTION BARS OPTIONS GROUP

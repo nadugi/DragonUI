@@ -13,9 +13,9 @@ local addon = select(2, ...)
 -- COMMAND HANDLERS
 -- ============================================================================
 
--- Open configuration panel
+-- Open configuration panel (uses ToggleOptionsUI which loads DragonUI_Options)
 local function OpenConfig()
-    LibStub("AceConfigDialog-3.0"):Open("DragonUI")
+    addon:ToggleOptionsUI()
 end
 
 -- Toggle editor/move mode
