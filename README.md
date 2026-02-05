@@ -1,4 +1,4 @@
-# DragonUI - Experimental Branch
+# 🐉 DragonUI - Experimental Branch 
 
 Addon structure reorganization to facilitate future development.
 
