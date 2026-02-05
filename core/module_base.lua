@@ -2,19 +2,19 @@
 ================================================================================
 DragonUI - Module Base Template
 ================================================================================
-Este archivo contiene el template base que todos los módulos de DragonUI
-deben seguir para mantener consistencia y funcionalidad correcta.
+This file contains the base template that all DragonUI modules should follow
+to maintain consistency and correct functionality.
 
-USO:
-1. Copia este template al crear un nuevo módulo
-2. Reemplaza "ModuleName" con el nombre de tu módulo
-3. Implementa las funciones Apply() y Restore()
-4. Registra los eventos y hooks necesarios
+USAGE:
+1. Copy this template when creating a new module
+2. Replace "ModuleName" with your module's name
+3. Implement the Apply() and Restore() functions
+4. Register necessary events and hooks
 
-IMPORTANTE:
-- Siempre usar SafeCall() para modificaciones de frames seguros
-- Trackear todos los eventos, hooks y frames creados
-- Implementar cleanup correcto en Restore()
+IMPORTANT:
+- Always use SafeCall() for secure frame modifications
+- Track all events, hooks and frames created
+- Implement proper cleanup in Restore()
 ================================================================================
 ]]
 
@@ -22,27 +22,27 @@ local addon = select(2, ...)
 
 -- ============================================================================
 -- MODULE BASE MIXIN
--- Funciones compartidas que todos los módulos pueden usar
+-- Shared functions that all modules can use
 -- ============================================================================
 
 addon.ModuleBase = {}
 
--- Crear un nuevo módulo con la estructura estándar
+-- Create a new module with the standard structure
 function addon.ModuleBase:New(moduleName)
     local Module = {
         name = moduleName,
         initialized = false,
         applied = false,
-        originalStates = {},      -- Estados originales para restaurar
-        registeredEvents = {},    -- Eventos registrados (para cleanup)
-        hooks = {},               -- Hooks registrados (para cleanup)
-        stateDrivers = {},        -- State drivers registrados (para cleanup)
-        frames = {},              -- Frames creados (para cleanup)
-        pendingUpdate = false,    -- Si hay operación pendiente por combate
-        eventFrame = nil          -- Frame para manejar eventos
+        originalStates = {},      -- Original states for restoration
+        registeredEvents = {},    -- Registered events (for cleanup)
+        hooks = {},               -- Registered hooks (for cleanup)
+        stateDrivers = {},        -- Registered state drivers (for cleanup)
+        frames = {},              -- Created frames (for cleanup)
+        pendingUpdate = false,    -- If there's a pending operation due to combat
+        eventFrame = nil          -- Frame to handle events
     }
     
-    -- Almacenar referencia global
+    -- Store global reference
     addon[moduleName .. "Module"] = Module
     
     return Module
@@ -50,7 +50,7 @@ end
 
 -- ============================================================================
 -- COMBAT SAFETY SYSTEM
--- Sistema centralizado para manejar operaciones seguras en combate
+-- Centralized system to handle combat-safe operations
 -- ============================================================================
 
 addon.CombatSafety = {
@@ -101,9 +101,9 @@ function addon.CombatSafety:HasPending(id)
     return self.pendingOperations[id] ~= nil
 end
 
--- Función de utilidad para llamadas seguras en combate
--- Retorna: success (bool), result (any)
--- Si estamos en combate, registra la operación para después y retorna false
+-- Utility function for combat-safe calls
+-- Returns: success (bool), result (any)
+-- If in combat, registers the operation for later and returns false
 function addon.SafeCall(operationId, func, ...)
     if InCombatLockdown() then
         addon.CombatSafety:Initialize()
@@ -122,10 +122,10 @@ end
 
 -- ============================================================================
 -- EVENT MANAGEMENT HELPERS
--- Funciones de ayuda para manejar eventos con tracking
+-- Helper functions to handle events with tracking
 -- ============================================================================
 
--- Registrar un evento con tracking automático
+-- Register an event with automatic tracking
 function addon.ModuleBase:RegisterEvent(module, event, handler)
     if not module.eventFrame then
         module.eventFrame = CreateFrame("Frame")
@@ -150,7 +150,7 @@ function addon.ModuleBase:RegisterEvent(module, event, handler)
     return false
 end
 
--- Desregistrar un evento con cleanup
+-- Unregister an event with cleanup
 function addon.ModuleBase:UnregisterEvent(module, event)
     if module.registeredEvents[event] then
         if module.eventFrame then
@@ -162,7 +162,7 @@ function addon.ModuleBase:UnregisterEvent(module, event)
     return false
 end
 
--- Desregistrar todos los eventos de un módulo
+-- Unregister all events from a module
 function addon.ModuleBase:UnregisterAllEvents(module)
     if module.eventFrame then
         module.eventFrame:UnregisterAllEvents()
@@ -172,10 +172,10 @@ end
 
 -- ============================================================================
 -- HOOK MANAGEMENT HELPERS
--- Funciones de ayuda para manejar hooks con tracking
+-- Helper functions to handle hooks with tracking
 -- ============================================================================
 
--- Registrar un hook seguro con tracking
+-- Register a secure hook with tracking
 function addon.ModuleBase:SecureHook(module, target, method, hookFunc)
     local hookId = tostring(target) .. "_" .. method
     
@@ -192,7 +192,7 @@ function addon.ModuleBase:SecureHook(module, target, method, hookFunc)
     return false
 end
 
--- Registrar un hook en función global
+-- Register a hook on a global function
 function addon.ModuleBase:SecureHookGlobal(module, funcName, hookFunc)
     if not module.hooks[funcName] then
         hooksecurefunc(funcName, hookFunc)
@@ -208,10 +208,10 @@ end
 
 -- ============================================================================
 -- STATE DRIVER MANAGEMENT
--- Funciones para manejar state drivers con tracking
+-- Functions to handle state drivers with tracking
 -- ============================================================================
 
--- Registrar un state driver con tracking
+-- Register a state driver with tracking
 function addon.ModuleBase:RegisterStateDriver(module, frame, state, condition)
     local driverId = tostring(frame) .. "_" .. state
     
@@ -228,7 +228,7 @@ function addon.ModuleBase:RegisterStateDriver(module, frame, state, condition)
     return false
 end
 
--- Desregistrar un state driver
+-- Unregister a state driver
 function addon.ModuleBase:UnregisterStateDriver(module, frame, state)
     local driverId = tostring(frame) .. "_" .. state
     
@@ -241,7 +241,7 @@ function addon.ModuleBase:UnregisterStateDriver(module, frame, state)
     return false
 end
 
--- Desregistrar todos los state drivers de un módulo
+-- Unregister all state drivers from a module
 function addon.ModuleBase:UnregisterAllStateDrivers(module)
     for id, driver in pairs(module.stateDrivers) do
         UnregisterStateDriver(driver.frame, driver.state)
@@ -251,15 +251,15 @@ end
 
 -- ============================================================================
 -- FRAME MANAGEMENT HELPERS
--- Funciones para manejar frames creados con tracking
+-- Functions to handle created frames with tracking
 -- ============================================================================
 
--- Registrar un frame creado para cleanup posterior
+-- Register a created frame for later cleanup
 function addon.ModuleBase:RegisterFrame(module, frameName, frame)
     module.frames[frameName] = frame
 end
 
--- Ocultar y limpiar todos los frames de un módulo
+-- Hide and cleanup all frames from a module
 function addon.ModuleBase:HideAllFrames(module)
     for name, frame in pairs(module.frames) do
         if frame and frame.Hide then
@@ -270,10 +270,10 @@ end
 
 -- ============================================================================
 -- ORIGINAL STATE MANAGEMENT
--- Funciones para guardar y restaurar estados originales
+-- Functions to save and restore original states
 -- ============================================================================
 
--- Guardar el estado original de un frame
+-- Save the original state of a frame
 function addon.ModuleBase:SaveOriginalState(module, frameName, frame)
     if not frame then return end
     
@@ -285,14 +285,14 @@ function addon.ModuleBase:SaveOriginalState(module, frameName, frame)
     }
 end
 
--- Restaurar el estado original de un frame
+-- Restore the original state of a frame
 function addon.ModuleBase:RestoreOriginalState(module, frameName, frame)
     if not frame then return end
     
     local state = module.originalStates[frameName]
     if not state then return end
     
-    -- No modificar frames seguros en combate
+    -- Don't modify secure frames in combat
     if InCombatLockdown() then
         addon.SafeCall("restore_" .. frameName, function()
             addon.ModuleBase:RestoreOriginalState(module, frameName, frame)
@@ -317,34 +317,34 @@ end
 
 -- ============================================================================
 -- MODULE LIFECYCLE HELPERS
--- Funciones para el ciclo de vida del módulo
+-- Functions for module lifecycle management
 -- ============================================================================
 
--- Verificar si un módulo está habilitado en la configuración
+-- Check if a module is enabled in configuration
 function addon.ModuleBase:IsModuleEnabled(moduleName)
     local cfg = addon.db and addon.db.profile and addon.db.profile.modules 
                 and addon.db.profile.modules[moduleName:lower()]
     return cfg and cfg.enabled
 end
 
--- Obtener la configuración de un módulo
+-- Get module configuration
 function addon.ModuleBase:GetModuleConfig(moduleName)
     return addon.db and addon.db.profile and addon.db.profile.modules 
            and addon.db.profile.modules[moduleName:lower()]
 end
 
--- Cleanup completo de un módulo
+-- Full cleanup of a module
 function addon.ModuleBase:Cleanup(module)
-    -- Desregistrar todos los eventos
+    -- Unregister all events
     self:UnregisterAllEvents(module)
     
-    -- Desregistrar todos los state drivers
+    -- Unregister all state drivers
     self:UnregisterAllStateDrivers(module)
     
-    -- Ocultar todos los frames creados
+    -- Hide all created frames
     self:HideAllFrames(module)
     
-    -- Restaurar estados originales
+    -- Restore original states
     for frameName, _ in pairs(module.originalStates) do
         local frame = module.frames[frameName] or _G[frameName]
         if frame then
@@ -352,20 +352,20 @@ function addon.ModuleBase:Cleanup(module)
         end
     end
     
-    -- Marcar como no aplicado
+    -- Mark as not applied
     module.applied = false
 end
 
 -- ============================================================================
 -- MODULE TEMPLATE
--- Template completo para copiar al crear nuevos módulos
+-- Complete template to copy when creating new modules
 -- ============================================================================
 
 --[[
--- Copiar este template para crear un nuevo módulo:
+-- Copy this template to create a new module:
 
 local addon = select(2, ...)
-local ModuleName = "MiModulo"  -- Cambiar por el nombre del módulo
+local ModuleName = "MyModule"  -- Change to your module name
 
 -- ============================================================================
 -- MODULE CONFIGURATION
@@ -395,12 +395,12 @@ local function Apply()
     if not IsModuleEnabled() then return end
     if Module.applied then return end
     
-    -- Verificar combate para frames seguros
+    -- Check combat for secure frames
     local success = addon.SafeCall(ModuleName .. "_apply", function()
-        -- Guardar estados originales
-        -- Aplicar cambios
-        -- Registrar eventos
-        -- Crear hooks
+        -- Save original states
+        -- Apply changes
+        -- Register events
+        -- Create hooks
         
         Module.applied = true
     end)
@@ -414,7 +414,7 @@ local function Restore()
     if not Module.applied then return end
     
     local success = addon.SafeCall(ModuleName .. "_restore", function()
-        -- Cleanup usando ModuleBase
+        -- Cleanup using ModuleBase
         addon.ModuleBase:Cleanup(Module)
     end)
     
@@ -453,7 +453,7 @@ end
 
 function addon["Refresh" .. ModuleName]()
     if not IsModuleEnabled() then return end
-    -- Lógica de refresh
+    -- Refresh logic
 end
 
 function addon["Refresh" .. ModuleName .. "System"]()
@@ -472,16 +472,16 @@ end
 -- INITIALIZATION
 -- ============================================================================
 
--- Registrar para inicialización cuando DragonUI esté listo
+-- Register for initialization when DragonUI is ready
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_LOGIN" then
-        -- Esperar a que addon.db esté disponible
+        -- Wait for addon.db to be available
         if addon.db then
             Initialize()
             
-            -- Registrar callbacks de perfil
+            -- Register profile callbacks
             addon.db.RegisterCallback(addon, "OnProfileChanged", OnProfileChanged)
             addon.db.RegisterCallback(addon, "OnProfileCopied", OnProfileChanged)
             addon.db.RegisterCallback(addon, "OnProfileReset", OnProfileChanged)
@@ -493,3 +493,4 @@ end)
 ]]
 
 print("|cFF00FF00[DragonUI]|r Module Base loaded")
+
