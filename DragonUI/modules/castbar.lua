@@ -1035,7 +1035,15 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     -- Clear casting/channeling flags
     castbar.castingEx = false
     castbar.channelingEx = false
-    castbar.selfInterrupt = isChannelStop or false
+    
+    -- Only treat as self-interrupt if channel was stopped EARLY (user moved/cancelled),
+    -- not when it completed naturally. Natural completion: currentTime >= endTime.
+    if isChannelStop and not wasInterrupted then
+        local currentTime = GetTime()
+        castbar.selfInterrupt = currentTime < (castbar.endTime or 0) - 0.1
+    else
+        castbar.selfInterrupt = false
+    end
     
     if wasInterrupted or castbar.selfInterrupt then
         -- Show interrupted state

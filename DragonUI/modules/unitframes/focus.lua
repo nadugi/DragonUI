@@ -608,6 +608,8 @@ local function InitializeFrame()
         focusScaleDeferFrame:Hide()
         focusScaleDeferFrame:SetScript("OnUpdate", function(self)
             self:Hide()
+            -- Don't call SetScale during combat lockdown (causes ADDON_ACTION_BLOCKED on /reload in combat)
+            if InCombatLockdown() then return end
             local config = GetConfig()
             local correctScale = config.scale or 1
             if not FocusFrame.DragonUI_SettingScale then
