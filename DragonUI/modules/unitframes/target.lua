@@ -154,7 +154,6 @@ local function GetConfig()
         __index = defaults
     })
 end
-end
 
 -- ============================================================================
 -- CLASS PORTRAIT SYSTEM
