@@ -226,18 +226,14 @@ function TextSystem.HookStatusBar(statusBar, parentFrame, prefix, frameType, uni
         return
     end
 
-    --  HOOKEAR LA FUNCIÓN NATIVA SetValue
+    --  HOOK SetValue using hooksecurefunc (taint-safe, no method replacement)
     if not statusBar.DragonUIHooked then
-        statusBar.DragonUIOriginalSetValue = statusBar.SetValue
-        statusBar.SetValue = function(self, value)
-            -- Llamar función original
-            statusBar.DragonUIOriginalSetValue(self, value)
-
-            -- Actualizar nuestro texto inmediatamente
+        hooksecurefunc(statusBar, "SetValue", function(self, value)
+            -- Update our text immediately after Blizzard's SetValue completes
             if updateCallback then
                 updateCallback()
             end
-        end
+        end)
         statusBar.DragonUIHooked = true
 
     end

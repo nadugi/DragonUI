@@ -581,16 +581,15 @@ local function SetupHealthBarClipping(frame)
     hooksecurefunc(healthbar, "SetValue", function(self, value)
         local frameIndex = frame:GetID()
         local unit = "party" .. frameIndex
-        if not UnitExists(unit) then
-            return
-        end
+        -- NOTE: Do NOT early return on !UnitExists — during ghost/spirit release
+        -- UnitExists can briefly return false, leaving texture stuck invisible
 
         local texture = self:GetStatusBarTexture()
         if not texture then
             return
         end
 
-        -- Apply class color first
+        -- Apply class color first (safe if unit doesn't exist — checks internally)
         UpdatePartyHealthBarColor(frameIndex)
 
         -- Dynamic clipping: Only show the filled part of the texture
@@ -598,7 +597,8 @@ local function SetupHealthBarClipping(frame)
         local current = value or self:GetValue()
 
         if max > 0 and current then
-            local percentage = current / max
+            -- CRITICAL FIX: Clamp to minimum 0.001 to prevent zero-width invisible texture
+            local percentage = math.max(current / max, 0.001)
             texture:SetTexCoord(0, percentage, 0, 1)
         else
             texture:SetTexCoord(0, 1, 0, 1)
@@ -622,9 +622,7 @@ local function SetupManaBarClipping(frame)
     -- Hook SetValue for dynamic clipping
     hooksecurefunc(manabar, "SetValue", function(self, value)
         local unit = "party" .. frame:GetID()
-        if not UnitExists(unit) then
-            return
-        end
+        -- NOTE: Do NOT early return on !UnitExists — see health bar comment
 
         local texture = self:GetStatusBarTexture()
         if not texture then
@@ -635,8 +633,8 @@ local function SetupManaBarClipping(frame)
         local current = value or self:GetValue()
 
         if max > 0 and current then
-            -- Dynamic clipping: Only show the filled part of the texture
-            local percentage = current / max
+            -- CRITICAL FIX: Clamp to minimum 0.001 to prevent zero-width invisible texture
+            local percentage = math.max(current / max, 0.001)
             texture:SetTexCoord(0, percentage, 0, 1)
         else
             texture:SetTexCoord(0, 1, 0, 1)
@@ -663,14 +661,34 @@ local function HideBlizzardTexts(frame)
     local manaText = _G[frame:GetName() .. 'ManaBarText']
     
     -- Set alpha to 0 instead of hiding to avoid taint
+    -- Use hooksecurefunc to re-force alpha=0 after any Blizzard SetAlpha call
+    -- A recursion guard flag prevents infinite loop since our SetAlpha(0) also triggers the hook
     if healthText then
         healthText:SetAlpha(0)
-        healthText.SetAlpha = function() end -- Prevent Blizzard from changing alpha
+        if not healthText.DragonUI_AlphaHooked then
+            hooksecurefunc(healthText, "SetAlpha", function(self, alpha)
+                if not self.DragonUI_AlphaGuard and alpha ~= 0 then
+                    self.DragonUI_AlphaGuard = true
+                    self:SetAlpha(0)
+                    self.DragonUI_AlphaGuard = nil
+                end
+            end)
+            healthText.DragonUI_AlphaHooked = true
+        end
     end
     
     if manaText then
         manaText:SetAlpha(0)
-        manaText.SetAlpha = function() end -- Prevent Blizzard from changing alpha
+        if not manaText.DragonUI_AlphaHooked then
+            hooksecurefunc(manaText, "SetAlpha", function(self, alpha)
+                if not self.DragonUI_AlphaGuard and alpha ~= 0 then
+                    self.DragonUI_AlphaGuard = true
+                    self:SetAlpha(0)
+                    self.DragonUI_AlphaGuard = nil
+                end
+            end)
+            manaText.DragonUI_AlphaHooked = true
+        end
     end
 end
 
@@ -1488,7 +1506,7 @@ local function SetupPartyHooks()
                 local min, max = statusbar:GetMinMaxValues()
                 local current = statusbar:GetValue()
                 if max > 0 and current then
-                    local percentage = current / max
+                    local percentage = math.max(current / max, 0.001)
                     texture:SetTexCoord(0, percentage, 0, 1)
                 end
             end
@@ -1516,7 +1534,7 @@ local function SetupPartyHooks()
                     local min, max = statusbar:GetMinMaxValues()
                     local current = statusbar:GetValue()
                     if max > 0 and current then
-                        local percentage = current / max
+                        local percentage = math.max(current / max, 0.001)
                         texture:SetTexCoord(0, percentage, 0, 1)
                         texture:SetTexture(powerTexture)
                     end
@@ -1683,6 +1701,93 @@ connectionFrame:SetScript("OnEvent", function(self, event)
         local frame = _G['PartyMemberFrame' .. i]
         if frame then
             UpdateDisconnectedState(frame)
+        end
+    end
+end)
+
+-- ===============================================================
+-- DEATH/GHOST RECOVERY SYSTEM
+-- ===============================================================
+-- After death + spirit release, party frame textures can get stuck invisible
+-- because SetValue hooks clip to zero-width and UnitExists may briefly return false.
+-- These events force a full texture refresh to recover from that state.
+
+local recoveryFrame = CreateFrame("Frame")
+recoveryFrame:RegisterEvent("PARTY_MEMBERS_CHANGED")   -- Party composition changes (join/leave/role swap)
+recoveryFrame:RegisterEvent("PLAYER_ALIVE")             -- Player resurrects (accept rez or spirit healer)
+recoveryFrame:RegisterEvent("PLAYER_UNGHOST")           -- Player returns from ghost form
+recoveryFrame:RegisterEvent("UNIT_HEALTH")              -- Any unit health change (catches party member rez too)
+recoveryFrame:SetScript("OnEvent", function(self, event, unit)
+    -- For UNIT_HEALTH, only process party units
+    if event == "UNIT_HEALTH" then
+        if not unit or not unit:match("^party%d$") then return end
+        local frameIndex = tonumber(unit:match("party(%d)"))
+        if frameIndex then
+            local frame = _G['PartyMemberFrame' .. frameIndex]
+            if frame and UnitExists(unit) then
+                local healthbar = _G[frame:GetName() .. 'HealthBar']
+                local manabar = _G[frame:GetName() .. 'ManaBar']
+                if healthbar then
+                    -- Force re-clip with current values
+                    local texture = healthbar:GetStatusBarTexture()
+                    if texture then
+                        local _, max = healthbar:GetMinMaxValues()
+                        local current = healthbar:GetValue()
+                        if max > 0 and current then
+                            local percentage = math.max(current / max, 0.001)
+                            texture:SetTexCoord(0, percentage, 0, 1)
+                        end
+                    end
+                    UpdateHealthText(healthbar, false)
+                end
+                if manabar then
+                    local texture = manabar:GetStatusBarTexture()
+                    if texture then
+                        local _, max = manabar:GetMinMaxValues()
+                        local current = manabar:GetValue()
+                        if max > 0 and current then
+                            local percentage = math.max(current / max, 0.001)
+                            texture:SetTexCoord(0, percentage, 0, 1)
+                        end
+                    end
+                    UpdateManaText(manabar, false)
+                end
+            end
+        end
+        return
+    end
+    
+    -- For party-wide events, refresh ALL party frames
+    for i = 1, MAX_PARTY_MEMBERS do
+        local frame = _G['PartyMemberFrame' .. i]
+        local unit = "party" .. i
+        if frame and UnitExists(unit) then
+            local healthbar = _G[frame:GetName() .. 'HealthBar']
+            local manabar = _G[frame:GetName() .. 'ManaBar']
+            if healthbar then
+                local texture = healthbar:GetStatusBarTexture()
+                if texture then
+                    local _, max = healthbar:GetMinMaxValues()
+                    local current = healthbar:GetValue()
+                    if max > 0 and current then
+                        local percentage = math.max(current / max, 0.001)
+                        texture:SetTexCoord(0, percentage, 0, 1)
+                    end
+                end
+                UpdateHealthText(healthbar, false)
+            end
+            if manabar then
+                local texture = manabar:GetStatusBarTexture()
+                if texture then
+                    local _, max = manabar:GetMinMaxValues()
+                    local current = manabar:GetValue()
+                    if max > 0 and current then
+                        local percentage = math.max(current / max, 0.001)
+                        texture:SetTexCoord(0, percentage, 0, 1)
+                    end
+                end
+                UpdateManaText(manabar, false)
+            end
         end
     end
 end)

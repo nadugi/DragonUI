@@ -2066,30 +2066,34 @@ if PlayerFrame_SequenceFinished then
     end)
 end
 
--- SOLUCIÓN ANTI-PARPADEO: Hook SetPoint del PlayerFrame para interceptar movimientos no deseados
-local originalPlayerFrameSetPoint = PlayerFrame.SetPoint
-PlayerFrame.SetPoint = function(self, point, relativeTo, relativePoint, x, y)
-    -- SEGURO: Verificar combat lockdown antes de modificar
-    if InCombatLockdown() then
-        -- En combate, usar el SetPoint original sin modificaciones
-        originalPlayerFrameSetPoint(self, point, relativeTo, relativePoint, x, y)
-        return
-    end
-
-    -- Si es un movimiento automático de Blizzard durante transiciones de vehículo,
-    -- aplicar nuestra posición personalizada en su lugar
+-- ANTI-FLICKER: Hook SetPoint on PlayerFrame to intercept unwanted Blizzard repositioning
+-- Uses hooksecurefunc instead of direct method replacement to avoid taint
+-- The hook fires AFTER Blizzard's SetPoint, so we re-apply our position on the next frame
+local playerSetPointPending = false
+local playerSetPointDeferFrame = CreateFrame("Frame")
+hooksecurefunc(PlayerFrame, "SetPoint", function(self, point, relativeTo, relativePoint, x, y)
+    -- Skip if in combat (cannot modify secure frames)
+    if InCombatLockdown() then return end
+    -- Skip if this is our own call via ApplyWidgetPosition (prevent infinite loop)
+    if self.DragonUI_SettingPoint then return end
+    
+    -- Only intercept Blizzard auto-repositioning (vehicle transitions, etc.)
     if point and relativeTo == UIParent and (point == "TOPLEFT" or point == "CENTER") then
-        -- SEGURO: Usar pcall para proteger contra errores
-        local success, err = pcall(ApplyWidgetPosition)
-        if not success then
-            -- Fallback al comportamiento original si hay error
-            originalPlayerFrameSetPoint(self, point, relativeTo, relativePoint, x, y)
+        -- Defer to next frame to avoid re-entering SetPoint during Blizzard's call
+        if not playerSetPointPending then
+            playerSetPointPending = true
+            playerSetPointDeferFrame:SetScript("OnUpdate", function(f)
+                f:SetScript("OnUpdate", nil)
+                playerSetPointPending = false
+                if not InCombatLockdown() then
+                    PlayerFrame.DragonUI_SettingPoint = true
+                    pcall(ApplyWidgetPosition)
+                    PlayerFrame.DragonUI_SettingPoint = nil
+                end
+            end)
         end
-    else
-        -- Llamar al SetPoint original para otros casos
-        originalPlayerFrameSetPoint(self, point, relativeTo, relativePoint, x, y)
     end
-end
+end)
 
 -- Profile change callbacks for configuration updates
 local function OnProfileChanged()
