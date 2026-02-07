@@ -883,12 +883,8 @@ local function SetupAlternateManaAlwaysVisible()
         return
     end
     
-    -- Remove any existing hover scripts
-    if alternateManaBar.DragonUIHoverEnabled then
-        alternateManaBar:SetScript("OnEnter", nil)
-        alternateManaBar:SetScript("OnLeave", nil)
-        alternateManaBar.DragonUIHoverEnabled = false
-    end
+    -- Phase 3C: Disable hover mode via flag (can't unhook HookScript)
+    alternateManaBar.DragonUIHoverEnabled = false
     
     -- Show text immediately and keep it visible
     UpdateAlternateManaText()
@@ -914,21 +910,29 @@ end
 -- Setup hover-only behavior for DragonUI alternate mana text
 local function SetupAlternateManaHoverBehavior()
     local alternateManaBar = _G.PlayerFrameAlternateManaBar
-    if not alternateManaBar or alternateManaBar.DragonUIHoverEnabled then
+    if not alternateManaBar then
         return
     end
     
     -- Hide text initially
     HideAlternateManaTextElements()
     
-    -- Setup hover scripts
-    alternateManaBar:SetScript("OnEnter", function()
-        UpdateAlternateManaText()
-    end)
-    
-    alternateManaBar:SetScript("OnLeave", function()
-        HideAlternateManaTextElements()
-    end)
+    -- Phase 3C: Use HookScript instead of SetScript on Blizzard frame
+    -- Hook only once, use flag to enable/disable behavior
+    if not alternateManaBar.DragonUIHoverHooked then
+        alternateManaBar:HookScript("OnEnter", function()
+            if alternateManaBar.DragonUIHoverEnabled then
+                UpdateAlternateManaText()
+            end
+        end)
+        
+        alternateManaBar:HookScript("OnLeave", function()
+            if alternateManaBar.DragonUIHoverEnabled then
+                HideAlternateManaTextElements()
+            end
+        end)
+        alternateManaBar.DragonUIHoverHooked = true
+    end
     
     alternateManaBar.DragonUIHoverEnabled = true
 end

@@ -434,9 +434,9 @@ local function OnEvent(self, event, ...)
     if event == "ADDON_LOADED" then
         local name = ...
         if name == "DragonUI" and not Module.initialized then
-            Module.totFrame = CreateFrame("Frame", "DragonUI_FoT_Anchor", UIParent)
-            Module.totFrame:SetSize(120, 47)
-            Module.totFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 370, -80)
+            Module.tofFrame = CreateFrame("Frame", "DragonUI_FoT_Anchor", UIParent)
+            Module.tofFrame:SetSize(120, 47)
+            Module.tofFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 370, -80)
             Module.initialized = true
         end
 
@@ -484,9 +484,6 @@ local function OnEvent(self, event, ...)
         end
         
         UpdateClassification()
-        if Module.textSystem then
-            Module.textSystem.update()
-        end
 
     elseif event == "UNIT_TARGET" then
         if not IsEnabled() then return end
@@ -507,9 +504,6 @@ local function OnEvent(self, event, ...)
             end
             
             UpdateClassification()
-            if Module.textSystem then
-                Module.textSystem.update()
-            end
         end
 
     elseif event == "UNIT_CLASSIFICATION_CHANGED" then
@@ -569,9 +563,6 @@ local function RefreshFrame()
 
     if ShouldShowFoT() then
         UpdateClassification()
-        if Module.textSystem then
-            Module.textSystem.update()
-        end
     end
 end
 
@@ -595,7 +586,7 @@ addon.TargetOfFocus = {
     RefreshToFFrame = RefreshFrame,
     Reset = ResetFrame,
     anchor = function()
-        return Module.totFrame
+        return Module.tofFrame
     end,
     ChangeToFFrame = RefreshFrame
 }

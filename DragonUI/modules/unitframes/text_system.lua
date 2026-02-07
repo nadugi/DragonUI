@@ -367,11 +367,11 @@ function TextSystem.SetupHoverEvents(parentFrame, healthBar, manaBar, updateCall
         if isPlayerFrame then
             -- PLAYER FRAME: Click-through habilitado
             healthHover:EnableMouse(false)  -- NO capturar clicks
-            -- Configurar hover directamente en la StatusBar subyacente
+            -- Phase 3C: Use HookScript on Blizzard StatusBar to avoid taint
             if not healthBar.DragonUIHoverSetup then
                 healthBar:EnableMouse(true)
-                healthBar:SetScript("OnEnter", updateCallback)
-                healthBar:SetScript("OnLeave", updateCallback)
+                healthBar:HookScript("OnEnter", updateCallback)
+                healthBar:HookScript("OnLeave", updateCallback)
                 healthBar.DragonUIHoverSetup = true
             end
         else
@@ -392,11 +392,11 @@ function TextSystem.SetupHoverEvents(parentFrame, healthBar, manaBar, updateCall
         if isPlayerFrame then
             -- PLAYER FRAME: Click-through habilitado
             manaHover:EnableMouse(false)  -- NO capturar clicks
-            -- Configurar hover directamente en la StatusBar subyacente
+            -- Phase 3C: Use HookScript on Blizzard StatusBar to avoid taint
             if not manaBar.DragonUIHoverSetup then
                 manaBar:EnableMouse(true)
-                manaBar:SetScript("OnEnter", updateCallback)
-                manaBar:SetScript("OnLeave", updateCallback)
+                manaBar:HookScript("OnEnter", updateCallback)
+                manaBar:HookScript("OnLeave", updateCallback)
                 manaBar.DragonUIHoverSetup = true
             end
         else

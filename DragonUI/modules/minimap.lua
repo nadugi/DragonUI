@@ -62,10 +62,6 @@ local BORDER_SIZE = 71 * 2 * 2 ^ 0.5
 
 local ADDON_ORBIT_RADIUS = 15
 
-local MINIMAP_TEXTURES = {
-    BORDER = "Interface\\AddOns\\DragonUI\\assets\\uiminimapborder"
-}
-
 --  ADDON ICON SKINNING: Definir whitelist y función ANTES de ReplaceBlizzardFrame
 local WHITE_LIST = {'MiniMapBattlefieldFrame', 'MiniMapTrackingButton', 'MiniMapMailFrame', 'HelpOpenTicketButton',
                     'GatherMatePin', 'HandyNotesPin', 'TimeManagerClockButton', 'Archy', 'GatherNote', 'MinimMap',
@@ -109,6 +105,7 @@ local function SetupSecureHooks()
 
     -- Hook seguro para CloseDropDownMenus
     MinimapModule.hooks.CloseDropDownMenus = function()
+        if not MinimapModule.applied then return end
         if MiniMapTrackingIcon and MiniMapTrackingIcon:GetAlpha() > 0 then
             MiniMapTrackingIcon:ClearAllPoints()
             MiniMapTrackingIcon:SetPoint('CENTER', MiniMapTracking, 'CENTER', 0, 0)
@@ -138,9 +135,10 @@ local function SetupSecureHooks()
 end
 
 -- CLEANUP: Función para limpiar hooks
+-- Phase 3B: Use flag-based approach instead of clearing table
+-- (hooksecurefunc can't be undone; clearing the table enables re-registration and duplication)
 local function CleanupSecureHooks()
-    -- No hay manera directa de unhook en WoW 3.3.5a, pero trackear para debugging
-    MinimapModule.hooks = {}
+    MinimapModule.hooksDisabled = true
 end
 
 local function UpdateCalendarDate()
@@ -516,10 +514,7 @@ local function ReplaceBlizzardFrame(frame)
         end
     end
 
-    -- Hook al cierre del dropdown (legacy - mantenido por compatibilidad)
-    hooksecurefunc("CloseDropDownMenus", ResetTrackingIconPosition)
-
-    -- Setup secure hooks after frame modifications
+    -- Setup secure hooks after frame modifications (handles CloseDropDownMenus)
     SetupSecureHooks()
 
 end -- End of ReplaceBlizzardFrame function

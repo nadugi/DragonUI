@@ -47,20 +47,6 @@ local function FindInsertPosition()
     return afterButton, nil -- No hay beforeButton ya que va al final
 end
 
--- Función para obtener todos los botones visibles del game menu
-local function GetVisibleGameMenuButtons()
-    local visibleButtons = {}
-    
-    for _, buttonName in ipairs(GAME_MENU_BUTTONS) do
-        local button = _G[buttonName]
-        if button and button:IsVisible() then
-            table.insert(visibleButtons, button)
-        end
-    end
-    
-    return visibleButtons
-end
-
 -- Función para posicionar el botón DragonUI de forma muy conservadora
 local function PositionDragonUIButton()
     if not dragonUIButton then return end

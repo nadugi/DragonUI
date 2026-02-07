@@ -319,11 +319,6 @@ end)
                 
                 -- Update classification (elite/boss icon)
                 UpdateClassification()
-                
-                -- Update texts
-                if Module.textSystem then
-                    Module.textSystem.update()
-                end
             end
         end)
         TargetFrameToT.DragonUI_ShowHook = true
@@ -552,9 +547,6 @@ local function OnEvent(self, event, ...)
         end
         
         UpdateClassification()
-        if Module.textSystem then
-            Module.textSystem.update()
-        end
 
     elseif event == "UNIT_TARGET" then
         if not IsEnabled() then return end
@@ -572,9 +564,6 @@ local function OnEvent(self, event, ...)
             end
             
             UpdateClassification()
-            if Module.textSystem then
-                Module.textSystem.update()
-            end
         end
 
     elseif event == "UNIT_CLASSIFICATION_CHANGED" then
@@ -639,9 +628,6 @@ local function RefreshFrame()
 
     if ShouldShowToT() then
         UpdateClassification()
-        if Module.textSystem then
-            Module.textSystem.update()
-        end
     end
 end
 

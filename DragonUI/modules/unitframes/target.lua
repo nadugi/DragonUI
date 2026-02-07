@@ -120,9 +120,10 @@ local POWER_MAP = {
 }
 
 -- Threat colors
-local THREAT_COLORS = {{1.0, 1.0, 0.47}, -- Low
-{1.0, 0.6, 0.0}, -- Medium
-{1.0, 0.0, 0.0} -- High
+local THREAT_COLORS = {
+    {1.0, 1.0, 0.47}, -- Low
+    {1.0, 0.6, 0.0},  -- Medium
+    {1.0, 0.0, 0.0}   -- High
 }
 
 -- Frame elements storage
@@ -153,16 +154,6 @@ local function GetConfig()
         __index = defaults
     })
 end
-
-local function SafeCall(func, ...)
-    if not func then
-        return
-    end
-    local success, result = pcall(func, ...)
-    if not success then
-        
-    end
-    return success, result
 end
 
 -- ============================================================================
