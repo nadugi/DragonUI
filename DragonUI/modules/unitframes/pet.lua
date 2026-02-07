@@ -186,13 +186,7 @@ end
 -- FUNCIÓN OnUpdate PARA EL PET FRAME
 -- ===============================================================
 local function PetFrame_OnUpdate(self, elapsed)
-    local success, err = pcall(function()
-        AnimatePetCombatPulse(elapsed)
-    end)
-    
-    if not success then
-        
-    end
+    AnimatePetCombatPulse(elapsed)
 end
 
 -- ===============================================================

@@ -495,21 +495,22 @@ local function RepositionBlizzardBuffs()
     for i = 1, MAX_PARTY_MEMBERS do
         local frame = _G['PartyMemberFrame' .. i]
         if frame then
-            -- Move buffs and debuffs together
+            -- Position auras fully outside frame right edge
+            -- Buff row at top, debuff row below (no vertical overlap between members)
             for auraIndex = 1, 4 do
                 local buff = _G['PartyMemberFrame' .. i .. 'Buff' .. auraIndex]
                 local debuff = _G['PartyMemberFrame' .. i .. 'Debuff' .. auraIndex]
 
                 if buff then
                     buff:ClearAllPoints()
-                    buff:SetPoint('TOPLEFT', frame, 'TOPRIGHT', -5 + (auraIndex - 1) * 18, -5)
-                    buff:SetSize(16, 16)
+                    buff:SetPoint('TOPLEFT', frame, 'TOPRIGHT', 2 + (auraIndex - 1) * 17, -2)
+                    buff:SetSize(15, 15)
                 end
 
                 if debuff then
                     debuff:ClearAllPoints()
-                    debuff:SetPoint('TOPLEFT', frame, 'TOPRIGHT', -5 + (auraIndex - 1) * 18, -22)
-                    debuff:SetSize(16, 16)
+                    debuff:SetPoint('TOPLEFT', frame, 'TOPRIGHT', 2 + (auraIndex - 1) * 17, -19)
+                    debuff:SetSize(15, 15)
                 end
             end
         end

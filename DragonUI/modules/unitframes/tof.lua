@@ -420,8 +420,52 @@ local function InitializeFrame()
     -- Setup bar hooks
     SetupBarHooks()
     
-    -- CRITICAL: Show the main FoT frame
-    FocusFrameToT:Show()
+    -- CRITICAL: Hook UnitFrameManaBar_UpdateType (pattern from tot.lua)
+    -- Called when power type changes (shapeshifting, different unit types)
+    if not Module.updateTypeHooked then
+        hooksecurefunc("UnitFrameManaBar_UpdateType", function(manaBar)
+            if manaBar == FocusFrameToTManaBar and IsEnabled() and UnitExists("focustarget") then
+                local texture = manaBar:GetStatusBarTexture()
+                if texture then
+                    local powerType = UnitPowerType("focustarget")
+                    local powerName = POWER_MAP[powerType] or "Mana"
+                    texture:SetTexture(TEXTURES.BAR_PREFIX .. powerName)
+                    texture:SetDrawLayer("ARTWORK", 1)
+                    texture:SetVertexColor(1, 1, 1)
+                end
+            end
+        end)
+        Module.updateTypeHooked = true
+    end
+    
+    -- Hook FocusFrameToT:Show() to ensure styling persists (pattern from tot.lua)
+    if FocusFrameToT and not FocusFrameToT.DragonUI_ShowHook then
+        hooksecurefunc(FocusFrameToT, "Show", function(self)
+            if IsEnabled() and ShouldShowFoT() then
+                if frameElements.background then frameElements.background:Show() end
+                if frameElements.border then frameElements.border:Show() end
+                UpdateClassification()
+            end
+        end)
+        FocusFrameToT.DragonUI_ShowHook = true
+    end
+    
+    -- Hook UnitFramePortrait_Update for FoT portrait changes (pattern from tot.lua)
+    if not Module.portraitHooked then
+        hooksecurefunc("UnitFramePortrait_Update", function(frame, unit)
+            if frame == FocusFrameToT and IsEnabled() and UnitExists("focustarget") then
+                if frameElements.background then frameElements.background:Show() end
+                if frameElements.border then frameElements.border:Show() end
+                UpdateClassification()
+            end
+        end)
+        Module.portraitHooked = true
+    end
+    
+    -- CRITICAL: Show the main FoT frame (combat-safe)
+    if not InCombatLockdown() then
+        FocusFrameToT:Show()
+    end
 
     Module.configured = true
 end
@@ -445,11 +489,13 @@ local function OnEvent(self, event, ...)
         
         -- If initialization failed (frame doesn't exist yet), schedule a retry
         if not Module.configured and IsEnabled() then
-            local retryFrame = CreateFrame("Frame")
-            local retryCount = 0
-            retryFrame:SetScript("OnUpdate", function(self, elapsed)
-                retryCount = retryCount + 1
-                if Module.configured or retryCount > 50 then
+            if not Module.retryFrame then
+                Module.retryFrame = CreateFrame("Frame")
+            end
+            Module.retryCount = 0
+            Module.retryFrame:SetScript("OnUpdate", function(self, elapsed)
+                Module.retryCount = (Module.retryCount or 0) + 1
+                if Module.configured or Module.retryCount > 50 then
                     self:SetScript("OnUpdate", nil)
                     return
                 end
@@ -542,7 +588,7 @@ end
 
 local function RefreshFrame()
     if not IsEnabled() then
-        if FocusFrameToT then
+        if FocusFrameToT and not InCombatLockdown() then
             FocusFrameToT:Hide()
         end
         return
@@ -551,8 +597,8 @@ local function RefreshFrame()
     if not Module.configured then
         InitializeFrame()
     else
-        -- Show/hide based on whether we should show FoT
-        if FocusFrameToT then
+        -- Show/hide based on whether we should show FoT (combat-safe)
+        if FocusFrameToT and not InCombatLockdown() then
             if ShouldShowFoT() then
                 FocusFrameToT:Show()
             else
@@ -572,12 +618,14 @@ local function ResetFrame()
     addon:SetConfigValue("unitframe", "fot", "y", -30)
     addon:SetConfigValue("unitframe", "fot", "scale", 1.0)
 
-    -- Apply immediately
-    local config = GetConfig()
-    FocusFrameToT:ClearAllPoints()
-    FocusFrameToT:SetPoint(config.anchor or "BOTTOMRIGHT", FocusFrame, config.anchorParent or "BOTTOMRIGHT", config.x,
-        config.y)
-    FocusFrameToT:SetScale(config.scale)
+    -- Apply immediately (combat-safe)
+    if not InCombatLockdown() then
+        local config = GetConfig()
+        FocusFrameToT:ClearAllPoints()
+        FocusFrameToT:SetPoint(config.anchor or "BOTTOMRIGHT", FocusFrame, config.anchorParent or "BOTTOMRIGHT", config.x,
+            config.y)
+        FocusFrameToT:SetScale(config.scale)
+    end
 end
 
 -- Export API
