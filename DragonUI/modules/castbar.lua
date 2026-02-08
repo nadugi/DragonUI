@@ -887,12 +887,12 @@ end
 -- ============================================================================
 
 function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
-    local spell, displayName, icon, startTime, endTime
+    local spell, icon, startTime, endTime
     
     if isChanneling then
-        spell, _, displayName, icon, startTime, endTime = UnitChannelInfo(unit)
+        spell, _, _, icon, startTime, endTime = UnitChannelInfo(unit)
     else
-        spell, _, displayName, icon, startTime, endTime = UnitCastingInfo(unit)
+        spell, _, _, icon, startTime, endTime = UnitCastingInfo(unit)
     end
     
     if not spell then
@@ -980,12 +980,12 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
     end
     
     ForceStatusBarLayer(frames.castbar)
-    SetCastText(unitType, displayName)
+    SetCastText(unitType, spell)
     
     -- Configure icon
     local cfg = GetConfig(unitType)
     if frames.icon and cfg and cfg.showIcon then
-        frames.icon:SetTexture(GetSpellIcon(displayName, icon))
+        frames.icon:SetTexture(GetSpellIcon(spell, icon))
         frames.icon:Show()
         if frames.icon.Border then
             frames.icon.Border:Show()

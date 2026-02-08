@@ -1,5 +1,25 @@
 # 🐉 DragonUI - Experimental Changelog
 
+## 2026-02-08
+
+### Fixed
+- Vehicle UI completely rewritten and functional
+- Vehicle exit button now displays correctly
+- Bottom bars properly hide/show when entering/leaving vehicles
+- Micro menu editor overlay now aligns correctly with icons in both colored and grayscale modes
+- Quest tracker invisible frame no longer blocks mouse clicks outside editor mode
+- Castbar now shows the actual spell name during channeling instead of "Channeling"
+- Castbar: improved self-interrupt detection for channeled spells
+- Unit frames (player, target, focus, target-of-target) protected against combat errors
+- Focus frame scale no longer breaks when entering combat
+- Party frame textures no longer become invisible after dying or releasing spirit
+- Memory leaks fixed in several modules (vehicle, player, castbar)
+- Potential infinite recursion in minimap removed
+
+### Changed
+- All Blizzard frame modifications now use secure hooks (hooksecurefunc)
+- General cleanup of dead and duplicated code across multiple modules
+
 ## 2026-02-06
 
 ### Added

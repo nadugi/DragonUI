@@ -82,7 +82,10 @@ local function ReplaceBlizzardFrame(frame)
     -- Show again after a short delay (critical fix for quest display)
     ScheduleTimer(0.1, function()
         watchFrame:SetAlpha(1)
-        watchFrame:EnableMouse(true)
+        -- Do NOT re-enable mouse on WatchFrame itself: child frames (quest lines,
+        -- collapse button) handle their own click events independently.
+        -- Enabling mouse on the parent WatchFrame blocks clicks on the game world
+        -- across its entire bounding box.
     end)
 end
 
@@ -222,6 +225,8 @@ function QuestTrackerModule:Initialize()
     self.questTrackerFrame:SetSize(230, 500)
     self.questTrackerFrame:SetFrameLevel(100)
     self.questTrackerFrame:SetFrameStrata('FULLSCREEN')
+    self.questTrackerFrame:EnableMouse(false)
+    self.questTrackerFrame:SetMovable(false)
     
     -- Add nineslice overlay for editor mode (DragonflightUI style)
     if addon.AddNineslice then
