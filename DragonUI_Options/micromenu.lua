@@ -547,35 +547,18 @@ local additionalOptions = {
                     inline = true,
                     order = 3,
                     args = {
-                        x_position = {
-                            type = 'range',
-                            name = "X Position",
-                            desc = "Horizontal position of vehicle bar",
-                            min = -500,
-                            max = 500,
-                            step = 1,
-                            get = function()
-                                return (addon.db.profile.additional.vehicle and addon.db.profile.additional.vehicle.x_position) or 0
-                            end,
-                            set = function(info, value)
-                                addon.db.profile.additional.vehicle.x_position = value
-                                if addon.RefreshVehicle then addon.RefreshVehicle() end
-                            end,
-                            order = 1,
-                            width = "double"
-                        },
                         artstyle = {
                             type = 'toggle',
-                            name = "Blizzard Art Style",
-                            desc = "Use Blizzard original bar arts style",
+                            name = "Custom Art Style",
+                            desc = "Use custom vehicle bar art style with health/power bars and themed skin. Requires UI reload to apply.",
                             get = function()
                                 return addon.db.profile.additional.vehicle.artstyle
                             end,
                             set = function(info, value)
                                 addon.db.profile.additional.vehicle.artstyle = value
-                                if addon.RefreshVehicle then addon.RefreshVehicle() end
+                                StaticPopup_Show("DRAGONUI_RELOAD_UI")
                             end,
-                            order = 2,
+                            order = 1,
                             width = "full"
                         }
                     }

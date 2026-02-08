@@ -112,8 +112,9 @@ local function CreateVehicleExitButton()
     -- Anchor relative to stance bar or main bar for positioning only
     local anchor = addon.pUiStanceBar or _G.pUiStanceBar or pUiMainBar
     local x_pos = config.additional.vehicle and config.additional.vehicle.x_position or -40
+    local y_pos = config.additional.vehicle and config.additional.vehicle.y_offset or -5
     if anchor then
-        vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', x_pos, -5)
+        vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', x_pos, y_pos)
     else
         vehicleExitButton:SetPoint('BOTTOM', UIParent, 'BOTTOM', x_pos, 115)
     end
@@ -126,6 +127,26 @@ local function CreateVehicleExitButton()
     vehicleExitButton:SetHighlightTexture('Interface\\Vehicles\\UI-Vehicles-Button-Highlight')
     vehicleExitButton:GetHighlightTexture():SetTexCoord(0.130625, 0.879375, 0.130625, 0.879375)
     vehicleExitButton:GetHighlightTexture():SetBlendMode('ADD')
+
+    -- Dragonflight-style background (matches action button styling)
+    local bg = vehicleExitButton:CreateTexture(nil, 'BACKGROUND', nil, -1)
+    bg:SetPoint('TOPRIGHT', vehicleExitButton, 3, 3)
+    bg:SetPoint('BOTTOMLEFT', vehicleExitButton, -3, -3)
+    if bg.set_atlas then
+        bg:set_atlas('ui-hud-actionbar-iconframe-slot')
+    else
+        bg:SetColorTexture(0, 0, 0, 0.6)
+    end
+    vehicleExitButton.background = bg
+
+    -- Border shadow (Dragonflight style)
+    local shadow = vehicleExitButton:CreateTexture(nil, 'BACKGROUND', nil, -2)
+    shadow:SetPoint('TOPRIGHT', vehicleExitButton, 5, 5)
+    shadow:SetPoint('BOTTOMLEFT', vehicleExitButton, -5, -5)
+    if shadow.set_atlas then
+        shadow:set_atlas('ui-hud-actionbar-iconframe-flyoutbordershadow', true)
+    end
+    vehicleExitButton.shadow = shadow
 
     -- Scripts
     vehicleExitButton:RegisterForClicks('AnyUp')
@@ -143,11 +164,119 @@ local function CreateVehicleExitButton()
 
     vehicleExitButton:Hide()
 
-    -- Direct state driver: show only during vehicle UI
-    VehicleModule.stateDrivers.vehicleExitVisibility = {frame = vehicleExitButton, state = 'visibility'}
-    RegisterStateDriver(vehicleExitButton, 'visibility', '[vehicleui] show; hide')
+    -- NOTE: State driver for visibility is registered separately in ApplyVehicleSystem
+    -- so the editor overlay is always available regardless of artstyle setting
 
     VehicleModule.frames.vehicleExitButton = vehicleExitButton
+
+    -- Create editor overlay for positioning
+    if addon.CreateUIFrame then
+        local editorOverlay = addon.CreateUIFrame(btnsize + 10, btnsize + 10, 'VehicleExitOverlay')
+        editorOverlay:SetFrameStrata('FULLSCREEN')
+        editorOverlay:SetFrameLevel(100)
+        editorOverlay:Hide()
+        VehicleModule.frames.editorOverlay = editorOverlay
+
+        if editorOverlay.editorText then
+            editorOverlay.editorText:SetText('Vehicle Exit')
+        end
+
+        -- Drag tracking variables
+        local dragStartX, dragStartY = 0, 0
+        local configStartX, configStartY = 0, 0
+        local isDragging = false
+
+        editorOverlay:SetMovable(false)
+        editorOverlay:EnableMouse(true)
+        editorOverlay:RegisterForDrag('LeftButton')
+
+        editorOverlay:SetScript('OnDragStart', function(self)
+            isDragging = true
+            if self.NineSlice and addon.SetNinesliceState then
+                addon.SetNinesliceState(self, true)
+            end
+            local scale = self:GetEffectiveScale()
+            dragStartX = GetCursorPosition() / scale
+            dragStartY = select(2, GetCursorPosition()) / scale
+            local vCfg = addon.db and addon.db.profile.additional.vehicle
+            if vCfg then
+                configStartX = vCfg.x_position or -40
+                configStartY = vCfg.y_offset or -5
+            end
+        end)
+
+        editorOverlay:SetScript('OnUpdate', function(self, elapsed)
+            if not isDragging then return end
+            local scale = self:GetEffectiveScale()
+            local currentX = GetCursorPosition() / scale
+            local currentY = select(2, GetCursorPosition()) / scale
+            local deltaX = currentX - dragStartX
+            local deltaY = currentY - dragStartY
+            local vCfg = addon.db and addon.db.profile.additional.vehicle
+            if vCfg then
+                vCfg.x_position = math.floor(configStartX + deltaX + 0.5)
+                vCfg.y_offset = math.floor(configStartY + deltaY + 0.5)
+                -- Update exit button position in real-time
+                if vehicleExitButton and anchor then
+                    vehicleExitButton:ClearAllPoints()
+                    vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', vCfg.x_position, vCfg.y_offset)
+                end
+                -- Keep overlay aligned
+                self:ClearAllPoints()
+                if anchor then
+                    self:SetPoint('CENTER', anchor, 'TOPLEFT', vCfg.x_position + (btnsize / 2), vCfg.y_offset - (btnsize / 2))
+                end
+            end
+        end)
+
+        editorOverlay:SetScript('OnDragStop', function(self)
+            isDragging = false
+            if self.NineSlice and addon.SetNinesliceState then
+                addon.SetNinesliceState(self, false)
+            end
+        end)
+
+        -- Register with editor mode system
+        if addon.RegisterEditableFrame then
+            addon:RegisterEditableFrame({
+                name = 'vehicle_exit',
+                frame = editorOverlay,
+                configPath = {'additional', 'vehicle'},
+
+                showTest = function()
+                    local currentAnchor = addon.pUiStanceBar or _G.pUiStanceBar or pUiMainBar
+                    if currentAnchor then
+                        local vCfg = addon.db and addon.db.profile.additional.vehicle
+                        local xp = vCfg and vCfg.x_position or -40
+                        local yp = vCfg and vCfg.y_offset or -5
+                        editorOverlay:SetSize(btnsize + 10, btnsize + 10)
+                        editorOverlay:ClearAllPoints()
+                        editorOverlay:SetPoint('CENTER', currentAnchor, 'TOPLEFT', xp + (btnsize / 2), yp - (btnsize / 2))
+                        editorOverlay:Show()
+                        if addon.ShowNineslice then
+                            addon.SetNinesliceState(editorOverlay, false)
+                            addon.ShowNineslice(editorOverlay)
+                        end
+                        if editorOverlay.editorText then
+                            editorOverlay.editorText:Show()
+                        end
+                    end
+                end,
+
+                hideTest = function()
+                    editorOverlay:Hide()
+                    if addon.HideNineslice then
+                        addon.HideNineslice(editorOverlay)
+                    end
+                    if editorOverlay.editorText then
+                        editorOverlay.editorText:Hide()
+                    end
+                end,
+
+                module = VehicleModule
+            })
+        end
+    end
 end
 
 -- ============================================================================
@@ -381,58 +510,18 @@ local function SetupArtStyleStateDrivers()
         end
     ]])
     RegisterStateDriver(pUiMainBar, 'vehicleupdate', '[vehicleui] 1; 2')
-end
 
--- ============================================================================
--- BOTTOM BARS VISIBILITY DURING VEHICLE
--- ============================================================================
--- Since noop.lua removed bars from UIPARENT_MANAGED_FRAME_POSITIONS,
--- Blizzard's native system can't hide them during vehicle. We handle it.
-
-local function SetupBottomBarVehicleVisibility()
-    local hider = VehicleModule.frames.bottomBarHider
-    if not hider then
-        hider = CreateFrame('Frame')
-        hider:RegisterEvent('UNIT_ENTERED_VEHICLE')
-        hider:RegisterEvent('UNIT_EXITED_VEHICLE')
-        hider:RegisterEvent('PLAYER_ENTERING_WORLD')
-        VehicleModule.frames.bottomBarHider = hider
+    -- Hide bottom bars during vehicle UI via direct state drivers
+    if MultiBarBottomLeft then
+        VehicleModule.stateDrivers.bottomLeftVisibility = {frame = MultiBarBottomLeft, state = 'visibility'}
+        VehicleModule.stateDrivers_bottomLeftRegistered = true
+        RegisterStateDriver(MultiBarBottomLeft, 'visibility', '[vehicleui] hide; show')
     end
-
-    hider:SetScript('OnEvent', function(self, event, unit)
-        if InCombatLockdown() then return end
-
-        if event == 'UNIT_ENTERED_VEHICLE' and unit == 'player' then
-            if MultiBarBottomLeft and MultiBarBottomLeft:IsShown() then
-                VehicleModule.frames.bottomLeftWasShown = true
-                MultiBarBottomLeft:Hide()
-            end
-            if MultiBarBottomRight and MultiBarBottomRight:IsShown() then
-                VehicleModule.frames.bottomRightWasShown = true
-                MultiBarBottomRight:Hide()
-            end
-        elseif event == 'UNIT_EXITED_VEHICLE' and unit == 'player' then
-            if VehicleModule.frames.bottomLeftWasShown and MultiBarBottomLeft then
-                MultiBarBottomLeft:Show()
-                VehicleModule.frames.bottomLeftWasShown = nil
-            end
-            if VehicleModule.frames.bottomRightWasShown and MultiBarBottomRight then
-                MultiBarBottomRight:Show()
-                VehicleModule.frames.bottomRightWasShown = nil
-            end
-        elseif event == 'PLAYER_ENTERING_WORLD' then
-            if UnitInVehicle('player') then
-                if MultiBarBottomLeft and MultiBarBottomLeft:IsShown() then
-                    VehicleModule.frames.bottomLeftWasShown = true
-                    MultiBarBottomLeft:Hide()
-                end
-                if MultiBarBottomRight and MultiBarBottomRight:IsShown() then
-                    VehicleModule.frames.bottomRightWasShown = true
-                    MultiBarBottomRight:Hide()
-                end
-            end
-        end
-    end)
+    if MultiBarBottomRight then
+        VehicleModule.stateDrivers.bottomRightVisibility = {frame = MultiBarBottomRight, state = 'visibility'}
+        VehicleModule.stateDrivers_bottomRightRegistered = true
+        RegisterStateDriver(MultiBarBottomRight, 'visibility', '[vehicleui] hide; show')
+    end
 end
 
 -- ============================================================================
@@ -518,9 +607,13 @@ local function ApplyVehicleSystem()
     -- 1. Bonus bar page switching (always needed for action page management)
     SetupBonusBarVehicle()
 
-    -- 2. Custom vehicle art OR simple exit button
+    -- 2. Always create exit button + editor overlay (editor works in both modes)
+    CreateVehicleExitButton()
+
+    -- 3. Custom vehicle art OR simple exit button visibility
     if config.additional.vehicle.artstyle then
         -- artstyle=true: full vehicle art overlay + built-in leave button
+        -- Exit button stays hidden (art has VehicleMenuBarLeaveButton)
         CreateVehicleArtFrames()
         vehiclebar_power_setup()
 
@@ -536,15 +629,13 @@ local function ApplyVehicleSystem()
         end
         vehiclebar:SetScript('OnEvent', OnVehicleEvent)
 
-        -- State drivers: show art when [vehicleui], hide main bar
+        -- State drivers: show art when [vehicleui], hide main bar + bottom bars
         SetupArtStyleStateDrivers()
-
-        -- Hide bottom bars (main bar is replaced by vehicle art)
-        SetupBottomBarVehicleVisibility()
     else
-        -- artstyle=false: main bars stay visible, just add an exit button
+        -- artstyle=false: main bars stay visible, show exit button during vehicle
         -- Bottom bars remain visible (main bar is not replaced)
-        CreateVehicleExitButton()
+        VehicleModule.stateDrivers.vehicleExitVisibility = {frame = vehicleExitButton, state = 'visibility'}
+        RegisterStateDriver(vehicleExitButton, 'visibility', '[vehicleui] show; hide')
     end
 
     VehicleModule.applied = true
@@ -575,19 +666,17 @@ local function RestoreVehicleSystem()
     if vehicleBarBackground then vehicleBarBackground:Hide() end
     if vehicleExitButton then vehicleExitButton:Hide() end
 
-    -- Restore bottom bars
-    if VehicleModule.frames.bottomLeftWasShown and MultiBarBottomLeft then
+    -- Bottom bars: state drivers were unregistered above, which leaves them
+    -- in their last state. Re-show them (the state driver only hid bars that
+    -- were already shown, so restoring show is always safe here).
+    if MultiBarBottomLeft and VehicleModule.stateDrivers_bottomLeftRegistered then
         MultiBarBottomLeft:Show()
     end
-    if VehicleModule.frames.bottomRightWasShown and MultiBarBottomRight then
+    if MultiBarBottomRight and VehicleModule.stateDrivers_bottomRightRegistered then
         MultiBarBottomRight:Show()
     end
-
-    -- Unregister bottomBarHider events
-    if VehicleModule.frames.bottomBarHider then
-        VehicleModule.frames.bottomBarHider:UnregisterAllEvents()
-        VehicleModule.frames.bottomBarHider:SetScript('OnEvent', nil)
-    end
+    VehicleModule.stateDrivers_bottomLeftRegistered = nil
+    VehicleModule.stateDrivers_bottomRightRegistered = nil
 
     CleanupVehicleFrames()
     if VehicleMenuBar then VehicleMenuBar:Show() end
@@ -627,12 +716,14 @@ function addon.RefreshVehicle()
     local btnsize = config.additional.size
     local x_position = config.additional.vehicle.x_position
 
+    local y_offset = config.additional.vehicle.y_offset or -5
+
     if vehicleExitButton then
         vehicleExitButton:SetSize(btnsize, btnsize)
         vehicleExitButton:ClearAllPoints()
         local anchor = addon.pUiStanceBar or _G.pUiStanceBar or pUiMainBar
         if anchor then
-            vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', x_position, -5)
+            vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', x_position, y_offset)
         else
             vehicleExitButton:SetPoint('BOTTOM', UIParent, 'BOTTOM', x_position, 115)
         end
