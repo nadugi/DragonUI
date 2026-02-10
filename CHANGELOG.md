@@ -1,5 +1,21 @@
 # 🐉 DragonUI - Experimental Changelog
 
+## 📅 2026-02-10
+
+### Compatibility
+- New/edited target-style textures to make Fat Health Bar compatible with Dragon Decoration
+- Player frame layout updated for Fat + Decoration
+
+### Vehicle
+- Vehicle combat/status glow frames using the vehicle atlas
+- Vehicle layout updated (portrait/texture updates on enter/exit)
+- Vehicle action buttons centered using calculated offsets
+- Vehicle transitions more stable after /reload and after leaving combat
+
+### Combat Feedback
+- PlayerHitIndicator (healing/damage numbers) now renders above border/decoration/PvP icon
+- Blizzard flash/status textures no longer interfere with DragonUI glow effects
+
 ## 📅 2026-02-09
 
 ### Added
