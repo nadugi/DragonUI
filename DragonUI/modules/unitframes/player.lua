@@ -1372,6 +1372,28 @@ local function UpdatePlayerDragonDecoration()
             if dragonFrame.BorderOverlay then dragonFrame.BorderOverlay:Hide() end
             if dragonFrame.ClassPortraitOverlay then dragonFrame.ClassPortraitOverlay:Hide() end
         end
+
+        -- Raise PlayerHitIndicator above decoration/dragon overlays.
+        -- PlayerHitIndicator is a FontString on PlayerFrame (combat feedback: heals/damage).
+        -- Border and dragon decoration are on higher-level frames and cover it.
+        local hitIndicator = _G["PlayerHitIndicator"]
+        if hitIndicator then
+            if not dragonFrame.HitIndicatorFrame then
+                local hif = CreateFrame("Frame", nil, PlayerFrame)
+                hif:SetSize(100, 100)
+                dragonFrame.HitIndicatorFrame = hif
+            end
+            -- HIGH strata to render above dragon decoration (MEDIUM strata)
+            -- Level 1001 to render above EliteIconContainer (level 1000) which holds PVP icon
+            dragonFrame.HitIndicatorFrame:SetFrameStrata("HIGH")
+            dragonFrame.HitIndicatorFrame:SetFrameLevel(1001)
+            dragonFrame.HitIndicatorFrame:ClearAllPoints()
+            dragonFrame.HitIndicatorFrame:SetPoint("CENTER", PlayerPortrait, "CENTER", 0, 0)
+            dragonFrame.HitIndicatorFrame:Show()
+            hitIndicator:SetParent(dragonFrame.HitIndicatorFrame)
+            hitIndicator:ClearAllPoints()
+            hitIndicator:SetPoint("CENTER", dragonFrame.HitIndicatorFrame, "CENTER", 0, 0)
+        end
     else
         -- No dragon decoration, OR in vehicle: use normal/fat/vehicle textures
         local fatMode = IsFatHealthbarActive() -- false during vehicle
@@ -1380,6 +1402,27 @@ local function UpdatePlayerDragonDecoration()
         if dragonFrame.PortraitOverlay then dragonFrame.PortraitOverlay:Hide() end
         if dragonFrame.BorderOverlay then dragonFrame.BorderOverlay:Hide() end
         if dragonFrame.ClassPortraitOverlay then dragonFrame.ClassPortraitOverlay:Hide() end
+
+        -- Raise PlayerHitIndicator above border (lives on HealthBar at level+1).
+        -- No HIGH strata needed here — just a higher frame level than the border.
+        local hitIndicator = _G["PlayerHitIndicator"]
+        if hitIndicator then
+            if not dragonFrame.HitIndicatorFrame then
+                local hif = CreateFrame("Frame", nil, PlayerFrame)
+                hif:SetSize(100, 100)
+                dragonFrame.HitIndicatorFrame = hif
+            end
+            -- HIGH strata + level 1001 to render above EliteIconContainer (HIGH, level 1000)
+            -- which holds the PVP icon
+            dragonFrame.HitIndicatorFrame:SetFrameStrata("HIGH")
+            dragonFrame.HitIndicatorFrame:SetFrameLevel(1001)
+            dragonFrame.HitIndicatorFrame:ClearAllPoints()
+            dragonFrame.HitIndicatorFrame:SetPoint("CENTER", PlayerPortrait, "CENTER", 0, 0)
+            dragonFrame.HitIndicatorFrame:Show()
+            hitIndicator:SetParent(dragonFrame.HitIndicatorFrame)
+            hitIndicator:ClearAllPoints()
+            hitIndicator:SetPoint("CENTER", dragonFrame.HitIndicatorFrame, "CENTER", 0, 0)
+        end
 
         if inVehicle then
             -- VEHICLE MODE: Use atlas on Blizzard's PlayerFrameVehicleTexture (RetailUI pattern)
