@@ -1,6 +1,6 @@
 # 🐉 DragonUI - Experimental Changelog
 
-> **⚠️ Experimental Branch** — All changes below still need further in-game testing and may contain bugs or incomplete features. If you run into any problems, feel free to let me know [here](https://github.com/NeticSoul/DragonUI/issues/141) — any feedback helps!
+> **⚠️ Experimental Branch** - All changes below still need further in-game testing and may contain bugs or incomplete features. If you run into any problems, feel free to let me know [here](https://github.com/NeticSoul/DragonUI/issues/141) - any feedback helps!
 
 ## 📅 2026-02-11
 
