@@ -5,8 +5,8 @@
 ## 📅 2026-02-11
 
 ### Added
-- **Custom Options Panel** — New dark-themed, resizable panel with vertical tab navigation, profile management, and quick-launch buttons for Editor/KeyBind modes. Access legacy options via `/dragonui legacy`
-- **Fat Mana Bar Textures** — Selectable power bar textures (Blizzard, Flat, Smooth, Aluminium, LiteStep) with customizable Dragonflight-style power colors
+- **Custom Options Panel** - New dark-themed, resizable panel with vertical tab navigation, profile management, and quick-launch buttons for Editor/KeyBind modes. Access legacy options via `/dragonui legacy`
+- **Fat Mana Bar Textures** - Selectable power bar textures (Blizzard, Flat, Smooth, Aluminium, LiteStep) with customizable Dragonflight-style power colors
 - Editor mode now hides fat mana bar anchor when fat mode is disabled
 
 ### Fixed
