@@ -2028,8 +2028,8 @@ local function ChangePlayerframe()
         PlayerStatusTexture:SetSize(192, 71)
         PlayerStatusTexture:SetTexCoord(0.1943359375, 0.3818359375, 0.169921875, 0.30859375)
         PlayerStatusTexture:ClearAllPoints()
-        PlayerStatusTexture:SetBlendMode("BLEND") -- Reset from vehicle ADD mode
-        PlayerStatusTexture:SetVertexColor(1, 1, 1, 1) -- Reset from vehicle tint
+        PlayerStatusTexture:SetBlendMode("ADD") -- Additive glow (matches combat/elite glow style)
+        PlayerStatusTexture:SetVertexColor(1.0, 0.82, 0.0, 0.6) -- Gold/yellow for resting state
 
         if dragonFrame and dragonFrame.PlayerFrameBorder then
             PlayerStatusTexture:SetPoint('TOPLEFT', PlayerPortrait, 'TOPLEFT', -9, 9)

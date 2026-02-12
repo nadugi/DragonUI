@@ -95,6 +95,16 @@ local defaults = {
                 anchor = "TOPLEFT",
                 posX = 187,
                 posY = -9
+            },
+            tot = {
+                anchor = "CENTER",
+                posX = 0,
+                posY = 0
+            },
+            fot = {
+                anchor = "CENTER",
+                posX = 0,
+                posY = -100
             }
         },
         -- Quest Tracker

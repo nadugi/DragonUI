@@ -328,8 +328,13 @@ local function ReskinWidget(widget)
         SkinDropdown(widget)
     elseif t == "Button" then
         SkinButton(widget)
-    elseif t == "Label" or t == "InteractiveLabel" then
+    elseif t == "Label" then
         SkinLabel(widget)
+    elseif t == "InteractiveLabel" then
+        -- Re-apply sub-tab font instead of SkinLabel (which sets size 11)
+        if widget._dragonSubTabFont and widget.label then
+            widget.label:SetFont(unpack(widget._dragonSubTabFont))
+        end
     elseif t == "Heading" then
         SkinHeading(widget)
     elseif t == "InlineGroup" then
@@ -669,9 +674,11 @@ function Controls:AddSubTabs(parent, tabs, activeKey, onSelect)
             btn:SetText("|cffaaaaaa" .. tab.label .. "|r")
         end
 
-        -- Font sizing
+        -- Font sizing — stored on widget for deferred re-skin pass
+        local fontFlags = isActive and "OUTLINE" or ""
+        btn._dragonSubTabFont = { self.Theme.font, 12, fontFlags }
         if btn.label then
-            btn.label:SetFont(self.Theme.font, 12, isActive and "OUTLINE" or "")
+            btn.label:SetFont(self.Theme.font, 12, fontFlags)
         end
 
         btn:SetCallback("OnClick", function()
@@ -689,6 +696,11 @@ function Controls:AddSubTabs(parent, tabs, activeKey, onSelect)
         end)
 
         row:AddChild(btn)
+
+        -- Re-apply font after AddChild (guards against AceGUI pool/layout resets)
+        if btn.label then
+            btn.label:SetFont(self.Theme.font, 12, fontFlags)
+        end
     end
 
     -- Separator line under the sub-tab bar

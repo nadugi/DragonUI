@@ -378,15 +378,21 @@ function UF.SmallFrame.Create(opts)
         -- Get configuration
         local config = GetConfig()
 
-        -- Position frame (anchored to parent)
+        -- Position frame: override (detached) or attached to parent
         frames.main:ClearAllPoints()
-        frames.main:SetPoint(
-            config.anchor or opts.defaultAnchor or "BOTTOMRIGHT",
-            frames.parent,
-            config.anchorParent or opts.defaultAnchorParent or "BOTTOMRIGHT",
-            config.x or opts.defaultX or 0,
-            config.y or opts.defaultY or 0
-        )
+        if config.override and Module.anchorFrame then
+            -- Detached mode: follow the free anchor frame
+            frames.main:SetPoint("CENTER", Module.anchorFrame, "CENTER", 0, 0)
+        else
+            -- Attached mode: anchored to parent frame (default)
+            frames.main:SetPoint(
+                config.anchor or opts.defaultAnchor or "BOTTOMRIGHT",
+                frames.parent,
+                config.anchorParent or opts.defaultAnchorParent or "BOTTOMRIGHT",
+                config.x or opts.defaultX or 0,
+                config.y or opts.defaultY or 0
+            )
+        end
         frames.main:SetScale(config.scale or 1.0)
 
         -- Hide Blizzard default textures
@@ -517,11 +523,9 @@ function UF.SmallFrame.Create(opts)
         -- ----------------------------------------------------------------
         if event == "ADDON_LOADED" then
             local name = ...
-            if name == "DragonUI" and not Module.initialized then
-                Module.anchorFrame = CreateFrame("Frame", opts.namePrefix .. "_Anchor", UIParent)
-                Module.anchorFrame:SetSize(120, 47)
-                Module.anchorFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 370, -80)
-                Module.initialized = true
+            if name == "DragonUI" then
+                -- Apply widget position from DB (addon.db is now available)
+                Module:ApplyWidgetPosition()
 
                 -- Set CVar on load (ToT only)
                 if opts.cvar then
@@ -635,6 +639,44 @@ function UF.SmallFrame.Create(opts)
 
 
     -- ========================================================================
+    -- WIDGET POSITION HELPERS (like pet.lua / party.lua pattern)
+    -- ========================================================================
+
+    function Module:ApplyWidgetPosition()
+        if not Module.anchorFrame then return end
+
+        local config = GetConfig()
+        if config and config.override then
+            -- Detached mode: use saved widget position from DB
+            if addon.db and addon.db.profile and addon.db.profile.widgets then
+                local widgetConfig = addon.db.profile.widgets[opts.configKey]
+                if widgetConfig and widgetConfig.posX and widgetConfig.posY then
+                    local anchor = widgetConfig.anchor or "CENTER"
+                    Module.anchorFrame:ClearAllPoints()
+                    Module.anchorFrame:SetPoint(anchor, UIParent, anchor, widgetConfig.posX, widgetConfig.posY)
+                    return
+                end
+            end
+        end
+        -- Attached mode or no saved data: temporary position (showTest will reposition in editor)
+        Module.anchorFrame:ClearAllPoints()
+        Module.anchorFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    end
+
+    function Module:UpdateWidgets()
+        Module:ApplyWidgetPosition()
+        -- Reposition the main frame relative to the updated anchor if overridden
+        if not InCombatLockdown() and frames.main then
+            local config = GetConfig()
+            if config and config.override and Module.anchorFrame then
+                frames.main:ClearAllPoints()
+                frames.main:SetPoint("CENTER", Module.anchorFrame, "CENTER", 0, 0)
+            end
+        end
+    end
+
+
+    -- ========================================================================
     -- PUBLIC API
     -- ========================================================================
 
@@ -671,6 +713,11 @@ function UF.SmallFrame.Create(opts)
     end
 
     local function ResetFrame()
+        -- Re-attach to parent frame (clear override)
+        local config = GetConfig()
+        if config then
+            config.override = false
+        end
         addon:SetConfigValue("unitframe", opts.configKey, "x", opts.defaultX or 0)
         addon:SetConfigValue("unitframe", opts.configKey, "y", opts.defaultY or 0)
         addon:SetConfigValue("unitframe", opts.configKey, "scale", 1.0)
@@ -687,6 +734,74 @@ function UF.SmallFrame.Create(opts)
             frames.main:SetScale(1.0)
         end
     end
+
+    -- ========================================================================
+    -- EDITOR MODE INITIALIZATION (at file load time, like pet.lua/party.lua)
+    -- ========================================================================
+
+    -- Create anchor frame immediately (addon.CreateUIFrame is available)
+    Module.anchorFrame = addon.CreateUIFrame(120, 47, opts.configKey)
+    if Module.anchorFrame.editorText then
+        Module.anchorFrame.editorText:SetText(opts.namePrefix)
+    end
+    -- Temporary position until ADDON_LOADED restores from DB
+    Module.anchorFrame:ClearAllPoints()
+    Module.anchorFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+
+    -- Track if the user actually dragged this frame in editor mode
+    Module.anchorFrame:HookScript("OnDragStop", function(self)
+        self.DragonUI_WasDragged = true
+    end)
+
+    -- Register with editor mode system immediately
+    addon:RegisterEditableFrame({
+        name = opts.configKey,  -- "tot" or "fot"
+        frame = Module.anchorFrame,
+        configPath = {"widgets", opts.configKey},
+        hasTarget = function()
+            -- Always show in editor mode (like pet frame)
+            return true
+        end,
+        showTest = function()
+            -- Position anchor overlay on top of the actual frame when attached
+            if Module.anchorFrame then
+                Module.anchorFrame:Show() -- Ensure anchor is visible
+                local config = GetConfig()
+                if not config or not config.override then
+                    -- Attached mode: green overlay appears on top of the actual frame
+                    Module.anchorFrame:ClearAllPoints()
+                    Module.anchorFrame:SetPoint("CENTER", frames.main, "CENTER", 0, 0)
+                end
+                -- Detached mode: anchor stays at its saved widget position
+            end
+            -- Show the Blizzard frame in editor mode even without a target
+            if frames.main and not InCombatLockdown() then
+                frames.main:Show()
+            end
+        end,
+        hideTest = function()
+            -- Restore normal visibility when leaving editor
+            if frames.main and not InCombatLockdown() then
+                if not ShouldShow() then
+                    frames.main:Hide()
+                end
+            end
+        end,
+        onHide = function()
+            -- Only detach if the user actually dragged the frame
+            if Module.anchorFrame.DragonUI_WasDragged then
+                local config = GetConfig()
+                if config then
+                    config.override = true
+                end
+                Module:UpdateWidgets()
+                Module.anchorFrame.DragonUI_WasDragged = nil
+            end
+        end,
+        module = Module
+    })
+
+    Module.initialized = true
 
     -- ========================================================================
     -- Return module API table

@@ -21,92 +21,99 @@ StaticPopupDialogs["DRAGONUI_RELOAD_UI"] = {
     preferredIndex = 3,
 }
 
+-- ============================================================================
+-- BUTTON STYLING (matches DragonUI Options panel theme)
+-- ============================================================================
+local BD_EDITOR_BUTTON = {
+    bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
+    edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
+    tile = false, edgeSize = 1,
+    insets = { left = 0, right = 0, top = 0, bottom = 0 },
+}
+
+local function styleEditorButton(button)
+    -- Strip all template textures (Left/Middle/Right sub-textures)
+    local name = button:GetName()
+    if name then
+        for _, suffix in ipairs({"Left", "Middle", "Right"}) do
+            local tex = _G[name .. suffix]
+            if tex and tex.SetTexture then
+                tex:SetTexture(nil)
+                tex:SetAlpha(0)
+                tex:Hide()
+            end
+        end
+    end
+
+    -- Strip Normal/Pushed/Highlight/Disabled textures
+    if button:GetNormalTexture() then button:GetNormalTexture():SetTexture(nil); button:GetNormalTexture():SetAlpha(0) end
+    if button:GetPushedTexture() then button:GetPushedTexture():SetTexture(nil); button:GetPushedTexture():SetAlpha(0) end
+    if button:GetHighlightTexture() then button:GetHighlightTexture():SetTexture(nil); button:GetHighlightTexture():SetAlpha(0) end
+    if button:GetDisabledTexture() then button:GetDisabledTexture():SetTexture(nil); button:GetDisabledTexture():SetAlpha(0) end
+
+    -- Apply dark backdrop with subtle blue-accent border
+    button:SetBackdrop(BD_EDITOR_BUTTON)
+    button:SetBackdropColor(0.16, 0.16, 0.18, 1)
+    button:SetBackdropBorderColor(0.09, 0.52, 0.82, 0.6) -- Blue accent border
+
+    -- Create highlight overlay with blue tint
+    if not button._dragonHighlight then
+        local hl = button:CreateTexture(nil, "HIGHLIGHT")
+        hl:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+        hl:SetVertexColor(0.09, 0.52, 0.82, 0.25)
+        hl:SetAllPoints()
+        button._dragonHighlight = hl
+    end
+
+    -- Style text: clean modern font
+    local fontString = button:GetFontString()
+    if fontString then
+        fontString:SetTextColor(0.9, 0.9, 0.9, 1)
+        local fontPath = "Interface\\AddOns\\DragonUI_Options\\fonts\\PTSansNarrow.ttf"
+        fontString:SetFont(fontPath, 12, "")
+    end
+end
+
 --  BOTÓN DE SALIDA DEL MODO EDITOR
 local function createExitButton()
     if exitEditorButton then return; end
 
-    -- Crear el botón con estilo profesional
     exitEditorButton = CreateFrame("Button", "DragonUIExitEditorButton", UIParent, "UIPanelButtonTemplate");
     exitEditorButton:SetText("Exit Edit Mode");
-    exitEditorButton:SetSize(140, 28); -- Mismo tamaño que Reset button
-    exitEditorButton:SetPoint("CENTER", UIParent, "CENTER", 0, 200); -- Posición flotante centrada
-    exitEditorButton:SetFrameStrata("DIALOG"); -- Asegura que esté por encima de otros elementos
+    exitEditorButton:SetSize(140, 28);
+    exitEditorButton:SetPoint("CENTER", UIParent, "CENTER", 0, 200);
+    exitEditorButton:SetFrameStrata("DIALOG");
     exitEditorButton:SetFrameLevel(100);
 
-    
-    -- Estilo profesional: Mismo color rojo que Reset button
-    local normalTexture = exitEditorButton:GetNormalTexture()
-    if normalTexture then
-        normalTexture:SetVertexColor(0.8, 0.3, 0.3, 1) -- Rojo profesional (igual que Reset)
-    end
-    
-    local highlightTexture = exitEditorButton:GetHighlightTexture()
-    if highlightTexture then
-        highlightTexture:SetVertexColor(1, 0.4, 0.4, 1) -- Rojo claro al pasar ratón (igual que Reset)
-    end
-    
-    local pushedTexture = exitEditorButton:GetPushedTexture()
-    if pushedTexture then
-        pushedTexture:SetVertexColor(0.6, 0.2, 0.2, 1) -- Rojo oscuro al presionar (igual que Reset)
-    end
-    
-    -- Texto en blanco para contraste
-    local fontString = exitEditorButton:GetFontString()
-    if fontString then
-        fontString:SetTextColor(1, 1, 1, 1) -- Texto blanco
-        fontString:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE") -- Fuente profesional
-    end
+    -- Apply modern grey + blue style
+    styleEditorButton(exitEditorButton)
 
-    -- Asignar la acción de salida
     exitEditorButton:SetScript("OnClick", function()
         EditorMode:Toggle();
     end);
 
-    exitEditorButton:Hide(); -- Oculto por defecto
+    exitEditorButton:Hide();
 end
 
---  BOTÓN DE RESET ALL POSITIONS - ESTILO PROFESIONAL
+--  BOTÓN DE RESET ALL POSITIONS
 local function createResetAllButton()
     if resetAllButton then return; end
 
-    -- Crear el botón con estilo profesional sincronizado
     resetAllButton = CreateFrame("Button", "DragonUIResetAllButton", UIParent, "UIPanelButtonTemplate");
     resetAllButton:SetText("Reset All Positions");
-    resetAllButton:SetSize(140, 28); -- Mismo tamaño que Exit button
-    resetAllButton:SetPoint("CENTER", UIParent, "CENTER", 0, 165); -- Separación uniforme
+    resetAllButton:SetSize(140, 28);
+    resetAllButton:SetPoint("CENTER", UIParent, "CENTER", 0, 165);
     resetAllButton:SetFrameStrata("DIALOG");
     resetAllButton:SetFrameLevel(100);
 
-    -- Estilo profesional: Rojo elegante para acción destructiva
-    local normalTexture = resetAllButton:GetNormalTexture()
-    if normalTexture then
-        normalTexture:SetVertexColor(0.8, 0.3, 0.3, 1) -- Rojo profesional (menos saturado)
-    end
-    
-    local highlightTexture = resetAllButton:GetHighlightTexture()
-    if highlightTexture then
-        highlightTexture:SetVertexColor(1, 0.4, 0.4, 1) -- Rojo claro al pasar ratón
-    end
-    
-    local pushedTexture = resetAllButton:GetPushedTexture()
-    if pushedTexture then
-        pushedTexture:SetVertexColor(0.6, 0.2, 0.2, 1) -- Rojo oscuro al presionar
-    end
-    
-    -- Texto en blanco para contraste perfecto
-    local fontString = resetAllButton:GetFontString()
-    if fontString then
-        fontString:SetTextColor(1, 1, 1, 1) -- Texto blanco
-        fontString:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE") -- Fuente profesional
-    end
+    -- Apply modern grey + blue style
+    styleEditorButton(resetAllButton)
 
-    -- ESTRATEGIA: Mostrar confirmación directamente sin salir del editor mode
     resetAllButton:SetScript("OnClick", function()
-        -- Mostrar solo el popup de confirmación específico para reset
         EditorMode:ShowResetConfirmation()
     end);
 
-    resetAllButton:Hide(); -- Oculto por defecto
+    resetAllButton:Hide();
 end
 
 --  TU GRID MEJORADO - AHORA CUADRADOS SIMÉTRICOS
@@ -350,6 +357,16 @@ function EditorMode:ResetAllPositions()
         addon.db.profile.widgets = addon:CopyTable(addon.defaults.profile.widgets)
     else
         return
+    end
+
+    -- Reset ToT/ToF override flags so they re-attach to parent frames
+    if addon.db.profile.unitframe then
+        if addon.db.profile.unitframe.tot then
+            addon.db.profile.unitframe.tot.override = false
+        end
+        if addon.db.profile.unitframe.fot then
+            addon.db.profile.unitframe.fot.override = false
+        end
     end
     
     -- NUEVO: Resetear también additional.totem para multicast

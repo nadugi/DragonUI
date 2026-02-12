@@ -396,7 +396,7 @@ local function BuildToTSection(scroll)
 
     local tot = C:AddSection(scroll, "Target of Target")
     C:AddDescription(tot,
-        "Styles the built-in ToT frame. Enable it in Interface > Combat if hidden.")
+        "Follows the Target frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely.")
 
     C:AddSlider(tot, {
         label = "Scale",
@@ -412,23 +412,30 @@ local function BuildToTSection(scroll)
         callback = refreshToT,
     })
 
-    C:AddSlider(tot, {
-        label = "X Offset",
-        dbPath = "unitframe.tot.x",
-        min = -200, max = 200, step = 1,
+    -- Attachment status indicator
+    local totOverride = C:GetDBValue("unitframe.tot.override")
+    if totOverride then
+        C:AddDescription(tot, "|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode")
+    else
+        C:AddDescription(tot, "|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Target frame")
+    end
+
+    -- Re-attach button (only useful when detached)
+    C:AddButton(tot, {
+        label = "Re-attach to Target",
         width = 200,
-        callback = refreshToT,
+        disabled = function() return not C:GetDBValue("unitframe.tot.override") end,
+        callback = function()
+            if addon.TargetOfTarget and addon.TargetOfTarget.Reset then
+                addon.TargetOfTarget.Reset()
+            end
+            Panel:SelectTab("unitframes")
+        end,
     })
 
-    C:AddSlider(tot, {
-        label = "Y Offset",
-        dbPath = "unitframe.tot.y",
-        min = -200, max = 200, step = 1,
-        width = 200,
-        callback = refreshToT,
-    })
-
+    -- ====================================================================
     -- Target of Focus
+    -- ====================================================================
     local refreshToF = function()
         if addon.TargetOfFocus and addon.TargetOfFocus.RefreshToFFrame then
             addon.TargetOfFocus.RefreshToFFrame()
@@ -436,6 +443,8 @@ local function BuildToTSection(scroll)
     end
 
     local fot = C:AddSection(scroll, "Target of Focus")
+    C:AddDescription(fot,
+        "Follows the Focus frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely.")
 
     C:AddSlider(fot, {
         label = "Scale",
@@ -451,20 +460,25 @@ local function BuildToTSection(scroll)
         callback = refreshToF,
     })
 
-    C:AddSlider(fot, {
-        label = "X Offset",
-        dbPath = "unitframe.fot.x",
-        min = -200, max = 200, step = 1,
-        width = 200,
-        callback = refreshToF,
-    })
+    -- Attachment status indicator
+    local fotOverride = C:GetDBValue("unitframe.fot.override")
+    if fotOverride then
+        C:AddDescription(fot, "|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode")
+    else
+        C:AddDescription(fot, "|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Focus frame")
+    end
 
-    C:AddSlider(fot, {
-        label = "Y Offset",
-        dbPath = "unitframe.fot.y",
-        min = -200, max = 200, step = 1,
+    -- Re-attach button (only useful when detached)
+    C:AddButton(fot, {
+        label = "Re-attach to Focus",
         width = 200,
-        callback = refreshToF,
+        disabled = function() return not C:GetDBValue("unitframe.fot.override") end,
+        callback = function()
+            if addon.TargetOfFocus and addon.TargetOfFocus.Reset then
+                addon.TargetOfFocus.Reset()
+            end
+            Panel:SelectTab("unitframes")
+        end,
     })
 end
 

@@ -464,6 +464,12 @@ local function ApplyMulticastSystem()
             frame = editorOverlay,
             configPath = {"additional", "totem"},
             
+            editorVisible = function()
+                -- Only show totem bar in editor mode for shamans
+                local _, class = UnitClass("player")
+                return class == "SHAMAN" and MultiCastActionBarFrame ~= nil
+            end,
+            
             showTest = function()
                 if anchor then
                     -- Calculate width based on config
