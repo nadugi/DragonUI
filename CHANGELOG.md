@@ -2,9 +2,28 @@
 
 > **⚠️ Experimental Branch** - All changes below still need further in-game testing and may contain bugs or incomplete features. If you run into any problems, feel free to let me know [here](https://github.com/NeticSoul/DragonUI/issues/141) - any feedback helps!
 
-## 📅 2026-02-13
+## 📅 2026-02-14
 
-[RovBot](https://github.com/RovxBot/DragonUI/commit/4e6ee66aa3ad6e304f5cc6aa9327a57723b40537)
+### Added
+- **Action Bar Layout & Visibility Options** - New options for all action bars including grid layout with columns slider, quick presets, and per-bar visibility controls (show on hover, show in combat)
+- Reworked horizontal bar system for better, more consistent behavior
+- Bar enable/disable settings sync with Blizzard's Interface Options - no reload needed
+
+### Fixed
+- Action bars now properly hide when entering vehicles
+- Minimap addon button skin now toggles on/off instantly without reload
+- Skinned addon buttons show hover highlight correctly
+- Vanilla minimap border no longer reappears after closing Interface Options
+- PvP capture bar (territory control) now positions correctly below the minimap on first appearance - no longer requires a reload
+- Vanilla combat flash no longer shows around the player portrait during combat
+- Cooldown sweep animation no longer flickers when targeting yourself
+- Class portrait on target/focus frames updates more efficiently
+
+### Changed
+- Health and mana bar textures clamped to prevent visual glitches during Battleground loading and phasing
+
+### Credits
+- Action bar grid/preset system based on work by [RovBot](https://github.com/RovxBot/DragonUI/commit/4e6ee66aa3ad6e304f5cc6aa9327a57723b40537)
 
 ## 📅 2026-02-12
 

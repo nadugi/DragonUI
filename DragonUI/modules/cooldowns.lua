@@ -57,6 +57,14 @@ function addon.cooldownMixin:create_string()
 end
 
 function addon.cooldownMixin:set_cooldown(start, duration)
+    -- Only process action button cooldowns, not buff/debuff cooldowns.
+    -- The metatable hook fires for ALL CooldownFrame:SetCooldown calls.
+    -- Buff frames lack .action, and processing them causes unnecessary
+    -- SetPoint/Show calls that interfere with the sweep animation.
+    if not self:GetParent() or not self:GetParent().action then
+        return
+    end
+
     local moduleDb = addon.db.profile.modules.cooldowns
     local db = addon.db.profile.buttons.cooldown
     if not db then
@@ -167,6 +175,23 @@ function addon.InitializeCooldowns()
 
     else
 
+    end
+
+    -- Hook CooldownFrame_SetTimer to prevent redundant calls that reset
+    -- the sweep animation.  When targeting self, TargetFrame_UpdateAuras
+    -- re-calls SetTimer with identical start/duration for every buff,
+    -- causing the sweep to visually "flash" back to 0.  Caching the
+    -- previous values and skipping identical calls eliminates this.
+    if _G.CooldownFrame_SetTimer then
+        local original = _G.CooldownFrame_SetTimer
+        _G.CooldownFrame_SetTimer = function(self, start, duration, enable, ...)
+            if self._dui_cdStart == start and self._dui_cdDur == duration then
+                return -- skip redundant call → no sweep reset
+            end
+            self._dui_cdStart = start
+            self._dui_cdDur   = duration
+            return original(self, start, duration, enable, ...)
+        end
     end
 end
 

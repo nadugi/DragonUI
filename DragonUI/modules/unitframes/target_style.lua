@@ -145,6 +145,14 @@ function UF.TargetStyle.Create(opts)
             local _, classFileName = UnitClass(unitToken)
             if classFileName and CLASS_ICON_TCOORDS
                and CLASS_ICON_TCOORDS[classFileName] then
+
+                -- Skip if already showing the correct class portrait
+                if updateCache.lastPortraitClass == classFileName
+                   and classPortraitIcon and classPortraitIcon:IsShown() then
+                    return
+                end
+                updateCache.lastPortraitClass = classFileName
+
                 local coords = CLASS_ICON_TCOORDS[classFileName]
 
                 -- Lazy-create background circle
@@ -178,6 +186,7 @@ function UF.TargetStyle.Create(opts)
             end
         else
             -- Disable: hide overlay, restore native portrait
+            updateCache.lastPortraitClass = nil
             if classPortraitBg  then classPortraitBg:Hide()  end
             if classPortraitIcon then classPortraitIcon:Hide() end
             if UnitExists(unitToken) then
@@ -194,6 +203,16 @@ function UF.TargetStyle.Create(opts)
 
     local function UpdateHealthBarColor()
         if not UnitExists(unitToken) or not HealthBar then return end
+
+        -- Per-frame throttle: skip redundant calls in the same render frame.
+        -- Multiple hooks (SetValue, OnValueChanged, SetStatusBarColor,
+        -- UnitFrameHealthBar_Update, TargetFrame_Update) can all fire for
+        -- the same event, especially when target==player.  Running once per
+        -- frame is enough to keep visuals correct while avoiding the
+        -- rendering pipeline churn that causes aura-icon flicker.
+        local now = GetTime()
+        if now == updateCache.lastColorFrame then return end
+        updateCache.lastColorFrame = now
 
         local config  = GetConfig()
         local texture = HealthBar:GetStatusBarTexture()
@@ -876,7 +895,9 @@ function UF.TargetStyle.Create(opts)
             end
 
         elseif event == opts.unitChangedEvent then
-            -- Unit changed (target/focus)
+            -- Unit changed (target/focus) — clear throttle caches so first update is immediate
+            updateCache.lastColorFrame = nil
+            updateCache.lastPortraitClass = nil
             if UnitExists(unitToken) and opts.forceLayoutOnUnitChange then
                 ForceReapplyLayout()
             end

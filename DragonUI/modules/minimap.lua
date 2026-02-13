@@ -427,48 +427,63 @@ local function ReplaceBlizzardFrame(frame)
     disabledTexture:SetAllPoints(zoomOutButton)
     SetAtlasTexture(disabledTexture, 'Minimap-ZoomOut-Pushed')
 
-    -- Define the function locally within ReplaceBlizzardFrame scope
-    local function SetupWorldStateCaptureBar()
-        local WorldStateCaptureBar1 = _G['WorldStateCaptureBar1']
-        if WorldStateCaptureBar1 then
-            WorldStateCaptureBar1:ClearAllPoints()
-            WorldStateCaptureBar1:SetPoint('CENTER', minimapFrame, 'BOTTOM', 0, -20)
-
-            -- Phase 2: hooksecurefunc instead of direct .SetPoint override to avoid taint
-            -- Use a post-hook that re-applies our positioning after any Blizzard SetPoint
-            if not WorldStateCaptureBar1._dragonUISetPointHooked then
-                hooksecurefunc(WorldStateCaptureBar1, "SetPoint", function(self, point, relativeTo, relativePoint)
-                    -- Only correct if NOT our own positioning (avoid recursion)
-                    if not (point == 'CENTER' and relativeTo == minimapFrame and relativePoint == 'BOTTOM') then
-                        if not self.DragonUI_SettingPoint then
-                            self.DragonUI_SettingPoint = true
-                            self:ClearAllPoints()
-                            self:SetPoint('CENTER', minimapFrame, 'BOTTOM', 0, -20)
-                            self.DragonUI_SettingPoint = nil
-                        end
+    -- Reposition a single WorldStateCaptureBar to below the minimap
+    local function RepositionCaptureBar(bar)
+        if not bar then return end
+        if not bar._dragonUISetPointHooked then
+            -- Post-hook SetPoint to re-apply our positioning after any Blizzard repositioning
+            hooksecurefunc(bar, "SetPoint", function(self, point, relativeTo, relativePoint)
+                if not (point == 'CENTER' and relativeTo == minimapFrame and relativePoint == 'BOTTOM') then
+                    if not self.DragonUI_SettingPoint then
+                        self.DragonUI_SettingPoint = true
+                        self:ClearAllPoints()
+                        self:SetPoint('CENTER', minimapFrame, 'BOTTOM', 0, -20)
+                        self.DragonUI_SettingPoint = nil
                     end
-                end)
-                WorldStateCaptureBar1._dragonUISetPointHooked = true
-            end
-            return true
+                end
+            end)
+            bar._dragonUISetPointHooked = true
         end
-        return false
+        -- Always force our position (safe even with the hook's recursion guard)
+        if not bar.DragonUI_SettingPoint then
+            bar.DragonUI_SettingPoint = true
+            bar:ClearAllPoints()
+            bar:SetPoint('CENTER', minimapFrame, 'BOTTOM', 0, -20)
+            bar.DragonUI_SettingPoint = nil
+        end
     end
 
-    -- Try to setup immediately
-    if not SetupWorldStateCaptureBar() then
-        -- If frame doesn't exist yet, wait for it to be created
-        local checkFrame = CreateFrame("Frame")
-        checkFrame:RegisterEvent("ADDON_LOADED")
-        checkFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-        checkFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-        checkFrame:SetScript("OnEvent", function(self, event)
-            if SetupWorldStateCaptureBar() then
-                -- Successfully set up, unregister events
-                self:UnregisterAllEvents()
+    -- Check and reposition all capture bars (there can be multiple in some BGs)
+    local function SetupWorldStateCaptureBar()
+        local found = false
+        for i = 1, 5 do
+            local bar = _G['WorldStateCaptureBar' .. i]
+            if bar then
+                RepositionCaptureBar(bar)
+                found = true
             end
-        end)
+        end
+        return found
     end
+
+    -- Try to setup immediately (frame rarely exists at load time)
+    SetupWorldStateCaptureBar()
+
+    -- Hook UIParent_ManageFramePositions — Blizzard calls this AFTER creating/repositioning
+    -- capture bars, so by the time our post-hook runs the frame is guaranteed to exist
+    if UIParent_ManageFramePositions then
+        hooksecurefunc("UIParent_ManageFramePositions", SetupWorldStateCaptureBar)
+    end
+
+    -- Also listen for key events as a safety net
+    local captureBarWatcher = CreateFrame("Frame")
+    captureBarWatcher:RegisterEvent("UPDATE_WORLD_STATES")
+    captureBarWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+    captureBarWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    captureBarWatcher:RegisterEvent("ZONE_CHANGED")
+    captureBarWatcher:SetScript("OnEvent", function()
+        SetupWorldStateCaptureBar()
+    end)
 
     --  Add right-click functionality to clear tracking
     minimapTrackingButton:SetScript("OnClick", function(self, button)
@@ -539,101 +554,232 @@ local function CreateMinimapBorderFrame(width, height)
     return minimapBorderFrame
 end
 
--- Funciones de fade para hover effect
+-- Helper: is addon button fade currently enabled?
+local function IsFadeEnabled()
+    return addon.db and addon.db.profile and addon.db.profile.minimap
+        and addon.db.profile.minimap.addon_button_fade or false
+end
+
+-- Funciones de fade para hover effect (check setting dynamically)
 local function fadein(self)
+    if not IsFadeEnabled() then return end
     securecall(UIFrameFadeIn, self, 0.2, self:GetAlpha(), 1.0)
 end
 
 local function fadeout(self)
+    if not IsFadeEnabled() then return end
     securecall(UIFrameFadeOut, self, 0.2, self:GetAlpha(), 0.2)
 end
 
--- Función para aplicar skin personalizado a iconos de addons (COPIA EXACTA del oldminimapcore.lua)
+-- Función para aplicar skin personalizado a iconos de addons
+-- Non-destructive: repositions originals, creates border overlay; all reversible.
 local function ApplyAddonIconSkin(button)
     if not button or button:GetObjectType() ~= 'Button' then
         return
     end
 
     local frameName = button:GetName()
-    --  USAR LA VERIFICACIÓN EXACTA DEL OLDMINIMAPCORE.LUA
     if IsFrameWhitelisted(frameName) then
         return
     end
 
-    -- Procesar texturas EXACTO como oldminimapcore.lua
-    for index = 1, button:GetNumRegions() do
-        local region = select(index, button:GetRegions())
-        if region:GetObjectType() == 'Texture' then
-            local name = region:GetTexture()
-            if name and (name:find('Border') or name:find('Background') or name:find('AlphaMask')) then
-                region:SetTexture(nil)
-            else
-                region:ClearAllPoints()
-                region:SetPoint('TOPLEFT', button, 'TOPLEFT', 2, -2)
-                region:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', -2, 2)
-                region:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-                region:SetDrawLayer('ARTWORK')
-                --  FORZAR TAMAÑO DEL ICONO PARA QUE COINCIDA CON EL TEXCOORD
-                region:SetSize(18, 18)
-                if frameName == 'PS_MinimapButton' then
-                    region.SetPoint = addon._noop
+    -- First-time setup: catalogue regions and create overlay (only once)
+    if not button.DragonUI_Skinned then
+        button.DragonUI_Skinned = true
+
+        -- Save original size
+        button.DragonUI_OrigW, button.DragonUI_OrigH = button:GetSize()
+
+        -- Classify original regions into "decoration" (border/bg), "highlight" (hover effect), and "icon"
+        button.DragonUI_DecoRegions = {}
+        button.DragonUI_HighlightRegions = {}
+        button.DragonUI_IconRegions = {}
+        for index = 1, button:GetNumRegions() do
+            local region = select(index, button:GetRegions())
+            if region:GetObjectType() == 'Texture' then
+                local tex = region:GetTexture()
+                local texStr = tex and tostring(tex) or ""
+                local layer = region:GetDrawLayer()
+                if layer == 'HIGHLIGHT' then
+                    -- Highlight textures: save original state for restore
+                    local numPoints = region:GetNumPoints()
+                    region.DragonUI_OrigPoints = {}
+                    for p = 1, numPoints do
+                        region.DragonUI_OrigPoints[p] = { region:GetPoint(p) }
+                    end
+                    region.DragonUI_OrigW, region.DragonUI_OrigH = region:GetWidth(), region:GetHeight()
+                    table.insert(button.DragonUI_HighlightRegions, region)
+                elseif texStr:find('Border') or texStr:find('Background') or texStr:find('AlphaMask') then
+                    region.DragonUI_OrigAlpha = region:GetAlpha()
+                    table.insert(button.DragonUI_DecoRegions, region)
+                else
+                    -- Save original anchoring/size for icon regions
+                    local numPoints = region:GetNumPoints()
+                    region.DragonUI_OrigPoints = {}
+                    for p = 1, numPoints do
+                        region.DragonUI_OrigPoints[p] = { region:GetPoint(p) }
+                    end
+                    region.DragonUI_OrigW, region.DragonUI_OrigH = region:GetWidth(), region:GetHeight()
+                    region.DragonUI_OrigLayer = region:GetDrawLayer()
+                    table.insert(button.DragonUI_IconRegions, region)
                 end
+            end
+        end
+
+        -- Create circle border overlay (once)
+        button.circle = button:CreateTexture(nil, 'OVERLAY')
+        button.circle:SetSize(23, 23)
+        button.circle:SetPoint('CENTER', button)
+        button.circle:SetTexture("Interface\\AddOns\\DragonUI\\assets\\border_buttons.tga")
+
+        -- Hook fade (once, permanent; functions check IsFadeEnabled() dynamically)
+        if not button.DragonUI_FadeHooked then
+            button.DragonUI_FadeHooked = true
+            button:HookScript('OnEnter', fadein)
+            button:HookScript('OnLeave', fadeout)
+        end
+    end
+
+    -- === ACTIVATE skinned state ===
+    button.DragonUI_SkinActive = true
+    button:SetSize(21, 21)
+
+    -- Hide decoration regions (borders, backgrounds)
+    for _, region in ipairs(button.DragonUI_DecoRegions) do
+        region:SetAlpha(0)
+    end
+
+    -- Reposition icon regions: crop and center
+    for _, region in ipairs(button.DragonUI_IconRegions) do
+        region:ClearAllPoints()
+        region:SetPoint('TOPLEFT', button, 'TOPLEFT', 2, -2)
+        region:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', -2, 2)
+        region:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+        region:SetDrawLayer('ARTWORK')
+    end
+
+    -- Reposition highlight regions to fit skinned button (auto-show on hover by WoW)
+    for _, region in ipairs(button.DragonUI_HighlightRegions) do
+        region:ClearAllPoints()
+        region:SetAllPoints(button)
+    end
+
+    -- Show DragonUI circle border
+    if button.circle then button.circle:Show() end
+
+    -- Set alpha based on fade setting
+    button:SetAlpha(IsFadeEnabled() and 0.2 or 1)
+end
+
+-- Restore original button appearance (non-destructive toggle)
+local function UnskinAddonButton(button)
+    if not button or not button.DragonUI_Skinned then return end
+
+    button.DragonUI_SkinActive = false
+
+    -- Restore original size
+    if button.DragonUI_OrigW then
+        button:SetSize(button.DragonUI_OrigW, button.DragonUI_OrigH)
+    end
+
+    -- Restore decoration regions
+    if button.DragonUI_DecoRegions then
+        for _, region in ipairs(button.DragonUI_DecoRegions) do
+            region:SetAlpha(region.DragonUI_OrigAlpha or 1)
+        end
+    end
+
+    -- Restore icon regions to original positioning
+    if button.DragonUI_IconRegions then
+        for _, region in ipairs(button.DragonUI_IconRegions) do
+            region:SetTexCoord(0, 1, 0, 1)
+            region:SetDrawLayer(region.DragonUI_OrigLayer or 'ARTWORK')
+            region:ClearAllPoints()
+            if region.DragonUI_OrigPoints then
+                for _, pt in ipairs(region.DragonUI_OrigPoints) do
+                    region:SetPoint(pt[1], pt[2], pt[3], pt[4], pt[5])
+                end
+            else
+                region:SetAllPoints(button)
+            end
+            if region.DragonUI_OrigW then
+                region:SetSize(region.DragonUI_OrigW, region.DragonUI_OrigH)
             end
         end
     end
 
-    -- Limpiar texturas del botón EXACTO como oldminimapcore.lua
-    button:SetPushedTexture(nil)
-    button:SetHighlightTexture(nil)
-    button:SetDisabledTexture(nil)
-    button:SetSize(21, 21)
-
-    -- Aplicar border EXACTO como oldminimapcore.lua
-    button.circle = button:CreateTexture(nil, 'OVERLAY')
-    button.circle:SetSize(23, 23)
-    button.circle:SetPoint('CENTER', button)
-    button.circle:SetTexture("Interface\\AddOns\\DragonUI\\assets\\border_buttons.tga")
-
-    --  VERIFICACIÓN SEGURA DE CONFIGURACIÓN
-    local fadeEnabled = false
-
-    -- Primero verificar DragonUI database (principal)
-    if addon.db and addon.db.profile and addon.db.profile.minimap then
-        fadeEnabled = addon.db.profile.minimap.addon_button_fade or false
+    -- Restore highlight regions to original positioning
+    if button.DragonUI_HighlightRegions then
+        for _, region in ipairs(button.DragonUI_HighlightRegions) do
+            region:ClearAllPoints()
+            if region.DragonUI_OrigPoints then
+                for _, pt in ipairs(region.DragonUI_OrigPoints) do
+                    region:SetPoint(pt[1], pt[2], pt[3], pt[4], pt[5])
+                end
+            else
+                region:SetAllPoints(button)
+            end
+            if region.DragonUI_OrigW then
+                region:SetSize(region.DragonUI_OrigW, region.DragonUI_OrigH)
+            end
+        end
     end
 
-    if fadeEnabled then
-        button:SetAlpha(0.2)
-        button:HookScript('OnEnter', fadein)
-        button:HookScript('OnLeave', fadeout)
-    else
-        button:SetAlpha(1)
-    end
+    -- Hide DragonUI circle border
+    if button.circle then button.circle:Hide() end
+
+    -- Full alpha
+    button:SetAlpha(1)
 end
 
 --  BORDER REMOVAL: Aplicar skin a iconos (SIMPLE como oldminimapcore.lua)
 
 -- Function to apply skins to all minimap buttons (exposed for re-application on addon load)
 local function ApplySkinsToAllMinimapButtons()
-    -- Verificar si el skinning está habilitado
     local skinEnabled = addon.db and addon.db.profile and addon.db.profile.minimap and
                             addon.db.profile.minimap.addon_button_skin
-
-    if not skinEnabled then
-        return
-    end
+    if not skinEnabled then return end
 
     for i = 1, Minimap:GetNumChildren() do
         local child = select(i, Minimap:GetChildren())
-        if child and child:GetObjectType() == "Button" and not child.DragonUI_Skinned then
-            ApplyAddonIconSkin(child)
-            child.DragonUI_Skinned = true  -- Mark as skinned to avoid reprocessing
+        if child and child:GetObjectType() == "Button" then
+            -- Apply to unskinned buttons OR re-activate previously unskinned ones
+            if not child.DragonUI_Skinned or not child.DragonUI_SkinActive then
+                ApplyAddonIconSkin(child)
+            end
+        end
+    end
+end
+
+-- Update fade alpha on all addon buttons (works with or without skin)
+local function UpdateAddonButtonFade()
+    local fadeEnabled = IsFadeEnabled()
+    for i = 1, Minimap:GetNumChildren() do
+        local child = select(i, Minimap:GetChildren())
+        if child and child:GetObjectType() == "Button" and not IsFrameWhitelisted(child:GetName()) then
+            -- Hook fade scripts once if not already hooked
+            if not child.DragonUI_FadeHooked then
+                child.DragonUI_FadeHooked = true
+                child:HookScript('OnEnter', fadein)
+                child:HookScript('OnLeave', fadeout)
+            end
+            child:SetAlpha(fadeEnabled and 0.2 or 1)
         end
     end
 end
 
 -- Expose for options to trigger
 MinimapModule.ApplySkinsToAllMinimapButtons = ApplySkinsToAllMinimapButtons
+
+-- Unskin all addon buttons (toggle back to original Blizzard appearance)
+local function UnskinAllMinimapButtons()
+    for i = 1, Minimap:GetNumChildren() do
+        local child = select(i, Minimap:GetChildren())
+        if child and child.DragonUI_Skinned then
+            UnskinAddonButton(child)
+        end
+    end
+end
 
 local function RemoveAllMinimapIconBorders()
 
@@ -735,6 +881,10 @@ local function RemoveBlizzardFrames()
         frame:SetAlpha(0)
     end
 
+    -- Hide vanilla north indicator and compass — DragonUI doesn't use them
+    if MinimapNorthTag then MinimapNorthTag:Hide() end
+    if MinimapCompassTexture then MinimapCompassTexture:Hide() end
+
     --  LLAMAR A LAS NUEVAS FUNCIONES
     RemoveAllMinimapIconBorders()
     StylePVPBattlefieldFrame()
@@ -743,17 +893,21 @@ end
 -- Stored on module table so the hooksecurefunc post-hook can reference it
 -- without calling the global (which would cause infinite recursion)
 MinimapModule.UpdateRotation = function()
-    local minimapBorder = MinimapBorder
+    -- Always hide the vanilla MinimapBorder — DragonUI uses Minimap.Circle instead.
+    -- Blizzard's Minimap_UpdateRotationSetting re-shows MinimapBorder when rotation
+    -- is toggled off (e.g. closing Interface Options); our post-hook must counteract that.
+    if MinimapBorder then
+        MinimapBorder:Hide()
+    end
+
     if GetCVar("rotateMinimap") == "1" then
         if MinimapModule.borderFrame then
             MinimapModule.borderFrame:Show()
         end
-        minimapBorder:Hide()
     else
         if MinimapModule.borderFrame then
             MinimapModule.borderFrame:Hide()
         end
-        minimapBorder:Show()
     end
 
     MinimapNorthTag:Hide()
@@ -1379,8 +1533,18 @@ function addon:RefreshMinimap()
         MinimapModule:UpdateSettings()
         -- Also update tracking icon when settings change
         MinimapModule:UpdateTrackingIcon()
-        --  NUEVO: Refrescar skinning de iconos de addons
-        RemoveAllMinimapIconBorders()
+
+        -- Refresh addon icon skinning
+        local skinEnabled = addon.db and addon.db.profile and addon.db.profile.minimap
+            and addon.db.profile.minimap.addon_button_skin
+        if skinEnabled then
+            RemoveAllMinimapIconBorders()
+        else
+            UnskinAllMinimapButtons()
+        end
+
+        -- Instant toggle for addon button fade
+        UpdateAddonButtonFade()
     end
 end
 

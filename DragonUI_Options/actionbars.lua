@@ -165,8 +165,9 @@ local actionbarsOptions = {
                     end,
                     set = function(_, value)
                         addon.db.profile.mainbars.left.horizontal = value
-                        if addon.PositionActionBars then
-                            addon.PositionActionBars()
+                        addon.db.profile.mainbars.left.columns = value and 12 or 1
+                        if addon.RefreshMainbarsSystem then
+                            addon.RefreshMainbarsSystem()
                         end
                     end,
                     order = 2
@@ -180,8 +181,9 @@ local actionbarsOptions = {
                     end,
                     set = function(_, value)
                         addon.db.profile.mainbars.right.horizontal = value
-                        if addon.PositionActionBars then
-                            addon.PositionActionBars()
+                        addon.db.profile.mainbars.right.columns = value and 12 or 1
+                        if addon.RefreshMainbarsSystem then
+                            addon.RefreshMainbarsSystem()
                         end
                     end,
                     order = 3

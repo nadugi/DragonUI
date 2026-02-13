@@ -2383,18 +2383,26 @@ local function InitializePlayerFrame()
 
     -- Suppress Blizzard's PlayerFrameFlash permanently — DragonUI uses its own combat flash
     -- (DragonUICombatGlow / VehicleCombatFlash / EliteCombatGlow depending on mode)
-    if PlayerFrameFlash and PlayerFrameFlash.HookScript then
-        PlayerFrameFlash:HookScript('OnShow', function(self)
-            if not self.DragonUI_ShowGuard then
-                self.DragonUI_ShowGuard = true
-                self:Hide()
-                self:SetAlpha(0)
-                if UIFrameFlashStop then
-                    UIFrameFlashStop(self)
-                end
-                self.DragonUI_ShowGuard = nil
+    -- Clear the texture entirely so UIFrameFlash's OnUpdate alpha animation has nothing to render
+    if PlayerFrameFlash then
+        PlayerFrameFlash:SetTexture('')
+        PlayerFrameFlash:Hide()
+        PlayerFrameFlash:SetAlpha(0)
+        if UIFrameFlashStop then
+            UIFrameFlashStop(PlayerFrameFlash)
+        end
+    end
+
+    if PlayerFrameFlash and not PlayerFrameFlash.__DragonUI_FlashHooked then
+        hooksecurefunc(PlayerFrameFlash, 'Show', function(self)
+            self:Hide()
+            self:SetAlpha(0)
+            self:SetTexture('')
+            if UIFrameFlashStop then
+                UIFrameFlashStop(self)
             end
         end)
+        PlayerFrameFlash.__DragonUI_FlashHooked = true
     end
 
     -- Suppress Blizzard's PlayerStatusTexture in vehicle and elite modes

@@ -90,8 +90,9 @@ local function BuildGeneralTab(scroll)
         label = "Left Bar Horizontal",
         desc = "Make the left secondary bar horizontal instead of vertical.",
         dbPath = "mainbars.left.horizontal",
-        callback = function()
-            if addon.PositionActionBars then addon.PositionActionBars() end
+        callback = function(value)
+            addon.db.profile.mainbars.left.columns = value and 12 or 1
+            RefreshBars()
         end,
     })
 
@@ -99,8 +100,9 @@ local function BuildGeneralTab(scroll)
         label = "Right Bar Horizontal",
         desc = "Make the right secondary bar horizontal instead of vertical.",
         dbPath = "mainbars.right.horizontal",
-        callback = function()
-            if addon.PositionActionBars then addon.PositionActionBars() end
+        callback = function(value)
+            addon.db.profile.mainbars.right.columns = value and 12 or 1
+            RefreshBars()
         end,
     })
 
@@ -509,6 +511,8 @@ end
 
 local function RefreshVisibility()
     if addon.RefreshActionBarVisibility then addon.RefreshActionBarVisibility() end
+    -- Keep Blizzard Interface Options in sync with our toggles
+    if addon.SyncBarCVarsFromProfile then addon.SyncBarCVarsFromProfile() end
 end
 
 local function BuildVisibilityTab(scroll)

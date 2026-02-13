@@ -68,12 +68,12 @@ local defaults = {
             },
             bottombarleft = {
                 anchor = "BOTTOM",
-                posX = -10,
+                posX = 0,
                 posY = 64
             },
             bottombarright = {
                 anchor = "BOTTOM",
-                posX = -10,
+                posX = 0,
                 posY = 105
             },
             micromenu = {

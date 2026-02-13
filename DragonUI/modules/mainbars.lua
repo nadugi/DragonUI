@@ -529,6 +529,44 @@ end
         'ACTIONBAR_PAGE_CHANGED'
     );
 
+    -- Helper: position buttons for a left/right bar using chain anchoring.
+    -- Position side bar (left/right) buttons in a grid layout using columns.
+    -- Uses TOPLEFT origin so button 1 is at top-left (natural reading order).
+    -- Columns controls layout: 1 = vertical, 12 = horizontal, anything between = grid.
+    local function PositionSideBarButtons(barPrefix, barFrame, containerFrame, count, columns)
+        if not barFrame then return end
+
+        count   = math.max(1, math.min(12, count or 12))
+        columns = math.max(1, math.min(12, columns or 1))
+
+        -- Position visible buttons in a TOPLEFT grid
+        for index = 1, NUM_ACTIONBAR_BUTTONS do
+            local button = _G[barPrefix .. index]
+            if button then
+                if index <= count then
+                    local gridIndex = index - 1
+                    local row = math.floor(gridIndex / columns)
+                    local col = gridIndex % columns
+                    local x =  col * (ACTION_BUTTON_SIZE + ACTION_BUTTON_SPACING)
+                    local y = -(row * (ACTION_BUTTON_SIZE + ACTION_BUTTON_SPACING))
+                    button:ClearAllPoints()
+                    button:SetPoint('TOPLEFT', barFrame, 'TOPLEFT', x, y)
+                    button:Show()
+                else
+                    button:ClearAllPoints()
+                    button:SetPoint("CENTER", UIParent, "BOTTOM", 0, -666)
+                    button:Hide()
+                end
+            end
+        end
+
+        -- Anchor bar frame to container
+        if containerFrame then
+            barFrame:ClearAllPoints()
+            barFrame:SetPoint("TOPLEFT", containerFrame, "TOPLEFT", 0, 0)
+        end
+    end
+
     function addon.PositionActionBars()
         if InCombatLockdown() then
             return
@@ -539,124 +577,109 @@ end
             return
         end
 
-        -- Configure MultiBarRight orientation (RetailUI pattern: position ALL buttons including first)
+        -- Right bar: grid layout using columns (horizontal = 12 cols, vertical = 1 col)
         if MultiBarRight then
             local containerFrame = addon.ActionBarFrames and addon.ActionBarFrames.rightbar
             local rightCfg = db.right or {}
-            local rightCount = rightCfg.buttons_shown or 12
-            local barSize = rightCount * ACTION_BUTTON_SIZE + (rightCount - 1) * ACTION_BUTTON_SPACING
-            
-            if rightCfg.horizontal then
-                -- Update editor frame size to horizontal
-                if containerFrame then
-                    containerFrame:SetSize(barSize, ACTION_BUTTON_SIZE)
-                end
-                
-                -- Horizontal mode: position Button1 anchored to LEFT of parent
-                local button1 = _G["MultiBarRightButton1"]
-                if button1 then
-                    button1:ClearAllPoints()
-                    button1:SetPoint("LEFT", MultiBarRight, "LEFT", 0, 0)
-                end
-                
-                -- Buttons 2-12 go from left to right
-                for i = 2, 12 do
-                    local button = _G["MultiBarRightButton" .. i]
-                    if button then
-                        button:ClearAllPoints()
-                        button:SetPoint("LEFT", _G["MultiBarRightButton" .. (i - 1)], "RIGHT", 7, 0)
-                    end
-                end
-                
-                -- Position the bar frame at LEFT of container (not centered)
-                MultiBarRight:ClearAllPoints()
-                MultiBarRight:SetPoint("LEFT", containerFrame, "LEFT", 0, 0)
-            else
-                -- Update editor frame size to vertical FIRST
-                if containerFrame then
-                    containerFrame:SetSize(ACTION_BUTTON_SIZE, barSize)
-                end
-                
-                -- Vertical mode: position Button1 anchored to TOP of parent
-                local button1 = _G["MultiBarRightButton1"]
-                if button1 then
-                    button1:ClearAllPoints()
-                    button1:SetPoint("TOP", MultiBarRight, "TOP", 0, 0)
-                end
-                
-                -- Buttons 2-12 go from top to bottom
-                for i = 2, 12 do
-                    local button = _G["MultiBarRightButton" .. i]
-                    if button then
-                        button:ClearAllPoints()
-                        button:SetPoint("TOP", _G["MultiBarRightButton" .. (i - 1)], "BOTTOM", 0, -7)
-                    end
-                end
-                
-                -- Position the bar frame at TOP of container
-                MultiBarRight:ClearAllPoints()
-                MultiBarRight:SetPoint("TOP", containerFrame, "TOP", 0, 0)
-            end
+            PositionSideBarButtons("MultiBarRightButton", MultiBarRight, containerFrame,
+                rightCfg.buttons_shown or 12, rightCfg.columns or 1)
         end
 
-        -- Configure MultiBarLeft orientation (RetailUI pattern: position ALL buttons including first)
+        -- Left bar: grid layout using columns
         if MultiBarLeft then
             local containerFrame = addon.ActionBarFrames and addon.ActionBarFrames.leftbar
             local leftCfg = db.left or {}
-            local leftCount = leftCfg.buttons_shown or 12
-            local leftBarSize = leftCount * ACTION_BUTTON_SIZE + (leftCount - 1) * ACTION_BUTTON_SPACING
-            
-            if leftCfg.horizontal then
-                -- Update editor frame size to horizontal FIRST
-                if containerFrame then
-                    containerFrame:SetSize(leftBarSize, ACTION_BUTTON_SIZE)
-                end
-                
-                -- Horizontal mode: position Button1 anchored to LEFT of parent
-                local button1 = _G["MultiBarLeftButton1"]
-                if button1 then
-                    button1:ClearAllPoints()
-                    button1:SetPoint("LEFT", MultiBarLeft, "LEFT", 0, 0)
-                end
-                
-                -- Buttons 2-12 go from left to right
-                for i = 2, 12 do
-                    local button = _G["MultiBarLeftButton" .. i]
-                    if button then
-                        button:ClearAllPoints()
-                        button:SetPoint("LEFT", _G["MultiBarLeftButton" .. (i - 1)], "RIGHT", 7, 0)
-                    end
-                end
-                
-                -- Position the bar frame at LEFT of container (not centered)
-                MultiBarLeft:ClearAllPoints()
-                MultiBarLeft:SetPoint("LEFT", containerFrame, "LEFT", 0, 0)
-            else
-                -- Update editor frame size to vertical FIRST
-                if containerFrame then
-                    containerFrame:SetSize(ACTION_BUTTON_SIZE, leftBarSize)
-                end
-                
-                -- Vertical mode: position Button1 anchored to TOP of parent
-                local button1 = _G["MultiBarLeftButton1"]
-                if button1 then
-                    button1:ClearAllPoints()
-                    button1:SetPoint("TOP", MultiBarLeft, "TOP", 0, 0)
-                end
-                
-                -- Buttons 2-12 go from top to bottom
-                for i = 2, 12 do
-                    local button = _G["MultiBarLeftButton" .. i]
-                    if button then
-                        button:ClearAllPoints()
-                        button:SetPoint("TOP", _G["MultiBarLeftButton" .. (i - 1)], "BOTTOM", 0, -7)
-                    end
-                end
-                
-                -- Position the bar frame at TOP of container
-                MultiBarLeft:ClearAllPoints()
-                MultiBarLeft:SetPoint("TOP", containerFrame, "TOP", 0, 0)
-            end
+            PositionSideBarButtons("MultiBarLeftButton", MultiBarLeft, containerFrame,
+                leftCfg.buttons_shown or 12, leftCfg.columns or 1)
+        end
+    end
+
+    -- Resize a container frame to a new size while keeping the bar anchored to it
+    -- in the SAME screen position.  Uses GetCenter() before/after to compensate.
+    local function ResizeContainerStable(container, newW, newH)
+        if not container then return end
+        local oldW, oldH = container:GetWidth(), container:GetHeight()
+        if oldW == newW and oldH == newH then return end -- nothing to do
+
+        -- Remember the visual center of the container in screen pixels
+        local cx, cy = container:GetCenter()
+        if not cx or not cy then
+            -- Frame not yet shown; just resize without compensation
+            container:SetSize(newW, newH)
+            return
+        end
+
+        -- Resize
+        container:SetSize(newW, newH)
+
+        -- After resize the anchor point is the same but the visual center
+        -- shifted because the frame grew/shrank around its anchor.  Read
+        -- the NEW center and calculate the delta.
+        local cx2, cy2 = container:GetCenter()
+        if not cx2 or not cy2 then return end
+
+        local dx = cx - cx2
+        local dy = cy - cy2
+        if math.abs(dx) < 0.5 and math.abs(dy) < 0.5 then return end
+
+        -- Shift the anchor to cancel the visual movement
+        local point, rel, relPoint, px, py = container:GetPoint(1)
+        if point then
+            container:SetPoint(point, rel, relPoint, (px or 0) + dx, (py or 0) + dy)
+        end
+    end
+
+    -- Compute container (overlay) size for a bar with the given columns/count.
+    -- No padding: buttons fill the container edge-to-edge.
+    local function BarContainerSize(cols, count)
+        cols  = math.max(1, cols or 1)
+        count = math.max(1, count or 12)
+        local effectiveCols = math.min(cols, count)
+        local rows = math.ceil(count / cols)
+        local w = effectiveCols * ACTION_BUTTON_SIZE + (effectiveCols - 1) * ACTION_BUTTON_SPACING
+        local h = rows * ACTION_BUTTON_SIZE + (rows - 1) * ACTION_BUTTON_SPACING
+        return w, h
+    end
+
+    -- Resize container (editor overlay) frames to match current bar dimensions.
+    -- Called when entering editor mode AND after layout changes so overlays stay in sync.
+    -- Uses ResizeContainerStable to avoid shifting bars on screen.
+    function addon.UpdateOverlaySizes()
+        local db = addon.db and addon.db.profile and addon.db.profile.mainbars
+        if not db then return end
+
+        -- Main bar container: match pUiMainBar (includes padding for NineSlice)
+        if addon.ActionBarFrames.mainbar and addon.pUiMainBar then
+            local w, h = addon.pUiMainBar:GetSize()
+            ResizeContainerStable(addon.ActionBarFrames.mainbar, w, h)
+        end
+
+        -- Right bar container (columns-based grid)
+        if addon.ActionBarFrames.rightbar then
+            local cfg = db.right or {}
+            local w, h = BarContainerSize(cfg.columns or 1, cfg.buttons_shown or 12)
+            ResizeContainerStable(addon.ActionBarFrames.rightbar, w, h)
+        end
+
+        -- Left bar container (columns-based grid)
+        if addon.ActionBarFrames.leftbar then
+            local cfg = db.left or {}
+            local w, h = BarContainerSize(cfg.columns or 1, cfg.buttons_shown or 12)
+            ResizeContainerStable(addon.ActionBarFrames.leftbar, w, h)
+        end
+
+        -- Bottom left container
+        if addon.ActionBarFrames.bottombarleft then
+            local cfg = db.bottom_left or {}
+            local w, h = BarContainerSize(cfg.columns or 12, cfg.buttons_shown or 12)
+            ResizeContainerStable(addon.ActionBarFrames.bottombarleft, w, h)
+        end
+
+        -- Bottom right container
+        if addon.ActionBarFrames.bottombarright then
+            local cfg = db.bottom_right or {}
+            local w, h = BarContainerSize(cfg.columns or 12, cfg.buttons_shown or 12)
+            ResizeContainerStable(addon.ActionBarFrames.bottombarright, w, h)
         end
     end
 
@@ -862,103 +885,69 @@ end
     end
 
     -- Create action bar container frames (RetailUI pattern)
+    -- Uses BarContainerSize() for consistent column-based sizing.
     local function CreateActionBarFrames()
         -- Main bar - create a NEW container frame instead of using pUiMainBar directly
         addon.ActionBarFrames.mainbar = addon.CreateUIFrame(pUiMainBar:GetWidth(), pUiMainBar:GetHeight(), "MainBar")
 
-        -- Get current orientation and button count settings
         local db = addon.db and addon.db.profile and addon.db.profile.mainbars
-        local rightHorizontal = db and db.right and db.right.horizontal
-        local leftHorizontal = db and db.left and db.left.horizontal
-
-        -- Calculate container sizes based on button counts
-        local BTN_SIZE = 36   -- action button size
-        local BTN_SPACE = 7   -- spacing between buttons
-        local function CalcBarSize(buttonCount)
-            local n = math.max(1, math.min(12, buttonCount or 12))
-            return n * BTN_SIZE + (n - 1) * BTN_SPACE
-        end
-
         local rightCfg = db and db.right or {}
-        local leftCfg = db and db.left or {}
-        local blCfg = db and db.bottom_left or {}
-        local brCfg = db and db.bottom_right or {}
-        local rightCount = rightCfg.buttons_shown or 12
-        local leftCount = leftCfg.buttons_shown or 12
-        local blCount = blCfg.buttons_shown or 12
-        local brCount = brCfg.buttons_shown or 12
+        local leftCfg  = db and db.left or {}
+        local blCfg    = db and db.bottom_left or {}
+        local brCfg    = db and db.bottom_right or {}
 
-        local rightSize = CalcBarSize(rightCount)
-        local leftSize = CalcBarSize(leftCount)
-        local blSize = CalcBarSize(blCount)
-        local brSize = CalcBarSize(brCount)
+        local rW, rH  = BarContainerSize(rightCfg.columns or 1,  rightCfg.buttons_shown or 12)
+        local lW, lH  = BarContainerSize(leftCfg.columns or 1,   leftCfg.buttons_shown or 12)
+        local blW, blH = BarContainerSize(blCfg.columns or 12,   blCfg.buttons_shown or 12)
+        local brW, brH = BarContainerSize(brCfg.columns or 12,   brCfg.buttons_shown or 12)
 
-        -- Create other action bar containers with correct initial orientation and size
-        addon.ActionBarFrames.rightbar = addon.CreateUIFrame(
-            rightHorizontal and rightSize or BTN_SIZE,
-            rightHorizontal and BTN_SIZE or rightSize,
-            "RightBar")
-        addon.ActionBarFrames.leftbar = addon.CreateUIFrame(
-            leftHorizontal and leftSize or BTN_SIZE,
-            leftHorizontal and BTN_SIZE or leftSize,
-            "LeftBar")
-        addon.ActionBarFrames.bottombarleft = addon.CreateUIFrame(blSize, BTN_SIZE, "BottomBarLeft")
-        addon.ActionBarFrames.bottombarright = addon.CreateUIFrame(brSize, BTN_SIZE, "BottomBarRight")
+        addon.ActionBarFrames.rightbar       = addon.CreateUIFrame(rW, rH, "RightBar")
+        addon.ActionBarFrames.leftbar        = addon.CreateUIFrame(lW, lH, "LeftBar")
+        addon.ActionBarFrames.bottombarleft  = addon.CreateUIFrame(blW, blH, "BottomBarLeft")
+        addon.ActionBarFrames.bottombarright = addon.CreateUIFrame(brW, brH, "BottomBarRight")
 
         -- RepExp bar container (RetailUI pattern)
         addon.ActionBarFrames.repexpbar = addon.CreateUIFrame(addon.ActionBarFrames.mainbar:GetWidth(), 10, "RepExpBar")
     end
 
     -- Position action bars to their container frames (initialization only - safe during addon load)
+    -- Side bars and bottom bars use BOTTOMLEFT so buttons positioned from BOTTOMLEFT
+    -- or TOPLEFT align exactly with the container edge.
     local function PositionActionBarsToContainers_Initial()
-        -- Get orientation settings
-        local db = addon.db and addon.db.profile and addon.db.profile.mainbars
-        local rightVertical = db and db.right and not db.right.horizontal
-        local leftVertical = db and db.left and not db.left.horizontal
-        
-        -- Position main bar - anchor pUiMainBar to its container
+        -- Position main bar - anchor pUiMainBar to its container (CENTER - has padding/NineSlice)
         if pUiMainBar and addon.ActionBarFrames.mainbar then
             pUiMainBar:SetParent(UIParent)
             pUiMainBar:ClearAllPoints()
             pUiMainBar:SetPoint("CENTER", addon.ActionBarFrames.mainbar, "CENTER")
         end
 
-        -- Position right bar - use TOP for vertical, LEFT for horizontal
+        -- Position right bar - TOPLEFT matches PositionSideBarButtons grid origin
         if MultiBarRight and addon.ActionBarFrames.rightbar then
             MultiBarRight:SetParent(UIParent)
             MultiBarRight:ClearAllPoints()
-            if rightVertical then
-                MultiBarRight:SetPoint("TOP", addon.ActionBarFrames.rightbar, "TOP", 0, 0)
-            else
-                -- Horizontal: anchor to LEFT so buttons align with overlay
-                MultiBarRight:SetPoint("LEFT", addon.ActionBarFrames.rightbar, "LEFT", 0, 0)
-            end
+            MultiBarRight:SetPoint("TOPLEFT", addon.ActionBarFrames.rightbar, "TOPLEFT", 0, 0)
         end
 
-        -- Position left bar - use TOP for vertical, LEFT for horizontal
+        -- Position left bar - TOPLEFT matches PositionSideBarButtons grid origin
         if MultiBarLeft and addon.ActionBarFrames.leftbar then
             MultiBarLeft:SetParent(UIParent)
             MultiBarLeft:ClearAllPoints()
-            if leftVertical then
-                MultiBarLeft:SetPoint("TOP", addon.ActionBarFrames.leftbar, "TOP", 0, 0)
-            else
-                -- Horizontal: anchor to LEFT so buttons align with overlay
-                MultiBarLeft:SetPoint("LEFT", addon.ActionBarFrames.leftbar, "LEFT", 0, 0)
-            end
+            MultiBarLeft:SetPoint("TOPLEFT", addon.ActionBarFrames.leftbar, "TOPLEFT", 0, 0)
         end
 
-        -- Position bottom left bar
+        -- Position bottom left bar - CENTER so the bar is visually centered
+        -- inside its container regardless of bar scale (0.9 default).
         if MultiBarBottomLeft and addon.ActionBarFrames.bottombarleft then
             MultiBarBottomLeft:SetParent(UIParent)
             MultiBarBottomLeft:ClearAllPoints()
-            MultiBarBottomLeft:SetPoint("CENTER", addon.ActionBarFrames.bottombarleft, "CENTER")
+            MultiBarBottomLeft:SetPoint("CENTER", addon.ActionBarFrames.bottombarleft, "CENTER", 0, 0)
         end
 
-        -- Position bottom right bar
+        -- Position bottom right bar - CENTER for same reason
         if MultiBarBottomRight and addon.ActionBarFrames.bottombarright then
             MultiBarBottomRight:SetParent(UIParent)
             MultiBarBottomRight:ClearAllPoints()
-            MultiBarBottomRight:SetPoint("CENTER", addon.ActionBarFrames.bottombarright, "CENTER")
+            MultiBarBottomRight:SetPoint("CENTER", addon.ActionBarFrames.bottombarright, "CENTER", 0, 0)
         end
     end
 
@@ -1454,6 +1443,9 @@ end
                 addon.RefreshActionBarVisibility()
             end
 
+            -- Sync Blizzard CVars with DragonUI bar enable/disable settings
+            addon.SyncBarCVarsFromProfile()
+
             self:UnregisterEvent("PLAYER_ENTERING_WORLD")
 
         elseif event == "PLAYER_LOGIN" then
@@ -1513,6 +1505,92 @@ end
     MainbarsModule.initialized = true
     MainbarsModule.applied = true
 
+end
+
+-- ============================================================================
+-- BLIZZARD BAR TOGGLE SYNC (bar enable/disable ↔ Interface Options)
+-- ============================================================================
+-- In WoW 3.3.5a, bar visibility is controlled via global variables
+-- SHOW_MULTI_ACTIONBAR_1..4 and persisted by SetActionBarToggles().
+-- We sync DragonUI's actionbars.*_enabled settings bidirectionally.
+
+local syncingBars = false
+
+-- Push DragonUI profile → Blizzard (persistent via SetActionBarToggles)
+function addon.SyncBarCVarsFromProfile()
+    if syncingBars then return end
+    syncingBars = true
+    local config = addon.db and addon.db.profile and addon.db.profile.actionbars
+    if config then
+        local bl = (config.bottom_left_enabled  ~= false) and 1 or 0
+        local br = (config.bottom_right_enabled ~= false) and 1 or 0
+        local r  = (config.right_enabled        ~= false) and 1 or 0
+        local l  = (config.left_enabled         ~= false) and 1 or 0
+
+        -- SetActionBarToggles persists into Blizzard saved variables AND
+        -- sets the SHOW_MULTI_ACTIONBAR_* globals AND calls MultiActionBar_Update.
+        if SetActionBarToggles then
+            SetActionBarToggles(bl, br, r, l)
+        end
+
+        -- Force-show enabled bars so they're visible immediately.
+        -- Blizzard's MultiActionBar_Update may have :Hide()'d them;
+        -- we need them :Show()'n for our alpha-based visibility to work.
+        if not InCombatLockdown() then
+            local barMap = {
+                { frame = MultiBarBottomLeft,  enabled = bl == 1 },
+                { frame = MultiBarBottomRight, enabled = br == 1 },
+                { frame = MultiBarRight,       enabled = r  == 1 },
+                { frame = MultiBarLeft,        enabled = l  == 1 },
+            }
+            for _, bar in ipairs(barMap) do
+                if bar.frame then
+                    bar.frame:Show()  -- always Show; alpha controls visibility
+                    bar.frame:SetAlpha(bar.enabled and 1 or 0)
+                end
+            end
+        end
+
+        -- Re-apply DragonUI positioning (Blizzard may have moved things)
+        if not InCombatLockdown() and addon.ActionBarFrames then
+            if addon.PositionActionBarsToContainers then
+                addon.PositionActionBarsToContainers()
+            end
+            addon.ApplyAllBarButtonCounts()
+        end
+    end
+    syncingBars = false
+
+    -- Final visibility pass OUTSIDE the guard so our alpha system is authoritative
+    if addon.RefreshActionBarVisibility then
+        addon.RefreshActionBarVisibility()
+    end
+end
+
+-- Pull Blizzard globals → DragonUI profile (called from MultiActionBar_Update hook)
+local function SyncBarGlobalsToProfile()
+    if syncingBars then return end
+    local config = addon.db and addon.db.profile and addon.db.profile.actionbars
+    if not config then return end
+    config.bottom_left_enabled  = (SHOW_MULTI_ACTIONBAR_1 == 1 or SHOW_MULTI_ACTIONBAR_1 == "1")
+    config.bottom_right_enabled = (SHOW_MULTI_ACTIONBAR_2 == 1 or SHOW_MULTI_ACTIONBAR_2 == "1")
+    config.right_enabled        = (SHOW_MULTI_ACTIONBAR_3 == 1 or SHOW_MULTI_ACTIONBAR_3 == "1")
+    config.left_enabled         = (SHOW_MULTI_ACTIONBAR_4 == 1 or SHOW_MULTI_ACTIONBAR_4 == "1")
+    -- Re-apply DragonUI positioning after Blizzard repositioned
+    if not InCombatLockdown() and addon.ActionBarFrames then
+        if addon.PositionActionBarsToContainers then
+            addon.PositionActionBarsToContainers()
+        end
+        addon.ApplyAllBarButtonCounts()
+        if addon.RefreshActionBarVisibility then
+            addon.RefreshActionBarVisibility()
+        end
+    end
+end
+
+-- Hook Blizzard's MultiActionBar_Update to capture changes from Interface Options
+if MultiActionBar_Update then
+    hooksecurefunc("MultiActionBar_Update", SyncBarGlobalsToProfile)
 end
 
 -- ============================================================================
@@ -1596,7 +1674,10 @@ function addon.UpdateActionBarVisibility(barName, frame)
     if barName ~= "main" then
         local enabledKey = barName .. "_enabled"
         if config[enabledKey] == false then
-            frame:SetAlpha(0)
+            if not InCombatLockdown() then
+                frame:Show()       -- keep frame alive for state tracking
+            end
+            frame:SetAlpha(0)  -- visually hidden
             return
         end
     end
@@ -1610,7 +1691,25 @@ function addon.UpdateActionBarVisibility(barName, frame)
             for i = 1, 12 do
                 local btn = _G["ActionButton" .. i]; if btn then btn:SetAlpha(1) end
             end
+            -- Restore art/gryphon alpha (may have been set to 0 by previous visibility mode)
+            local buttonsCfg = addon.db.profile.buttons
+            local baseArtAlpha = (buttonsCfg and buttonsCfg.hide_main_bar_background) and 0 or 1
+            if addon.pUiMainBarArt  then addon.pUiMainBarArt:SetAlpha(baseArtAlpha) end
+            if MainMenuBarArtFrame  then MainMenuBarArtFrame:SetAlpha(baseArtAlpha) end
+            if MainMenuBarLeftEndCap  then MainMenuBarLeftEndCap:SetAlpha(1) end
+            if MainMenuBarRightEndCap then MainMenuBarRightEndCap:SetAlpha(1) end
+            if ActionBarUpButton   then ActionBarUpButton:SetAlpha(baseArtAlpha) end
+            if ActionBarDownButton then ActionBarDownButton:SetAlpha(baseArtAlpha) end
+            if MainMenuBarPageNumber then MainMenuBarPageNumber:SetAlpha(baseArtAlpha) end
+            if addon.pUiMainBar then
+                if addon.pUiMainBar.BorderArt then addon.pUiMainBar.BorderArt:SetAlpha(baseArtAlpha) end
+                if addon.pUiMainBar.Background then addon.pUiMainBar.Background:SetAlpha(baseArtAlpha) end
+            end
+            SetMainBarArtAlphaDeep(baseArtAlpha)
         else
+            if not InCombatLockdown() then
+                frame:Show()  -- counteract any Blizzard :Hide()
+            end
             frame:SetAlpha(1)
         end
         return
@@ -1953,104 +2052,44 @@ function addon.ApplyAllBarButtonCounts()
     -- Reposition gryphons to hug the resized main bar
     addon.UpdateGryphonStyle()
 
-    -- Resize editor overlay frame for main bar (use effectiveCols)
-    if addon.ActionBarFrames and addon.ActionBarFrames.mainbar then
-        local mainEffCols = math.min(mainColumns, mainCount)
-        local w, h = CalculateFrameSize(mainRows, mainEffCols, nil, nil)
-        addon.ActionBarFrames.mainbar:SetSize(w, h)
-    end
+    -- NOTE: Container frames (editor overlays) are NOT resized here.
+    -- Resizing containers shifts bars depending on their anchor point.
+    -- Only pUiMainBar (with NineSlice/gryphons) resizes via ArrangeActionBarButtons above.
+    -- Containers keep their initial size set by CreateActionBarFrames / PositionActionBars.
 
-    -- Bottom Left bar — use grid layout, respect Blizzard visibility
+    -- Bottom Left bar — use grid layout (no padding)
+    -- Pass bar as parentFrame so it gets resized to match buttons.
+    -- This ensures CENTER anchoring keeps buttons visually centered.
     local blCfg = db.bottom_left or {}
     local blCols = blCfg.columns or 12
     local blCount = blCfg.buttons_shown or 12
     local blRows = math.ceil(blCount / blCols)
     if not MultiBarBottomLeft or MultiBarBottomLeft:IsShown() then
         addon.ArrangeActionBarButtons("MultiBarBottomLeftButton",
-            nil, MultiBarBottomLeft,
+            MultiBarBottomLeft, MultiBarBottomLeft,
             blRows, blCols, blCount,
-            nil, nil)
-        -- Resize editor overlay
-        if addon.ActionBarFrames and addon.ActionBarFrames.bottombarleft then
-            local blEffCols = math.min(blCols, blCount)
-            local w, h = CalculateFrameSize(blRows, blEffCols)
-            addon.ActionBarFrames.bottombarleft:SetSize(w, h)
-        end
+            0, 0)
     end
 
-    -- Bottom Right bar — use grid layout, respect Blizzard visibility
+    -- Bottom Right bar — use grid layout (no padding)
     local brCfg = db.bottom_right or {}
     local brCols = brCfg.columns or 12
     local brCount = brCfg.buttons_shown or 12
     local brRows = math.ceil(brCount / brCols)
     if not MultiBarBottomRight or MultiBarBottomRight:IsShown() then
         addon.ArrangeActionBarButtons("MultiBarBottomRightButton",
-            nil, MultiBarBottomRight,
+            MultiBarBottomRight, MultiBarBottomRight,
             brRows, brCols, brCount,
-            nil, nil)
-        -- Resize editor overlay
-        if addon.ActionBarFrames and addon.ActionBarFrames.bottombarright then
-            local brEffCols = math.min(brCols, brCount)
-            local w, h = CalculateFrameSize(brRows, brEffCols)
-            addon.ActionBarFrames.bottombarright:SetSize(w, h)
-        end
+            0, 0)
     end
 
-    -- Right bar — use grid layout with rows/columns, respect Blizzard visibility
-    local rightCfg = db.right or {}
-    local rightCols = rightCfg.columns or (rightCfg.horizontal and 12 or 1)
-    local rightCount = rightCfg.buttons_shown or 12
-    local rightRows = math.ceil(rightCount / rightCols)
-    if not MultiBarRight or MultiBarRight:IsShown() then
-        addon.ArrangeActionBarButtons("MultiBarRightButton",
-            nil, MultiBarRight,
-            rightRows, rightCols, rightCount,
-            nil, nil)
-        if addon.ActionBarFrames and addon.ActionBarFrames.rightbar then
-            local rightEffCols = math.min(rightCols, rightCount)
-            local oldH = addon.ActionBarFrames.rightbar:GetHeight()
-            local w, h = CalculateFrameSize(rightRows, rightEffCols)
-            addon.ActionBarFrames.rightbar:SetSize(w, h)
-            -- Compensate position to keep top edge fixed (prevents downward drift)
-            if oldH ~= h then
-                local point, rel, relPoint, px, py = addon.ActionBarFrames.rightbar:GetPoint(1)
-                if point and py then
-                    local halfDiff = (oldH - h) / 2
-                    -- Only adjust for center-based anchors (RIGHT, LEFT, CENTER)
-                    if point == "RIGHT" or point == "LEFT" or point == "CENTER" then
-                        addon.ActionBarFrames.rightbar:SetPoint(point, rel, relPoint, px, py + halfDiff)
-                    end
-                end
-            end
-        end
-    end
+    -- Left/Right bars: uses TOPLEFT grid layout via PositionSideBarButtons
+    -- which respects columns setting (1=vertical, 12=horizontal, etc.)
+    addon.PositionActionBars()
 
-    -- Left bar (Blizzard: MultiBarLeft) — use grid layout, respect visibility
-    local leftCfg = db.left or {}
-    local leftCols = leftCfg.columns or (leftCfg.horizontal and 12 or 1)
-    local leftCount = leftCfg.buttons_shown or 12
-    local leftRows = math.ceil(leftCount / leftCols)
-    if not MultiBarLeft or MultiBarLeft:IsShown() then
-        addon.ArrangeActionBarButtons("MultiBarLeftButton",
-            nil, MultiBarLeft,
-            leftRows, leftCols, leftCount,
-            nil, nil)
-        if addon.ActionBarFrames and addon.ActionBarFrames.leftbar then
-            local leftEffCols = math.min(leftCols, leftCount)
-            local oldH = addon.ActionBarFrames.leftbar:GetHeight()
-            local w, h = CalculateFrameSize(leftRows, leftEffCols)
-            addon.ActionBarFrames.leftbar:SetSize(w, h)
-            -- Compensate position to keep top edge fixed (prevents downward drift)
-            if oldH ~= h then
-                local point, rel, relPoint, px, py = addon.ActionBarFrames.leftbar:GetPoint(1)
-                if point and py then
-                    local halfDiff = (oldH - h) / 2
-                    if point == "RIGHT" or point == "LEFT" or point == "CENTER" then
-                        addon.ActionBarFrames.leftbar:SetPoint(point, rel, relPoint, px, py + halfDiff)
-                    end
-                end
-            end
-        end
+    -- Keep overlay sizes in sync with current layout
+    if addon.UpdateOverlaySizes then
+        addon.UpdateOverlaySizes()
     end
 end
 
@@ -2104,9 +2143,6 @@ function addon.RefreshMainbarsSystem()
         addon.MainMenuBarMixin:update_main_bar_background()
     end
 
-    -- Update positioning (safe check inside)
-    addon.PositionActionBars()
-
     -- Update widget positions if available
     if addon.ActionBarFrames and addon.ApplyActionBarPositions then
         addon.ApplyActionBarPositions()
@@ -2116,6 +2152,7 @@ function addon.RefreshMainbarsSystem()
     end
 
     -- Apply bar button counts (show/hide buttons)
+    -- This also calls PositionActionBars() at the end for left/right bar orientation
     addon.ApplyAllBarButtonCounts()
 end
 

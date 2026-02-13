@@ -76,10 +76,7 @@ local minimapOptions = {
         addon_button_fade = {
             type = 'toggle',
             name = "Addon Button Fade",
-            desc = "Addon icons fade out when not hovered (requires Addon Button Skin)",
-            disabled = function()
-                return not addon.db.profile.minimap.addon_button_skin
-            end,
+            desc = "Addon icons fade out when not hovered",
             get = function()
                 return addon.db.profile.minimap.addon_button_fade
             end,

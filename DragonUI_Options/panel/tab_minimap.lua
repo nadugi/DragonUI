@@ -48,6 +48,8 @@ local function BuildMinimapTab(scroll)
         end,
     })
 
+    local fadeToggle  -- forward reference for disabled-state refresh
+
     C:AddToggle(basic, {
         label = "Addon Button Skin",
         desc = "Apply DragonUI border styling to addon icons.",
@@ -57,13 +59,10 @@ local function BuildMinimapTab(scroll)
         end,
     })
 
-    C:AddToggle(basic, {
+    fadeToggle = C:AddToggle(basic, {
         label = "Addon Button Fade",
-        desc = "Addon icons fade out when not hovered (requires Addon Button Skin).",
+        desc = "Addon icons fade out when not hovered.",
         dbPath = "minimap.addon_button_fade",
-        disabled = function()
-            return not C:GetDBValue("minimap.addon_button_skin")
-        end,
         callback = function()
             if addon.RefreshMinimap then addon:RefreshMinimap() end
         end,
