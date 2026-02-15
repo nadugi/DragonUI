@@ -10,7 +10,6 @@ local NUM_SHAPESHIFT_SLOTS = NUM_SHAPESHIFT_SLOTS;
 local NUM_POSSESS_SLOTS = NUM_POSSESS_SLOTS;
 local VEHICLE_MAX_ACTIONBUTTONS = VEHICLE_MAX_ACTIONBUTTONS;
 local hooksecurefunc = hooksecurefunc;
-local GetName = GetName;
 local _G = getfenv(0);
 
 -- ============================================================================
@@ -46,12 +45,11 @@ end
 -- ============================================================================
 
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.buttons
+    return addon:GetModuleConfig("buttons")
 end
 
 local function IsModuleEnabled()
-    local cfg = GetModuleConfig()
-    return cfg and cfg.enabled
+    return addon:IsModuleEnabled("buttons")
 end
 
 local function GetButtonsConfig()
@@ -155,7 +153,7 @@ local function setup_background(button, anchor, shadow)
 end
 
 -- ============================================================================
--- KEY FORMATTING SYSTEM (Control total desde DragonUI)
+-- KEY FORMATTING SYSTEM (Full control from DragonUI)
 -- ============================================================================
 
 local GetKeyText
@@ -165,9 +163,9 @@ do
     local displaySubs = {
         { '('..keyButton..')', 'M' },
         { '('..keyNumpad..')', 'N' },
-        { '(a%-)', 'a' },           -- alt- -> a (minúscula)
-        { '(c%-)', 'c' },           -- ctrl- -> c (minúscula)
-        { '(s%-)', 's' },           -- shift- -> s (minúscula)
+        { '(a%-)', 'a' },           -- alt- -> a (lowercase)
+        { '(c%-)', 'c' },           -- ctrl- -> c (lowercase)
+        { '(s%-)', 's' },           -- shift- -> s (lowercase)
         { KEY_BUTTON3 or "Middle Mouse", 'M3' },
         { KEY_MOUSEWHEELUP or "Mouse Wheel Up", 'MU' },
         { KEY_MOUSEWHEELDOWN or "Mouse Wheel Down", 'MD' },
@@ -176,7 +174,7 @@ do
         { KEY_NUMLOCK or "Num Lock", 'NL' },
         { 'BUTTON', 'M' },
         { 'NUMPAD', 'N' },
-        { '(ALT%-)', 'a' },         -- ALT- -> a (versión mayúscula)
+        { '(ALT%-)', 'a' },         -- ALT- -> a (uppercase version)
         { '(CTRL%-)', 'c' },        -- CTRL- -> c 
         { '(SHIFT%-)', 's' },       -- SHIFT- -> s
         { 'MOUSEWHEELUP', 'MU' },
@@ -195,7 +193,7 @@ do
     end
 end
 
--- Asignar a addon para acceso global
+-- Assign to addon for global access
 addon.GetKeyText = GetKeyText
 
 -- ============================================================================
@@ -227,7 +225,7 @@ local function actionbuttons_hotkey(button)
 	else
 		hotkey:SetAlpha(db.hotkey.show and 1 or 0)
 		
-		-- CONTROL TOTAL: Usar nuestro sistema de formato personalizado
+		-- FULL CONTROL: Use our custom formatting system
 		local formattedText = GetKeyText(text)
 		hotkey:SetText(formattedText)
 		
@@ -606,7 +604,7 @@ function addon.vehiclebuttons_template()
 			local button = _G['VehicleMenuBarActionButton'..index]
 			if button then
 				main_buttons(button)
-				-- Aplicar formato de hotkeys también a vehicle buttons
+				-- Apply hotkey format to vehicle buttons too
 				actionbuttons_hotkey(button)
 			end
 		end
@@ -639,7 +637,7 @@ function addon.petbuttons_template()
 		local button = _G['PetActionButton'..index]
 		if button then
 			additional_buttons(button)
-			-- Aplicar formato de hotkeys también a pet buttons
+			-- Apply hotkey format to pet buttons too
 			actionbuttons_hotkey(button)
 		end
 	end
@@ -653,7 +651,7 @@ function addon.stancebuttons_template()
 		local button = _G['ShapeshiftButton'..index]
 		if button then
 			additional_buttons(button)
-			-- Aplicar formato de hotkeys también a stance buttons
+			-- Apply hotkey format to stance buttons too
 			actionbuttons_hotkey(button)
 		end
 	end
@@ -783,7 +781,7 @@ initFrame:SetScript("OnEvent", function(self, event, addonName)
             addon.RefreshButtons()
         end
     elseif event == "UPDATE_BINDINGS" then
-        -- PATRÓN ORIGINAL: Actualizar hotkeys cuando cambien los bindings
+        -- ORIGINAL PATTERN: Update hotkeys when bindings change
         if IsModuleEnabled() then
             -- Main action buttons
             for button in addon.buttons_iterator() do
@@ -828,6 +826,116 @@ initFrame:SetScript("OnEvent", function(self, event, addonName)
         end
     end
 end)
+
+-- ============================================================================
+-- RANGE INDICATOR SYSTEM
+-- Desaturate and tint action buttons red when target is out of range
+-- ============================================================================
+
+local rangeUpdateInterval = 0.2  -- Check every 0.2 seconds
+local rangeTimer = 0
+
+local function GetRangeConfig()
+    local db = GetButtonsConfig()
+    return db and db.range_indicator
+end
+
+-- Apply range coloring to a single action button
+local function UpdateButtonRange(button)
+    if not button or not button.action then return end
+    local icon = button.icon or _G[button:GetName() .. "Icon"]
+    if not icon then return end
+
+    local hasAction = HasAction(button.action)
+    if not hasAction then return end
+
+    local inRange = IsActionInRange(button.action)
+    local isUsable, notEnoughMana = IsUsableAction(button.action)
+
+    if inRange == 0 then
+        -- Out of range: red tint
+        icon:SetVertexColor(0.8, 0.2, 0.2)
+    elseif notEnoughMana then
+        -- Not enough mana: blue tint (Blizzard default behavior)
+        icon:SetVertexColor(0.5, 0.5, 1.0)
+    elseif not isUsable then
+        -- Not usable: desaturated
+        icon:SetVertexColor(0.4, 0.4, 0.4)
+    else
+        -- Usable and in range: normal
+        icon:SetVertexColor(1.0, 1.0, 1.0)
+    end
+end
+
+-- Range check OnUpdate handler (shared across all action buttons)
+local rangeFrame = CreateFrame("Frame")
+rangeFrame:Hide()
+
+rangeFrame:SetScript("OnUpdate", function(self, elapsed)
+    rangeTimer = rangeTimer + elapsed
+    if rangeTimer < rangeUpdateInterval then return end
+    rangeTimer = 0
+
+    -- Only update if we have a target and module is enabled
+    if not UnitExists("target") then return end
+
+    -- Update main action buttons
+    for i = 1, 12 do
+        UpdateButtonRange(_G["ActionButton" .. i])
+    end
+    -- Multi-bar buttons
+    for _, prefix in ipairs({"MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton", "MultiBarLeftButton"}) do
+        for i = 1, 12 do
+            UpdateButtonRange(_G[prefix .. i])
+        end
+    end
+end)
+
+-- Enable/disable range indicator based on config
+local function UpdateRangeIndicatorState()
+    if not IsModuleEnabled() then
+        rangeFrame:Hide()
+        return
+    end
+    local rangeCfg = GetRangeConfig()
+    if rangeCfg and rangeCfg.enabled then
+        rangeFrame:Show()
+    else
+        rangeFrame:Hide()
+    end
+end
+
+-- Hook target change to enable/disable range checking
+local rangeEventFrame = CreateFrame("Frame")
+rangeEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+rangeEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+rangeEventFrame:SetScript("OnEvent", function(self, event)
+    if not IsModuleEnabled() then return end
+    UpdateRangeIndicatorState()
+
+    -- When target is cleared, restore all button colors
+    if event == "PLAYER_TARGET_CHANGED" and not UnitExists("target") then
+        for i = 1, 12 do
+            local btn = _G["ActionButton" .. i]
+            if btn then
+                local icon = btn.icon or _G["ActionButton" .. i .. "Icon"]
+                if icon then icon:SetVertexColor(1, 1, 1) end
+            end
+        end
+        for _, prefix in ipairs({"MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton", "MultiBarLeftButton"}) do
+            for i = 1, 12 do
+                local btn = _G[prefix .. i]
+                if btn then
+                    local icon = btn.icon or _G[prefix .. i .. "Icon"]
+                    if icon then icon:SetVertexColor(1, 1, 1) end
+                end
+            end
+        end
+    end
+end)
+
+-- Export for options
+addon.UpdateRangeIndicatorState = UpdateRangeIndicatorState
 
 -- Monitor alwaysShowActionBars CVar changes with proper event (no more constant timer)
 local cvarFrame = CreateFrame("Frame")

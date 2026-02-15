@@ -874,6 +874,56 @@ function addon:SafeExecute(moduleId, operationName, func, ...)
 end
 
 -- ============================================================================
+-- MODULE HELPERS (centralized — replaces per-module boilerplate)
+-- ============================================================================
+
+-- No-op function reusable across all modules (avoids multiple definitions)
+addon._noop = addon._noop or function() end
+
+-- Get module config from addon.db.profile.modules[moduleName]
+-- @param moduleName: string key matching database.lua modules table
+-- @return table or nil
+function addon:GetModuleConfig(moduleName)
+    return self.db and self.db.profile and self.db.profile.modules
+        and self.db.profile.modules[moduleName]
+end
+
+-- Check if a module is enabled in the database
+-- @param moduleName: string key matching database.lua modules table
+-- @return boolean
+function addon:IsModuleEnabled(moduleName)
+    local cfg = self:GetModuleConfig(moduleName)
+    return cfg and cfg.enabled or false
+end
+
+-- ============================================================================
+-- DELAYED EXECUTION (unified timer — replaces 3 different implementations)
+-- ============================================================================
+
+-- Frame pool for delayed execution (C_Timer replacement for 3.3.5a)
+addon._timerPool = addon._timerPool or {}
+
+-- Schedule a callback after a delay (seconds)
+-- @param delay: number — seconds to wait
+-- @param callback: function — called after delay
+function addon:After(delay, callback)
+    local f = tremove(self._timerPool) or CreateFrame("Frame")
+    f._elapsed = 0
+    f._delay = delay
+    f._callback = callback
+    f:SetScript("OnUpdate", function(self, dt)
+        self._elapsed = self._elapsed + dt
+        if self._elapsed >= self._delay then
+            self:SetScript("OnUpdate", nil)
+            tinsert(addon._timerPool, self)
+            local cb = self._callback
+            self._callback = nil
+            cb()
+        end
+    end)
+end
+
+-- ============================================================================
 -- PRINT / DEBUG UTILITIES
 -- ============================================================================
 
@@ -893,5 +943,3 @@ end
 function addon:Error(...)
     print("|cFFFF0000[DragonUI Error]|r", ...)
 end
-
-print("|cFF00FF00[DragonUI]|r API loaded")

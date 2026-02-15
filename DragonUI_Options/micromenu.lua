@@ -642,5 +642,3 @@ addon:RegisterOptionsGroup("bags", bagsOptions)
 addon:RegisterOptionsGroup("xprepbar", xprepbarOptions)
 addon:RegisterOptionsGroup("style", styleOptions)
 addon:RegisterOptionsGroup("additional", additionalOptions)
-
-print("|cFF00FF00[DragonUI]|r Micro menu options loaded")

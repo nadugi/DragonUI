@@ -109,12 +109,11 @@ function addon.ArrangeActionBarButtons(buttonPrefix, parentFrame, anchorFrame, r
 end
 
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.mainbars
+    return addon:GetModuleConfig("mainbars")
 end
 
 local function IsModuleEnabled()
-    local cfg = GetModuleConfig()
-    return cfg and cfg.enabled
+    return addon:IsModuleEnabled("mainbars")
 end
 -- ============================================================================
 -- PET BAR FUNCTION (ALWAYS AVAILABLE)
@@ -222,7 +221,7 @@ local function InitializeMainbars()
     pUiMainBarArt:SetFrameStrata('HIGH');
     pUiMainBarArt:SetFrameLevel(pUiMainBar:GetFrameLevel() + 4);
     pUiMainBarArt:SetAllPoints(pUiMainBar);
-    -- CRÍTICO: Desactivar mouse para evitar zona muerta en iconos
+    -- CRITICAL: Disable mouse to avoid dead zone on icons
     pUiMainBarArt:EnableMouse(false);
 
     -- ============================================================================
@@ -365,7 +364,7 @@ local function InitializeMainbars()
         pUiMainBar:SetFrameRef('ActionButton' .. index, _G['ActionButton' .. index])
     end
 
-    -- Aplicar SetThreeSlice solo si el fondo NO está oculto
+    -- Apply SetThreeSlice only if the background is NOT hidden
     local shouldHideBackground = addon.db and addon.db.profile and addon.db.profile.buttons and 
                                 addon.db.profile.buttons.hide_main_bar_background
     
@@ -406,13 +405,13 @@ local function InitializeMainbars()
 end
 
     function MainMenuBarMixin:actionbar_art_setup()
-        -- setup art frames - CORREGIDO
-        MainMenuBarArtFrame:SetParent(pUiMainBarArt)  -- ✅ Va al contenedor de arte
+        -- setup art frames - FIXED
+        MainMenuBarArtFrame:SetParent(pUiMainBarArt)  -- Goes to the art container
         
-        -- CRÍTICO: Los grifones deben ir a pUiMainBarArt, NO a pUiMainBar
+        -- CRITICAL: Gryphons must go to pUiMainBarArt, NOT pUiMainBar
         for _, art in pairs({MainMenuBarLeftEndCap, MainMenuBarRightEndCap}) do
-            art:SetParent(pUiMainBarArt)  -- ✅ Al contenedor de arte correcto
-            art:SetDrawLayer('OVERLAY', 7)  -- ✅ Layer más alto que ARTWORK
+            art:SetParent(pUiMainBarArt)  -- To the correct art container
+            art:SetDrawLayer('OVERLAY', 7)  -- Higher layer than ARTWORK
         end
 
         -- apply background settings
@@ -434,13 +433,13 @@ end
                 button.NormalTexture:SetAlpha(alpha)
             end
             
-            -- Ocultar también las texturas aplicadas por SetThreeSlice
+            -- Also hide textures applied by SetThreeSlice
             local regions = {button:GetRegions()}
             for j = 1, #regions do
                 local region = regions[j]
                 if region and region:GetObjectType() == "Texture" then
                     local drawLayer = region:GetDrawLayer()
-                    -- Ocultar texturas de fondo y artwork que no sean iconos
+                    -- Hide background and artwork textures that aren't icons
                     if (drawLayer == "BACKGROUND" or drawLayer == "ARTWORK") and region ~= button:GetNormalTexture() then
                         local texPath = region:GetTexture()
                         if texPath and not string.find(texPath, "ICON") and not string.find(texPath, "Interface\\Icons") then
@@ -751,7 +750,7 @@ end
             mainMenuExpBar:SetScale(0.9)
             mainMenuExpBar:SetFrameStrata("MEDIUM")
 
-            -- COMPORTAMIENTO CORRECTO: Posición inicial
+            -- CORRECT BEHAVIOR: Initial position
             mainMenuExpBar:SetPoint("CENTER", addon.ActionBarFrames.repexpbar, "CENTER", 0, 0)
         end
 
@@ -764,7 +763,7 @@ end
             repWatchBar:SetFrameLevel(1)
             repWatchBar:SetFrameStrata("MEDIUM")
 
-            -- COMPORTAMIENTO CORRECTO: Rep va arriba, luego UpdateBarPositions ajusta XP
+            -- CORRECT BEHAVIOR: Rep goes on top, then UpdateBarPositions adjusts XP
             repWatchBar:SetPoint("CENTER", addon.ActionBarFrames.repexpbar, "CENTER", 0, 0)
 
             if ReputationWatchStatusBar then
@@ -804,7 +803,7 @@ end
         local repWatchBar = ReputationWatchBar
 
         if repWatchBar and repWatchBar:IsShown() then
-            -- Cuando Rep está visible: Rep toma la posición original de XP (centro)
+            -- When Rep is visible: Rep takes the original XP position (center)
             repWatchBar:ClearAllPoints()
             repWatchBar:SetSize(537, 10)
             repWatchBar:SetScale(0.9)
@@ -831,7 +830,7 @@ end
                 end
             end
         else
-            -- Cuando Rep NO está visible: XP vuelve al centro
+            -- When Rep is NOT visible: XP returns to center
             if mainMenuExpBar then
                 mainMenuExpBar:ClearAllPoints()
                 mainMenuExpBar:SetSize(537, 10)
@@ -841,19 +840,19 @@ end
             end
         end
     end
-   -- Función específica para deshabilitar MainMenuBarMaxLevelBar
+   -- Specific function to disable MainMenuBarMaxLevelBar
     local function DisableMaxLevelBar()
         if MainMenuBarMaxLevelBar then
             MainMenuBarMaxLevelBar:Hide()
             MainMenuBarMaxLevelBar:EnableMouse(false)
             MainMenuBarMaxLevelBar:SetAlpha(0)
-            -- Asegurar que nunca interfiera
+            -- Ensure it never interferes
             MainMenuBarMaxLevelBar:SetFrameLevel(0)
         end
     end
 
     local function RemoveBlizzardFrames()
-        -- Deshabilitar MainMenuBarMaxLevelBar inmediatamente
+        -- Disable MainMenuBarMaxLevelBar immediately
         DisableMaxLevelBar()
         
         local blizzFrames = {MainMenuBarPerformanceBar, MainMenuBarTexture0, MainMenuBarTexture1, MainMenuBarTexture2,
@@ -964,7 +963,7 @@ end
 
     -- Apply saved positions from database (RetailUI pattern)
     local function ApplyActionBarPositions()
-        -- CRÍTICO: No tocar frames durante combate para evitar taint
+        -- CRITICAL: Don't touch frames during combat to avoid taint
         if InCombatLockdown() then
             return
         end
@@ -1110,7 +1109,7 @@ end
             return
         end
 
-        -- CRÍTICO: Deshabilitar MainMenuBarMaxLevelBar INMEDIATAMENTE
+        -- CRITICAL: Disable MainMenuBarMaxLevelBar IMMEDIATELY
         if MainMenuBarMaxLevelBar then
             MainMenuBarMaxLevelBar:Hide()
             MainMenuBarMaxLevelBar:EnableMouse(false)
@@ -1941,7 +1940,7 @@ initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function(self, event, addonName)
     if event == "ADDON_LOADED" and addonName == "DragonUI" then
-        -- Solo inicializar si está habilitado
+        -- Only initialize if enabled
         InitializeMainbars()
         self:UnregisterEvent("ADDON_LOADED")
     elseif event == "PLAYER_LOGIN" then
@@ -2099,9 +2098,9 @@ function addon.RefreshMainbarsSystem()
         return
     end
 
-    -- CRÍTICO: No tocar frames protegidos durante combate
+    -- CRITICAL: Don't touch protected frames during combat
     if InCombatLockdown() then
-        -- Solo actualizar cosas seguras (no frames)
+        -- Only update safe things (not frames)
         addon.UpdateGryphonStyle()
         if addon.MainMenuBarMixin and addon.MainMenuBarMixin.update_main_bar_background then
             addon.MainMenuBarMixin:update_main_bar_background()
@@ -2109,7 +2108,7 @@ function addon.RefreshMainbarsSystem()
         return
     end
 
-    -- Apply scales to all action bars (SOLO FUERA DE COMBATE)
+    -- Apply scales to all action bars (ONLY OUTSIDE COMBAT)
     local db = addon.db and addon.db.profile and addon.db.profile.mainbars
     if not db then
         return

@@ -9,16 +9,16 @@ local UF = addon.UF
 -- MODULE VARIABLES & CONFIGURATION
 -- ============================================================================
 
--- Variable para defer aplicación después de combate
+-- Variable to defer application after combat
 local deferredPositionUpdate = false
 
--- MEJORAR: Añadir tracking de módulo como otras partes del addon
+-- IMPROVE: Add module tracking like other parts of the addon
 local Module = {
     playerFrame = nil,
     textSystem = nil,
     initialized = false,
     eventsFrame = nil,
-    -- AÑADIR: State tracking según patrón DragonUI
+    -- ADD: State tracking per DragonUI pattern
     hooks = {},
     registeredEvents = {},
     originalStates = {}
@@ -48,9 +48,9 @@ local PlayerLevelText = _G.PlayerLevelText
 -- Texture paths from shared core (single source of truth)
 local TEXTURES = UF.TEXTURES.player
 
--- Coordenadas para glows elite/rare (target frame invertido)
+-- Coordinates for elite/rare glows (inverted target frame)
 local ELITE_GLOW_COORDINATES = {
-    -- Usando la textura correcta: 'Interface\\Addons\\DragonUI\\Textures\\UI\\UnitFrame'
+    -- Using the correct texture: 'Interface\\Addons\\DragonUI\\Textures\\UI\\UnitFrame'
     texCoord = {0.2061015625, 0, 0.537109375, 0.712890625},
     size = {209, 90},
     texture = 'Interface\\Addons\\DragonUI\\Textures\\UI\\UnitFrame'
@@ -72,23 +72,23 @@ local DRAGON_COORDINATES = {
 
 -- Combat Flash animation settings *NO Elite activated
 local COMBAT_PULSE_SETTINGS = {
-    speed = 9, -- Velocidad del pulso
-    minAlpha = 0.3, -- Transparencia mínima
-    maxAlpha = 1.0, -- Transparencia máxima
-    enabled = true -- Activar/desactivar animación
+    speed = 9, -- Pulse speed
+    minAlpha = 0.3, -- Minimum transparency
+    maxAlpha = 1.0, -- Maximum transparency
+    enabled = true -- Enable/disable animation
 }
 
--- Elite Combat Flash animation settings (cuando elite decoration está ON)
+-- Elite Combat Flash animation settings (when elite decoration is ON)
 local ELITE_COMBAT_PULSE_SETTINGS = {
-    speed = 9, -- Velocidad para combat en modo elite (diferente a normal)
+    speed = 9, -- Speed for combat in elite mode (different from normal)
     minAlpha = 0.2,
     maxAlpha = 0.9,
     enabled = true
 }
 
--- Elite Status/Rest animation settings (cuando elite decoration está ON)
+-- Elite Status/Rest animation settings (when elite decoration is ON)
 local ELITE_STATUS_PULSE_SETTINGS = {
-    speed = 5, -- Velocidad para resting en modo elite
+    speed = 5, -- Speed for resting in elite mode
     minAlpha = 0,
     maxAlpha = 0.7,
     enabled = true
@@ -355,13 +355,21 @@ local function HideBlizzardPlayerTexts()
         end
     end
 end
--- Hide and disable Blizzard glow effects
+-- Hide and permanently disable Blizzard glow effects
 local function HideBlizzardGlows()
     local glows = {PlayerStatusGlow, PlayerRestGlow}
     for _, glow in ipairs(glows) do
         if glow then
             glow:Hide()
             glow:SetAlpha(0)
+            -- Permanent hook: prevent Blizzard from re-showing the resting glow
+            if not glow.__DragonUI_GlowHooked and glow.HookScript then
+                glow:HookScript("OnShow", function(self)
+                    self:Hide()
+                    self:SetAlpha(0)
+                end)
+                glow.__DragonUI_GlowHooked = true
+            end
         end
     end
     -- Always suppress Blizzard's PlayerFrameFlash (combat red flash)
@@ -488,33 +496,23 @@ local function UpdateGlowVisibility()
         return
     end
 
-    eliteGlowActive = IsEliteModeActive()
-
-    --  CORREGIDO: Control correcto del PlayerStatusTexture
+    --  DragonUI always suppresses Blizzard's PlayerStatusTexture
+    --  Custom glow is handled by EliteStatusGlow / VehicleStatusGlow
     if PlayerStatusTexture then
-        if eliteGlowActive then
-            -- En modo elite: ocultar completamente el glow original
-            PlayerStatusTexture:Hide()
-            PlayerStatusTexture:SetAlpha(0)
-        else
-            -- En modo normal: controlar según statusGlowVisible
-            PlayerStatusTexture:SetAlpha(1) -- Restaurar alpha
-            if statusGlowVisible then
-                PlayerStatusTexture:Show()
-            else
-                PlayerStatusTexture:Hide()
-            end
-        end
+        PlayerStatusTexture:Hide()
+        PlayerStatusTexture:SetAlpha(0)
     end
+
+    eliteGlowActive = IsEliteModeActive()
 
     if dragonFrame.DragonUICombatGlow then
         if eliteGlowActive then
-            -- En modo elite: ocultar glow original
+            -- In elite mode: hide original glow
             dragonFrame.DragonUICombatGlow:Hide()
             dragonFrame.DragonUICombatGlow:SetAlpha(0)
         else
-            -- En modo normal: mostrar/ocultar glow original según combatGlowVisible
-            dragonFrame.DragonUICombatGlow:SetAlpha(1) -- Restaurar alpha
+            -- In normal mode: show/hide original glow based on combatGlowVisible
+            dragonFrame.DragonUICombatGlow:SetAlpha(1) -- Restore alpha
             if combatGlowVisible then
                 dragonFrame.DragonUICombatGlow:Show()
             else
@@ -523,7 +521,7 @@ local function UpdateGlowVisibility()
         end
     end
 
-    -- Update elite glows (solo en modo elite)
+    -- Update elite glows (only in elite mode)
     if eliteGlowActive then
         if dragonFrame.EliteStatusGlow then
             if statusGlowVisible then
@@ -540,7 +538,7 @@ local function UpdateGlowVisibility()
             end
         end
     else
-        -- Ocultar elite glows en modo normal
+        -- Hide elite glows in normal mode
         if dragonFrame.EliteStatusGlow then
             dragonFrame.EliteStatusGlow:Hide()
         end
@@ -622,7 +620,7 @@ local function AnimateCombatFlashPulse(elapsed)
     end
 
     if eliteGlowActive then
-        -- Modo Elite: usar configuración específica para elite combat
+        -- Elite mode: use specific configuration for elite combat
         if not ELITE_COMBAT_PULSE_SETTINGS.enabled then
             return
         end
@@ -637,7 +635,7 @@ local function AnimateCombatFlashPulse(elapsed)
             dragonFrame.EliteCombatTexture:SetAlpha(pulseAlpha)
         end
     else
-        -- Modo Normal: usar configuración normal
+        -- Normal mode: use normal configuration
         if not COMBAT_PULSE_SETTINGS.enabled then
             return
         end
@@ -665,7 +663,7 @@ local function AnimateEliteStatusPulse(elapsed)
         return
     end
 
-    -- Solo animar si estamos en modo elite Y el status glow está visible
+    -- Only animate if we're in elite mode AND the status glow is visible
     if eliteGlowActive and dragonFrame.EliteStatusGlow and dragonFrame.EliteStatusGlow:IsVisible() then
         eliteStatusPulseTimer = eliteStatusPulseTimer + (elapsed * ELITE_STATUS_PULSE_SETTINGS.speed)
 
@@ -723,8 +721,8 @@ end
 
 -- Setup Death Knight rune frame (improved like RetailUI)
 local function SetupRuneFrame()
-    -- WoW automáticamente maneja la disponibilidad de runas para DKs
-    -- No necesitamos verificar la clase manualmente
+    -- WoW automatically handles rune availability for DKs
+    -- No need to manually check the class
 
     for index = 1, 6 do
         local button = _G['RuneButtonIndividual' .. index]
@@ -746,10 +744,10 @@ local function HandleRuneFrameVehicleTransition(toVehicle)
         local button = _G['RuneButtonIndividual' .. index]
         if button then
             if toVehicle then
-                button:Hide() -- Ocultar runas en vehículo
+                button:Hide() -- Hide runes in vehicle
             else
-                button:Show() -- Mostrar runas fuera de vehículo
-                UpdateRune(button) -- Actualizar al salir de vehículo
+                button:Show() -- Show runes outside vehicle
+                UpdateRune(button) -- Update when exiting vehicle
             end
         end
     end
@@ -765,7 +763,7 @@ local function UpdatePlayerRoleIcon()
     local iconTexture = dragonFrame.PlayerRoleIcon
     local isTank, isHealer, isDamage = UnitGroupRolesAssigned("player")
 
-    --  MEJORAR: Usar lógica de RetailUI
+    --  IMPROVE: Use RetailUI logic
     if isTank then
         iconTexture:SetTexture(TEXTURES.LFG_ICONS)
         iconTexture:SetTexCoord(unpack(ROLE_COORDS.TANK))
@@ -831,7 +829,7 @@ local function UpdateLeaderIconPosition()
     PlayerLeaderIcon:ClearAllPoints()
 
     if isEliteMode then
-        -- En modo elite: posicionar más arriba para evitar el dragon
+        -- In elite mode: position higher to avoid the dragon
         PlayerLeaderIcon:SetPoint('BOTTOM', PlayerFrame, "TOP", -1, -33)
     else
         -- Modo normal
@@ -857,7 +855,7 @@ local function UpdateMasterIconPosition()
         PlayerMasterIcon:ClearAllPoints()
         PlayerMasterIcon:SetPoint("TOPRIGHT", PlayerFrame, "TOPRIGHT", -135, -55)
     else
-        -- Modo normal
+        -- Normal mode
         PlayerMasterIcon:SetPoint('BOTTOM', PlayerFrame, "TOP", -71, -75)
     end
 end
@@ -881,31 +879,31 @@ local function UpdateDragonVisibilityForVehicle(inVehicle, hasEliteDecoration)
     UpdateGlowVisibility()
 end
 
--- Función para poner el timer PVP por encima del dragón Y reposicionarlo
+-- Function to raise the PVP timer above the dragon AND reposition it
 local function UpdatePVPTimerPosition(isEliteMode)
     local pvpTimerText = _G["PlayerPVPTimerText"]
     if not pvpTimerText then
         return
     end
     
-    -- SOLO modificar si hay decoración elite (elite, rareelite, worldboss, etc.)
+    -- ONLY modify if there's elite decoration (elite, rareelite, worldboss, etc.)
     if isEliteMode then
-        -- Con decoración elite: usar el MISMO parent que el icono PVP (que ya está por encima)
+        -- With elite decoration: use the SAME parent as the PVP icon (already above)
         local dragonFrame = _G["DragonUIUnitframeFrame"]
         if dragonFrame and dragonFrame.EliteIconContainer then
-            -- 1. Reparentar al mismo contenedor que el icono PVP
+            -- 1. Reparent to the same container as the PVP icon
             pvpTimerText:SetParent(dragonFrame.EliteIconContainer)
             pvpTimerText:SetDrawLayer("OVERLAY", 7)
             
-            -- 2. Reposicionar el timer (ajusta estas coordenadas como quieras)
+            -- 2. Reposition the timer (adjust these coordinates as needed)
             pvpTimerText:ClearAllPoints()
-            pvpTimerText:SetPoint("CENTER", PlayerPVPIcon, "LEFT", 22, 38)  -- A la izquierda del icono
+            pvpTimerText:SetPoint("CENTER", PlayerPVPIcon, "LEFT", 22, 38)  -- To the left of the icon
             
-            -- Opcional: ajustar tamaño del texto para mejor visibilidad
+            -- Optional: adjust text size for better visibility
             pvpTimerText:SetFont(pvpTimerText:GetFont(), 11, "OUTLINE")
         end
     end
-    -- SIN decoración elite: NO tocar nada, dejar parent, layer y posición originales de Blizzard
+    -- WITHOUT elite decoration: DO NOT touch anything, leave Blizzard's original parent, layer and position
 end
 
 local function UpdatePVPIconPosition()
@@ -913,7 +911,7 @@ local function UpdatePVPIconPosition()
         return
     end
 
-    -- ARREGLO: Verificar que el frame existe antes de continuar
+    -- FIX: Check that the frame exists before continuing
     local dragonFrame = _G["DragonUIUnitframeFrame"]
     if not dragonFrame or not dragonFrame.EliteIconContainer then
         return
@@ -929,20 +927,20 @@ local function UpdatePVPIconPosition()
     PlayerPVPIcon:ClearAllPoints()
 
     if isEliteMode then
-        -- Modo elite: posición específica
+        -- Elite mode: specific position
         PlayerPVPIcon:SetPoint("TOPRIGHT", PlayerFrame, "TOPRIGHT", -155, -22)
     else
-        -- Modo normal: diferenciar entre vehículo y player
+        -- Normal mode: differentiate between vehicle and player
         if hasVehicleUI then
-            -- AQUÍ MODIFICAS LA POSICIÓN PARA VEHÍCULO
+            -- MODIFY VEHICLE POSITION HERE
             PlayerPVPIcon:SetPoint("TOPRIGHT", PlayerFrame, "TOPRIGHT", -149, -25)
         else
-            -- Posición normal del player
+            -- Normal player position
             PlayerPVPIcon:SetPoint("TOPRIGHT", PlayerFrame, "TOPRIGHT", -155, -22)
         end
     end
     
-    -- NUEVO: Reposicionar el timer de PVP según el modo
+    -- NEW: Reposition the PVP timer based on mode
     UpdatePVPTimerPosition(isEliteMode)
 end
 
@@ -970,13 +968,13 @@ local function UpdatePlayerHealthBarColor()
     end
 
     if config.classcolor then
-        --  USAR TEXTURA STATUS (BLANCA) PARA CLASS COLOR
+        --  USE STATUS TEXTURE (WHITE) FOR CLASS COLOR
         local statusTexturePath = TEXTURES.HEALTH_STATUS
         if texture:GetTexture() ~= statusTexturePath then
             texture:SetTexture(statusTexturePath)
         end
 
-        --  APLICAR COLOR DE CLASE DEL PLAYER
+        --  APPLY PLAYER CLASS COLOR
         local _, class = UnitClass("player")
         local color = RAID_CLASS_COLORS[class]
         if color then
@@ -985,13 +983,13 @@ local function UpdatePlayerHealthBarColor()
             PlayerFrameHealthBar:SetStatusBarColor(1, 1, 1, 1)
         end
     else
-        --  USAR TEXTURA NORMAL (COLORED) SIN CLASS COLOR
+        --  USE NORMAL TEXTURE (COLORED) WITHOUT CLASS COLOR
         local normalTexturePath = TEXTURES.HEALTH_BAR
         if texture:GetTexture() ~= normalTexturePath then
             texture:SetTexture(normalTexturePath)
         end
 
-        --  COLOR BLANCO (la textura ya tiene color)
+        --  WHITE COLOR (texture already has color)
         PlayerFrameHealthBar:SetStatusBarColor(1, 1, 1, 1)
     end
 end
@@ -1004,7 +1002,7 @@ local function UpdateHealthBarColor(statusBar, unit)
         return
     end
 
-    --  LLAMAR A LA NUEVA FUNCIÓN
+    --  CALL THE NEW FUNCTION
     UpdatePlayerHealthBarColor()
 end
 
@@ -1041,7 +1039,7 @@ local function UpdatePowerBarTexture(statusBar)
     local powerType, powerTypeString = UnitPowerType('player')
     local powerTexture = GetPowerBarTexture(powerTypeString)
 
-    --  CAMBIAR TEXTURA según el tipo de poder actual
+    --  CHANGE TEXTURE based on current power type
     local currentTexture = statusBar:GetStatusBarTexture():GetTexture()
     if currentTexture ~= powerTexture then
         statusBar:GetStatusBarTexture():SetTexture(powerTexture)
@@ -1268,20 +1266,20 @@ local function UpdatePlayerDragonDecoration()
         dragonFrame.PlayerDragonDecoration = nil
     end
 
-    --  Reposicionar rest icon en modo elite/dragon
+    --  Reposition rest icon in elite/dragon mode
     if PlayerRestIcon then
         if decorationType ~= "none" then
-            -- Modo elite: mover arriba y a la derecha
+            -- Elite mode: move up and to the right
             PlayerRestIcon:ClearAllPoints()
             PlayerRestIcon:SetPoint("TOPLEFT", PlayerPortrait, "TOPLEFT", 60, 20)
         else
-            -- Modo normal: posición original
+            -- Normal mode: original position
             PlayerRestIcon:ClearAllPoints()
-            PlayerRestIcon:SetPoint("TOPLEFT", PlayerPortrait, "TOPLEFT", 40, 15) -- Posición original
+            PlayerRestIcon:SetPoint("TOPLEFT", PlayerPortrait, "TOPLEFT", 40, 15) -- Original position
         end
     end
 
-    --  Cambiar background, borde Y ESTIRAR MANA BAR según decoración
+    --  Change background, border AND STRETCH MANA BAR based on decoration
     local inVehicle = IsInVehicle()
 
     if decorationType ~= "none" and not inVehicle then
@@ -1593,7 +1591,12 @@ local function UpdatePlayerDragonDecoration()
     dragonFrame.PlayerDragonFrame = dragonParent
     dragonFrame.PlayerDragonDecoration = dragon
 
-    UpdateLeadershipIcons() -- Reposicionar icons de liderazgo
+    -- If dark mode is active, re-apply tint to newly created dragon decoration
+    if addon.RefreshDarkModeUnitFrames then
+        addon.RefreshDarkModeUnitFrames()
+    end
+
+    UpdateLeadershipIcons() -- Reposition leadership icons
 
 end
 
@@ -1645,7 +1648,7 @@ local function CreatePlayerFrameTextures()
         statusFrame:Hide()
 
         local statusTexture = statusFrame:CreateTexture(nil, "OVERLAY")
-        statusTexture:SetTexture(ELITE_GLOW_COORDINATES.texture) --  Usar desde coordenadas
+        statusTexture:SetTexture(ELITE_GLOW_COORDINATES.texture) --  Use from coordinates
         statusTexture:SetTexCoord(unpack(ELITE_GLOW_COORDINATES.texCoord))
         statusTexture:SetAllPoints(statusFrame)
         statusTexture:SetBlendMode("ADD")
@@ -1662,7 +1665,7 @@ local function CreatePlayerFrameTextures()
         combatFrame:Hide()
 
         local eliteCombatTexture = combatFrame:CreateTexture(nil, "OVERLAY")
-        eliteCombatTexture:SetTexture(ELITE_GLOW_COORDINATES.texture) --  Usar desde coordenadas
+        eliteCombatTexture:SetTexture(ELITE_GLOW_COORDINATES.texture) --  Use from coordinates
         eliteCombatTexture:SetTexCoord(unpack(ELITE_GLOW_COORDINATES.texCoord))
         eliteCombatTexture:SetAllPoints(combatFrame)
         eliteCombatTexture:SetBlendMode("ADD")
@@ -1760,17 +1763,17 @@ local function CreatePlayerFrameTextures()
     if not dragonFrame.PlayerGroupIndicator then
         local groupIndicator = CreateFrame("Frame", "DragonUIPlayerGroupIndicator", PlayerFrame)
 
-        --  USAR TEXTURA uiunitframe como RetailUI
+        --  USE uiunitframe texture like RetailUI
         local bgTexture = groupIndicator:CreateTexture(nil, "BACKGROUND")
         bgTexture:SetTexture(TEXTURES.BASE) -- Tu textura uiunitframe
-        bgTexture:SetTexCoord(0.927734375, 0.9970703125, 0.3125, 0.337890625) --  Coordenadas del GroupIndicator
+        bgTexture:SetTexCoord(0.927734375, 0.9970703125, 0.3125, 0.337890625) --  GroupIndicator coordinates
         bgTexture:SetAllPoints(groupIndicator)
 
-        --  SIZING FIJO como en las coordenadas
+        --  FIXED SIZING as per coordinates
         groupIndicator:SetSize(71, 13)
         groupIndicator:SetPoint("BOTTOMLEFT", PlayerFrame, "TOP", 30, -19.5)
 
-        --  TEXTO CENTRADO como original
+        --  CENTERED TEXT like original
         local text = groupIndicator:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         text:SetPoint("CENTER", groupIndicator, "CENTER", 0, 0)
         text:SetJustifyH("CENTER")
@@ -1785,7 +1788,7 @@ local function CreatePlayerFrameTextures()
 
         _G[PlayerFrame:GetName() .. 'GroupIndicator'] = groupIndicator
         _G[PlayerFrame:GetName() .. 'GroupIndicatorText'] = text
-        _G[PlayerFrame:GetName() .. 'GroupIndicatorMiddle'] = bgTexture --  Como original
+        _G[PlayerFrame:GetName() .. 'GroupIndicatorMiddle'] = bgTexture --  Like original
         dragonFrame.PlayerGroupIndicator = groupIndicator
     end
 
@@ -2075,7 +2078,7 @@ local function ChangePlayerframe()
 
     -- Setup class-specific elements
     local config = GetPlayerConfig()
-    if config.show_runes ~= false then -- Solo setup si no est\u00e1 expl\u00edcitamente deshabilitado
+    if config.show_runes ~= false then -- Only setup if not explicitly disabled
         SetupRuneFrame()
     end
     UpdatePlayerRoleIcon()
@@ -2102,15 +2105,15 @@ local function SetCombatFlashVisible(visible)
         if visible then
             combatPulseTimer = 0 -- Reset pulse timer
 
-            --  CAMBIAR DECORACIÓN A ICONO DE COMBATE (espadas cruzadas)
+            --  CHANGE DECORATION TO COMBAT ICON (crossed swords)
             dragonFrame.PlayerFrameDeco:SetTexCoord(0.9775390625, 0.9931640625, 0.259765625, 0.291015625)
-            --  AJUSTAR TAMAÑO PARA EL ICONO DE COMBATE
+            --  ADJUST SIZE FOR COMBAT ICON
             dragonFrame.PlayerFrameDeco:SetSize(16, 16)
             dragonFrame.PlayerFrameDeco:SetPoint('CENTER', PlayerPortrait, 'CENTER', 18, -20)
         else
-            --  RESTAURAR DECORACIÓN NORMAL
+            --  RESTORE NORMAL DECORATION
             dragonFrame.PlayerFrameDeco:SetTexCoord(0.953125, 0.9755859375, 0.259765625, 0.3046875)
-            --  RESTAURAR TAMAÑO ORIGINAL
+            --  RESTORE ORIGINAL SIZE
             dragonFrame.PlayerFrameDeco:SetSize(23, 23)
             dragonFrame.PlayerFrameDeco:SetPoint('CENTER', PlayerPortrait, 'CENTER', 16, -16.5)
         end
@@ -2123,7 +2126,7 @@ local function SetCombatFlashVisible(visible)
     SetEliteCombatFlashVisible(visible) -- Use unified system
 end
 
---  FUNCIÓN PARA APLICAR POSICIÓN DESDE WIDGETS (COMO MINIMAP)
+--  FUNCTION TO APPLY POSITION FROM WIDGETS (LIKE MINIMAP)
 local function ApplyWidgetPosition()
     -- COMBAT GUARD: Do NOT touch ANY frame during combat.
     -- Even our aux frame (DragonUI_PlayerFrame) generates taint when called from
@@ -2163,10 +2166,11 @@ end
 local function ApplyPlayerConfig()
     local config = GetPlayerConfig()
 
-    -- Aplicar escala (protected — pcall for combat safety)
-    pcall(function() PlayerFrame:SetScale(config.scale or 1.0) end)
+    -- Apply scale (protected — pcall for combat safety)
+    local scaleOk, scaleErr = pcall(function() PlayerFrame:SetScale(config.scale or 1.0) end)
+    if not scaleOk and addon.Debug then addon:Debug("PlayerFrame:SetScale error:", scaleErr) end
 
-    --  SIEMPRE usar posición de widgets (Editor Mode)
+    --  ALWAYS use widget position (Editor Mode)
     ApplyWidgetPosition()
 
     -- Setup text system
@@ -2199,7 +2203,7 @@ end
 
 -- Reset frame to default configuration
 local function ResetPlayerFrame()
-    -- Usar defaults de database en lugar de DEFAULTS locales
+    -- Use database defaults instead of local DEFAULTS
     local dbDefaults = addon.defaults and addon.defaults.profile.unitframe.player or {}
     for key, value in pairs(dbDefaults) do
         addon:SetConfigValue("unitframe", "player", key, value)
@@ -2210,34 +2214,34 @@ end
 
 -- Refresh frame configuration
 local function RefreshPlayerFrame()
-    --  APLICAR CONFIGURACIÓN INMEDIATAMENTE
+    --  APPLY CONFIGURATION IMMEDIATELY
     ApplyPlayerConfig()
 
     --  RE-APPLY FRAME LAYOUT (health/mana bar sizes, positions - needed for fat healthbar toggle)
     ChangePlayerframe()
 
-    --  ACTUALIZAR CLASS COLOR
+    --  UPDATE CLASS COLOR
     UpdatePlayerHealthBarColor()
 
-    --  ACTUALIZAR DECORACIÓN DRAGON (importante para scale)
+    --  UPDATE DRAGON DECORATION (important for scale)
     UpdatePlayerDragonDecoration()
 
-    --  ACTUALIZAR SISTEMA DE TEXTOS
+    --  UPDATE TEXT SYSTEM
     if Module.textSystem then
         Module.textSystem.update()
     end
     
-    --  La visibilidad del texto de barra alternativa se configura una sola vez en ApplyPlayerConfig()
+    --  Alternate mana bar text visibility is configured once in ApplyPlayerConfig()
 
 end
 
 -- ============================================================================
 -- INITIALIZATION
 -- ============================================================================
---  NUEVO: Hook para refresh automático de class color
+--  NEW: Hook for automatic class color refresh
 local function SetupPlayerClassColorHooks()
     if not _G.DragonUI_PlayerHealthHookSetup then
-        --  SOLO UN HOOK SIMPLE - cuando Blizzard actualiza la health bar
+        --  ONLY A SIMPLE HOOK - when Blizzard updates the health bar
         hooksecurefunc("UnitFrameHealthBar_Update", function(statusbar, unit)
             if statusbar == PlayerFrameHealthBar and unit == "player" then
                 UpdatePlayerHealthBarColor()
@@ -2254,7 +2258,7 @@ local function InitializePlayerFrame()
         return
     end
 
-    -- Setup vehicle transition hooks con función segura
+    -- Setup vehicle transition hooks with safe function
     local function SafeHookSecureFunc(funcName, hookFunc)
         if _G[funcName] and type(_G[funcName]) == "function" then
             hooksecurefunc(funcName, hookFunc)
@@ -2295,7 +2299,7 @@ local function InitializePlayerFrame()
     
     -- Alternate mana bar text setup done once in ApplyPlayerConfig() - no need for hooks
 
-    -- Hook para actualizar posición del timer PVP cuando aparece/cambia
+    -- Hook to update PVP timer position when it appears/changes
     local pvpTimerText = _G["PlayerPVPTimerText"]
     if pvpTimerText and pvpTimerText.HookScript then
         pvpTimerText:HookScript("OnShow", function()
@@ -2304,7 +2308,7 @@ local function InitializePlayerFrame()
             local isEliteMode = decorationType == "elite" or decorationType == "rareelite"
             UpdatePVPTimerPosition(isEliteMode)
         end)
-        -- También actualizar cuando el texto cambia
+        -- Also update when the text changes
         pvpTimerText:HookScript("OnTextChanged", function()
             local config = GetPlayerConfig()
             local decorationType = config.dragon_decoration or "none"
@@ -2316,14 +2320,14 @@ local function InitializePlayerFrame()
     -- Create auxiliary frame
     Module.playerFrame = addon.CreateUIFrame(200, 75, "PlayerFrame")
 
-    --  REGISTRO AUTOMÁTICO EN EL SISTEMA CENTRALIZADO
+    --  AUTOMATIC REGISTRATION IN CENTRALIZED SYSTEM
     addon:RegisterEditableFrame({
         name = "player",
         frame = Module.playerFrame,
         blizzardFrame = PlayerFrame,
         configPath = {"widgets", "player"},
         onHide = function()
-            ApplyPlayerConfig() -- Aplicar nueva configuración al salir del editor
+            ApplyPlayerConfig() -- Apply new configuration when exiting editor
         end,
         module = Module
     })
@@ -2355,11 +2359,11 @@ local function InitializePlayerFrame()
     -- Setup bar hooks for persistent colors
     if PlayerFrameHealthBar and PlayerFrameHealthBar.HookScript then
         PlayerFrameHealthBar:HookScript('OnValueChanged', function(self)
-            --  APLICAR CLASS COLOR EN CADA CAMBIO
+            --  APPLY CLASS COLOR ON EACH CHANGE
             UpdatePlayerHealthBarColor()
         end)
         PlayerFrameHealthBar:HookScript('OnShow', function(self)
-            --  APLICAR CLASS COLOR AL MOSTRAR
+            --  APPLY CLASS COLOR ON SHOW
             UpdatePlayerHealthBarColor()
         end)
         -- Phase 2: Removed OnUpdate hook — fires 60x/sec unnecessarily.
@@ -2405,17 +2409,16 @@ local function InitializePlayerFrame()
         PlayerFrameFlash.__DragonUI_FlashHooked = true
     end
 
-    -- Suppress Blizzard's PlayerStatusTexture in vehicle and elite modes
-    -- (DragonUI uses VehicleStatusGlow / EliteStatusGlow in those modes)
+    -- Always suppress Blizzard's PlayerStatusTexture (resting glow)
+    -- DragonUI provides custom glow system (EliteStatusGlow / VehicleStatusGlow)
+    -- and the status glow state is tracked via statusGlowVisible
     if PlayerStatusTexture and PlayerStatusTexture.HookScript then
         PlayerStatusTexture:HookScript('OnShow', function(self)
-            if UnitHasVehicleUI("player") or eliteGlowActive then
-                if not self.DragonUI_ShowGuard then
-                    self.DragonUI_ShowGuard = true
-                    self:Hide()
-                    self:SetAlpha(0)
-                    self.DragonUI_ShowGuard = nil
-                end
+            if not self.DragonUI_ShowGuard then
+                self.DragonUI_ShowGuard = true
+                self:Hide()
+                self:SetAlpha(0)
+                self.DragonUI_ShowGuard = nil
             end
         end)
     end
@@ -2456,7 +2459,7 @@ local function SetupPlayerEvents()
             if not Module.initialized then
                 InitializePlayerFrame()
             end
-            -- SEGURO: Aplicar cambios diferidos después del combate
+            -- SAFE: Apply deferred changes after combat
             if deferredPositionUpdate then
                 ApplyPlayerConfig()  -- Includes ApplyWidgetPosition + scale
                 ChangePlayerframe()  -- Re-apply full layout (vehicle state may have changed during combat)
@@ -2512,7 +2515,7 @@ local function SetupPlayerEvents()
         end,
 
         RUNE_TYPE_UPDATE = function(runeIndex)
-            -- Mejorado: manejo más robusto del evento
+            -- Improved: more robust event handling
             if runeIndex and runeIndex >= 1 and runeIndex <= 6 then
                 local button = _G['RuneButtonIndividual' .. runeIndex]
                 if button then
@@ -2541,7 +2544,7 @@ local function SetupPlayerEvents()
                     Module.textSystem.update()
                 end
                 
-                -- NUEVO: Ocultar decoración de dragón al entrar al vehículo
+                -- NEW: Hide dragon decoration when entering vehicle
                 local config = GetPlayerConfig()
                 local decorationType = config.dragon_decoration or "none"
                 local isEliteMode = decorationType == "elite" or decorationType == "rareelite"
@@ -2558,7 +2561,7 @@ local function SetupPlayerEvents()
                     Module.textSystem.update()
                 end
                 
-                -- NUEVO: Mostrar decoración de dragón al salir del vehículo
+                -- NEW: Show dragon decoration when exiting vehicle
                 local config = GetPlayerConfig()
                 local decorationType = config.dragon_decoration or "none"
                 local isEliteMode = decorationType == "elite" or decorationType == "rareelite"
@@ -2569,7 +2572,7 @@ local function SetupPlayerEvents()
                 end
                 if PlayerFrameManaBar then
                     PlayerFrameManaBar:GetScript("OnEvent")(PlayerFrameManaBar, "UNIT_POWER_UPDATE", "player")
-                    -- SOLUCIÓN: Restaurar el pintado blanco para pureza de textura
+                    -- FIX: Restore white tint for texture purity
                     UpdateManaBarColor(PlayerFrameManaBar)
                 end
             end
@@ -2639,7 +2642,7 @@ SetupPlayerClassColorHooks()
 HideBlizzardPlayerTexts()
 
 -- ===============================================================
--- HOOKS PARA MANTENER POSICIÓN EN TRANSICIONES DE VEHÍCULO
+-- HOOKS TO MAINTAIN POSITION DURING VEHICLE TRANSITIONS
 -- ===============================================================
 
 -- Hook PlayerFrame_ToPlayerArt (exiting vehicle)
@@ -2712,7 +2715,7 @@ hooksecurefunc("PlayerFrame_ToVehicleArt", function()
     UpdatePlayerDragonDecoration()
 end)
 
--- Hook para actualizar texto de alternate mana bar cuando cambie el poder
+-- Hook to update alternate mana bar text when power changes
 hooksecurefunc("UnitFrameManaBar_Update", function(statusbar, unit)
     if unit == "player" then
         local _, playerClass = UnitClass("player")
@@ -2732,7 +2735,7 @@ hooksecurefunc("UnitFrameManaBar_Update", function(statusbar, unit)
     end
 end)
 
--- Hook PlayerFrame_SequenceFinished (final de animaciones)
+-- Hook PlayerFrame_SequenceFinished (end of animations)
 if PlayerFrame_SequenceFinished then
     hooksecurefunc("PlayerFrame_SequenceFinished", function()
         -- ApplyWidgetPosition already guards against combat internally
@@ -2754,7 +2757,8 @@ hooksecurefunc(PlayerFrame, "SetPoint", function(self, point, relativeTo, relati
     if point and relativeTo == UIParent and (point == "TOPLEFT" or point == "CENTER") then
         -- Immediately re-apply our position in the same frame (no defer = no flicker)
         self.DragonUI_SettingPoint = true
-        pcall(ApplyWidgetPosition)
+        local ok, err = pcall(ApplyWidgetPosition)
+        if not ok and addon.Debug then addon:Debug("ApplyWidgetPosition error:", err) end
         self.DragonUI_SettingPoint = nil
     end
 end)

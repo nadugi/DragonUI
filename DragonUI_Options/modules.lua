@@ -231,6 +231,269 @@ addon.Options.args.modules = {
         },
 
         -- ====================================================================
+        -- ENHANCEMENTS SECTION - New DragonUI Features
+        -- ====================================================================
+        enhancements_header = {
+            type = 'header',
+            name = "Enhancements",
+            order = 50
+        },
+
+        enhancements_description = {
+            type = 'description',
+            name = "|cffFFD700Visual enhancements|r that add Dragonflight-style polish to the UI.\n",
+            order = 51
+        },
+
+        -- Dark Mode
+        darkmode_enabled = {
+            type = 'toggle',
+            name = "Dark Mode",
+            desc = "Apply darker tinted textures to all UI chrome: action bars, unit frames, minimap, bags, micro menu, and more.",
+            width = "full",
+            get = function()
+                return addon.db.profile.modules and addon.db.profile.modules.darkmode and
+                       addon.db.profile.modules.darkmode.enabled
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.darkmode then addon.db.profile.modules.darkmode = {} end
+                addon.db.profile.modules.darkmode.enabled = val
+                if val then
+                    if addon.ApplyDarkMode then addon.ApplyDarkMode() end
+                else
+                    if addon.RestoreDarkMode then addon.RestoreDarkMode() end
+                end
+            end,
+            order = 52
+        },
+
+        darkmode_intensity = {
+            type = 'select',
+            name = "Dark Mode Intensity",
+            desc = "Choose how dark the UI chrome should be.",
+            values = {
+                [1] = "Light (subtle)",
+                [2] = "Medium (balanced)",
+                [3] = "Dark (maximum)",
+            },
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.darkmode
+                return config and config.intensity_preset or 2
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.darkmode then addon.db.profile.modules.darkmode = {} end
+                addon.db.profile.modules.darkmode.intensity_preset = val
+                if addon.RefreshDarkMode then addon.RefreshDarkMode() end
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.darkmode and
+                            addon.db.profile.modules.darkmode.enabled)
+            end,
+            order = 53
+        },
+
+        -- Range Indicator
+        range_indicator_enabled = {
+            type = 'toggle',
+            name = "Range Indicator",
+            desc = "Tint action button icons when target is out of range (red), not enough mana (blue), or unusable (gray).",
+            width = "full",
+            get = function()
+                return addon.db.profile.buttons and addon.db.profile.buttons.range_indicator and
+                       addon.db.profile.buttons.range_indicator.enabled
+            end,
+            set = function(info, val)
+                if not addon.db.profile.buttons then addon.db.profile.buttons = {} end
+                if not addon.db.profile.buttons.range_indicator then addon.db.profile.buttons.range_indicator = {} end
+                addon.db.profile.buttons.range_indicator.enabled = val
+            end,
+            order = 54
+        },
+
+        -- Item Quality Borders
+        itemquality_enabled = {
+            type = 'toggle',
+            name = "Item Quality Borders",
+            desc = "Show colored glow borders on action buttons containing items, colored by item quality (green = uncommon, blue = rare, purple = epic, etc.).",
+            width = "full",
+            get = function()
+                return addon.db.profile.modules and addon.db.profile.modules.itemquality and
+                       addon.db.profile.modules.itemquality.enabled
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.itemquality then addon.db.profile.modules.itemquality = {} end
+                addon.db.profile.modules.itemquality.enabled = val
+                if val then
+                    if addon.ApplyItemQualitySystem then addon.ApplyItemQualitySystem() end
+                else
+                    if addon.RestoreItemQualitySystem then addon.RestoreItemQualitySystem() end
+                end
+            end,
+            order = 55
+        },
+
+        itemquality_minquality = {
+            type = 'select',
+            name = "Minimum Quality",
+            desc = "Only show colored borders for items at or above this quality level.",
+            values = {
+                [0] = "|cff9d9d9dPoor|r",
+                [1] = "|cffffffffCommon|r",
+                [2] = "|cff1eff00Uncommon|r",
+                [3] = "|cff0070ddRare|r",
+                [4] = "|cffa335eeEpic|r",
+                [5] = "|cffff8000Legendary|r",
+            },
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.itemquality
+                return config and config.min_quality or 2
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.itemquality then addon.db.profile.modules.itemquality = {} end
+                addon.db.profile.modules.itemquality.min_quality = val
+                if addon.UpdateAllQualityBorders then addon.UpdateAllQualityBorders() end
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.itemquality and
+                            addon.db.profile.modules.itemquality.enabled)
+            end,
+            order = 56
+        },
+
+        -- Enhanced Tooltips
+        tooltip_header = {
+            type = 'header',
+            name = "Enhanced Tooltips",
+            order = 60
+        },
+
+        tooltip_enabled = {
+            type = 'toggle',
+            name = "Enable Enhanced Tooltips",
+            desc = "Improve GameTooltip with class-colored borders, class-colored names, target-of-target info, and styled health bars.",
+            width = "full",
+            get = function()
+                return addon.db.profile.modules and addon.db.profile.modules.tooltip and
+                       addon.db.profile.modules.tooltip.enabled
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.tooltip then addon.db.profile.modules.tooltip = {} end
+                addon.db.profile.modules.tooltip.enabled = val
+                if val then
+                    if addon.ApplyTooltipSystem then addon.ApplyTooltipSystem() end
+                else
+                    if addon.RestoreTooltipSystem then addon.RestoreTooltipSystem() end
+                end
+            end,
+            order = 61
+        },
+
+        tooltip_class_border = {
+            type = 'toggle',
+            name = "Class-Colored Border",
+            desc = "Color the tooltip border by the unit's class (players) or reaction (NPCs).",
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
+                return config and config.class_colored_border ~= false
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.tooltip then addon.db.profile.modules.tooltip = {} end
+                addon.db.profile.modules.tooltip.class_colored_border = val
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.tooltip and
+                            addon.db.profile.modules.tooltip.enabled)
+            end,
+            order = 62
+        },
+
+        tooltip_class_name = {
+            type = 'toggle',
+            name = "Class-Colored Name",
+            desc = "Color the unit name text in the tooltip by class color (players only).",
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
+                return config and config.class_colored_name ~= false
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.tooltip then addon.db.profile.modules.tooltip = {} end
+                addon.db.profile.modules.tooltip.class_colored_name = val
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.tooltip and
+                            addon.db.profile.modules.tooltip.enabled)
+            end,
+            order = 63
+        },
+
+        tooltip_target_of_target = {
+            type = 'toggle',
+            name = "Target of Target",
+            desc = "Add a 'Targeting: <name>' line to the tooltip showing who the unit is targeting.",
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
+                return config and config.target_of_target ~= false
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.tooltip then addon.db.profile.modules.tooltip = {} end
+                addon.db.profile.modules.tooltip.target_of_target = val
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.tooltip and
+                            addon.db.profile.modules.tooltip.enabled)
+            end,
+            order = 64
+        },
+
+        tooltip_health_bar = {
+            type = 'toggle',
+            name = "Styled Health Bar",
+            desc = "Restyle the tooltip health bar with class/reaction colors.",
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
+                return config and config.health_bar ~= false
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.tooltip then addon.db.profile.modules.tooltip = {} end
+                addon.db.profile.modules.tooltip.health_bar = val
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.tooltip and
+                            addon.db.profile.modules.tooltip.enabled)
+            end,
+            order = 65
+        },
+
+        tooltip_anchor_cursor = {
+            type = 'toggle',
+            name = "Anchor to Cursor",
+            desc = "Make the tooltip follow the cursor position instead of using the default anchor.",
+            get = function()
+                local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
+                return config and config.anchor_cursor
+            end,
+            set = function(info, val)
+                if not addon.db.profile.modules then addon.db.profile.modules = {} end
+                if not addon.db.profile.modules.tooltip then addon.db.profile.modules.tooltip = {} end
+                addon.db.profile.modules.tooltip.anchor_cursor = val
+            end,
+            disabled = function()
+                return not (addon.db.profile.modules and addon.db.profile.modules.tooltip and
+                            addon.db.profile.modules.tooltip.enabled)
+            end,
+            order = 66
+        },
+
+        -- ====================================================================
         -- ADVANCED SECTION - All Registered Modules
         -- ====================================================================
         advanced_header = {
@@ -312,5 +575,3 @@ addon.Options.args.modules.args.advanced_header.name = function()
     GenerateAdvancedModuleOptions()
     return "Advanced - Individual Module Control"
 end
-
-print("|cFF00FF00[DragonUI]|r Modules options loaded")

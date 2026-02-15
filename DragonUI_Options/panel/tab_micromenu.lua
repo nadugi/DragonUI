@@ -88,5 +88,3 @@ end
 
 -- Register the tab
 Panel:RegisterTab("micromenu", "Micro Menu", BuildMicromenuTab, 9)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: Micro Menu loaded")

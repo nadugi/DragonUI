@@ -1086,5 +1086,3 @@ local unitframeOptions = {
 -- ============================================================================
 
 addon:RegisterOptionsGroup("unitframe", unitframeOptions)
-
-print("|cFF00FF00[DragonUI]|r Unit frames options loaded")

@@ -22,13 +22,11 @@ QuestTrackerModule.questTrackerFrame = nil
 -- MODULE ENABLED CHECK
 -- =============================================================================
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.questtracker
+    return addon:GetModuleConfig("questtracker")
 end
 
 local function IsModuleEnabled()
-    local config = GetModuleConfig()
-    if not config then return true end -- Default to enabled if no config
-    return config.enabled ~= false
+    return addon:IsModuleEnabled("questtracker")
 end
 
 -- =============================================================================
@@ -413,16 +411,47 @@ function QuestTrackerModule:ShowEditorTest()
             if frame.NineSlice and addon.SetNinesliceState then
                 addon.SetNinesliceState(frame, false)
             end
-            -- Save position to DragonUI database
-            local point, _, relativePoint, x, y = frame:GetPoint()
-            if addon.db and addon.db.profile then
-                -- Initialize questtracker config if it doesn't exist
-                if not addon.db.profile.questtracker then
-                    addon.db.profile.questtracker = {}
+            -- Calculate position relative to screen quadrant (same logic as movers system)
+            local screenWidth = UIParent:GetRight()
+            local screenHeight = UIParent:GetTop()
+            local screenCenterX = UIParent:GetCenter()
+            local cx, cy = frame:GetCenter()
+            if cx and cy then
+                local LEFT = screenWidth / 3
+                local RIGHT = screenWidth * 2 / 3
+                local TOP = screenHeight / 2
+                local point, x, y
+                if cy >= TOP then
+                    point = "TOP"
+                    y = -(screenHeight - frame:GetTop())
+                else
+                    point = "BOTTOM"
+                    y = frame:GetBottom()
                 end
-                addon.db.profile.questtracker.anchor = point
-                addon.db.profile.questtracker.x = x
-                addon.db.profile.questtracker.y = y
+                if cx >= RIGHT then
+                    point = point .. "RIGHT"
+                    x = frame:GetRight() - screenWidth
+                elseif cx <= LEFT then
+                    point = point .. "LEFT"
+                    x = frame:GetLeft()
+                else
+                    x = cx - screenCenterX
+                end
+                x = math.floor(x + 0.5)
+                y = math.floor(y + 0.5)
+                -- Re-anchor the frame properly
+                frame:ClearAllPoints()
+                frame:SetPoint(point, UIParent, point, x, y)
+                frame:SetUserPlaced(false)
+                -- Save position to DragonUI database
+                if addon.db and addon.db.profile then
+                    if not addon.db.profile.questtracker then
+                        addon.db.profile.questtracker = {}
+                    end
+                    addon.db.profile.questtracker.anchor = point
+                    addon.db.profile.questtracker.x = x
+                    addon.db.profile.questtracker.y = y
+                end
             end
         end)
     end

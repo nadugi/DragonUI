@@ -1,0 +1,568 @@
+local addon = select(2, ...)
+
+-- ============================================================================
+-- ITEM QUALITY BORDERS MODULE FOR DRAGONUI
+-- Adds quality-colored border overlays to inventory-related frames:
+--   Character Panel, Inspect Frame, Bags, Bank, Merchant, Guild Bank
+-- Inspired by DragonflightUI ItemColor module.
+-- ============================================================================
+
+-- Module state tracking
+local ItemQualityModule = {
+    initialized = false,
+    applied = false,
+    hooks = {},
+    frames = {},
+    overlays = {} -- Track all created overlays for cleanup
+}
+
+-- Register with ModuleRegistry (if available)
+if addon.RegisterModule then
+    addon:RegisterModule("itemquality", ItemQualityModule, "Item Quality", "Color item borders by quality in bags, character panel, bank, and merchant")
+end
+
+-- ============================================================================
+-- CONFIGURATION FUNCTIONS
+-- ============================================================================
+
+local function GetModuleConfig()
+    return addon:GetModuleConfig("itemquality")
+end
+
+local function IsModuleEnabled()
+    return addon:IsModuleEnabled("itemquality")
+end
+
+-- ============================================================================
+-- QUALITY COLORS
+-- ============================================================================
+
+local QUALITY_COLORS = {
+    [0] = { r = 0.62, g = 0.62, b = 0.62, a = 0.5 },  -- Poor (gray)
+    [1] = { r = 1.00, g = 1.00, b = 1.00, a = 0.5 },  -- Common (white)
+    [2] = { r = 0.12, g = 1.00, b = 0.00, a = 0.8 },  -- Uncommon (green)
+    [3] = { r = 0.00, g = 0.44, b = 0.87, a = 0.8 },  -- Rare (blue)
+    [4] = { r = 0.64, g = 0.21, b = 0.93, a = 0.8 },  -- Epic (purple)
+    [5] = { r = 1.00, g = 0.50, b = 0.00, a = 0.9 },  -- Legendary (orange)
+    [6] = { r = 0.90, g = 0.80, b = 0.50, a = 0.9 },  -- Artifact (light gold)
+    [7] = { r = 0.00, g = 0.80, b = 1.00, a = 0.8 },  -- Heirloom (blizzard blue)
+}
+
+-- ============================================================================
+-- OVERLAY CREATION
+-- ============================================================================
+
+-- Create or get the quality border overlay for any item frame
+local function GetOrCreateOverlay(frame)
+    if not frame then return nil end
+    if frame.__DragonUI_QualityOverlay then
+        return frame.__DragonUI_QualityOverlay
+    end
+
+    -- Use Blizzard's glow border texture in ADD blend mode
+    local overlay = frame:CreateTexture(nil, "OVERLAY", nil, 6)
+    overlay:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    overlay:SetBlendMode("ADD")
+    overlay:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    -- The glow texture must be ~1.7x the button size for a proper halo effect
+    -- Bag/character item buttons are ~37px, so glow = ~62px
+    local w, h = frame:GetWidth(), frame:GetHeight()
+    if (not w or w == 0) then w = 37 end
+    if (not h or h == 0) then h = 37 end
+    overlay:SetWidth(w * 1.7)
+    overlay:SetHeight(h * 1.7)
+    overlay:Hide()
+
+    frame.__DragonUI_QualityOverlay = overlay
+    ItemQualityModule.overlays[frame] = overlay
+    return overlay
+end
+
+-- Apply quality color to overlay, or hide if below min threshold
+local function SetOverlayQuality(frame, quality)
+    local overlay = GetOrCreateOverlay(frame)
+    if not overlay then return end
+
+    local config = GetModuleConfig()
+    local minQuality = config and config.min_quality or 2
+
+    if quality and quality >= minQuality and QUALITY_COLORS[quality] then
+        local c = QUALITY_COLORS[quality]
+        overlay:SetVertexColor(c.r, c.g, c.b, c.a or 0.8)
+        overlay:Show()
+    else
+        overlay:Hide()
+    end
+end
+
+-- ============================================================================
+-- CHARACTER PANEL (equipped items)
+-- ============================================================================
+
+-- Equipment slot names → global frame names
+-- GetInventorySlotInfo takes a NAME string, not a numeric ID
+local EQUIP_SLOTS = {
+    { name = "AmmoSlot",       frame = "CharacterAmmoSlot" },
+    { name = "HeadSlot",       frame = "CharacterHeadSlot" },
+    { name = "NeckSlot",       frame = "CharacterNeckSlot" },
+    { name = "ShoulderSlot",   frame = "CharacterShoulderSlot" },
+    { name = "ShirtSlot",      frame = "CharacterShirtSlot" },
+    { name = "ChestSlot",      frame = "CharacterChestSlot" },
+    { name = "WaistSlot",      frame = "CharacterWaistSlot" },
+    { name = "LegsSlot",       frame = "CharacterLegsSlot" },
+    { name = "FeetSlot",       frame = "CharacterFeetSlot" },
+    { name = "WristSlot",      frame = "CharacterWristSlot" },
+    { name = "HandsSlot",      frame = "CharacterHandsSlot" },
+    { name = "Finger0Slot",    frame = "CharacterFinger0Slot" },
+    { name = "Finger1Slot",    frame = "CharacterFinger1Slot" },
+    { name = "Trinket0Slot",   frame = "CharacterTrinket0Slot" },
+    { name = "Trinket1Slot",   frame = "CharacterTrinket1Slot" },
+    { name = "BackSlot",       frame = "CharacterBackSlot" },
+    { name = "MainHandSlot",   frame = "CharacterMainHandSlot" },
+    { name = "SecondaryHandSlot", frame = "CharacterSecondaryHandSlot" },
+    { name = "RangedSlot",     frame = "CharacterRangedSlot" },
+    { name = "TabardSlot",     frame = "CharacterTabardSlot" },
+}
+
+-- Bag equipment slot IDs (20-23) — these live on the bag-bar and should NOT get
+-- quality overlays.  Only character-panel gear slots should be decorated.
+local BAG_EQUIP_SLOT_IDS = { [20] = true, [21] = true, [22] = true, [23] = true }
+
+local function UpdateCharacterSlot(button)
+    if not button then return end
+    if not IsModuleEnabled() then return end
+
+    local slotID = button:GetID()
+    if not slotID or slotID < 0 then return end
+
+    -- Skip bag equipment slots — they sit on the bag-bar, not the character panel
+    if BAG_EQUIP_SLOT_IDS[slotID] then return end
+
+    local hasItem = GetInventoryItemTexture("player", slotID)
+    if hasItem then
+        local quality = GetInventoryItemQuality("player", slotID)
+        SetOverlayQuality(button, quality)
+    else
+        SetOverlayQuality(button, nil)
+    end
+end
+
+local function UpdateAllCharacterSlots()
+    if not IsModuleEnabled() then return end
+
+    for _, slot in ipairs(EQUIP_SLOTS) do
+        local button = _G[slot.frame]
+        if button then
+            UpdateCharacterSlot(button)
+        end
+    end
+end
+
+-- ============================================================================
+-- INSPECT FRAME (inspected player's equipped items)
+-- ============================================================================
+
+local function UpdateInspectSlot(button)
+    if not button then return end
+    if not IsModuleEnabled() then return end
+    if not InspectFrame or not InspectFrame.unit then return end
+
+    local slotID = button:GetID()
+    if not slotID then return end
+    if slotID >= 20 and slotID <= 23 then return end
+
+    local unit = InspectFrame.unit
+    local hasItem = GetInventoryItemTexture(unit, slotID)
+    if hasItem then
+        local quality = GetInventoryItemQuality(unit, slotID)
+        SetOverlayQuality(button, quality)
+    else
+        SetOverlayQuality(button, nil)
+    end
+end
+
+-- ============================================================================
+-- BAGS (container frames)
+-- ============================================================================
+
+local function GetBagItemQuality(bag, slot)
+    local link = GetContainerItemLink(bag, slot)
+    if not link then return nil end
+    local _, _, quality = GetItemInfo(link)
+    -- GetItemInfo can return nil on first call for uncached items (e.g. after
+    -- a form change flushes some caches).  Fall back to parsing the link color.
+    if not quality and link then
+        local _, _, colorHex = string.find(link, "|c(%x+)|")
+        if colorHex then
+            -- Map known quality color hex codes
+            local COLOR_TO_QUALITY = {
+                ["ff9d9d9d"] = 0, -- Poor
+                ["ffffffff"] = 1, -- Common
+                ["ff1eff00"] = 2, -- Uncommon
+                ["ff0070dd"] = 3, -- Rare
+                ["ffa335ee"] = 4, -- Epic
+                ["ffff8000"] = 5, -- Legendary
+                ["ffe6cc80"] = 6, -- Artifact
+                ["ff00ccff"] = 7, -- Heirloom
+            }
+            quality = COLOR_TO_QUALITY[colorHex:lower()]
+        end
+    end
+    return quality
+end
+
+local function UpdateBagSlot(frame, bag, slot)
+    if not frame or not IsModuleEnabled() then return end
+    local quality = GetBagItemQuality(bag, slot)
+    SetOverlayQuality(frame, quality)
+end
+
+local function UpdateAllBags()
+    if not IsModuleEnabled() then return end
+
+    -- NUM_CONTAINER_FRAMES = 13 in 3.3.5a (bags 0-4)
+    local numContainerFrames = NUM_CONTAINER_FRAMES or 13
+    for i = 1, numContainerFrames do
+        local containerFrame = _G["ContainerFrame" .. i]
+        if containerFrame and containerFrame:IsShown() then
+            local bag = containerFrame:GetID()
+            local numSlots = GetContainerNumSlots(bag)
+            for btnIdx = 1, numSlots do
+                local itemButton = _G["ContainerFrame" .. i .. "Item" .. btnIdx]
+                if itemButton then
+                    -- Use the button's actual slot ID, NOT the loop index.
+                    -- WoW 3.3.5a displays bag items in reverse order, so
+                    -- ContainerFrame1Item1 may represent slot 16, not slot 1.
+                    local realSlot = itemButton:GetID()
+                    UpdateBagSlot(itemButton, bag, realSlot)
+                end
+            end
+        end
+    end
+end
+
+-- ============================================================================
+-- BANK (bank frame slots)
+-- ============================================================================
+
+local NUM_BANKGENERIC_SLOTS = 28 -- Standard bank slots in 3.3.5a
+
+local function UpdateBankSlots()
+    if not IsModuleEnabled() then return end
+
+    -- Main bank slots: BankFrameItem1 through BankFrameItem28
+    for i = 1, NUM_BANKGENERIC_SLOTS do
+        local button = _G["BankFrameItem" .. i]
+        if button then
+            local slotID = button:GetID()
+            -- Bank uses BANK_CONTAINER = -1 for main slots
+            local link = GetContainerItemLink(BANK_CONTAINER, slotID)
+            if link then
+                local _, _, quality = GetItemInfo(link)
+                SetOverlayQuality(button, quality)
+            else
+                SetOverlayQuality(button, nil)
+            end
+        end
+    end
+
+    -- Bank bag slots (bags 5-11)
+    for bag = 5, 11 do
+        local numSlots = GetContainerNumSlots(bag)
+        for slot = 1, numSlots do
+            -- Bank bag container frames share ContainerFrame naming
+            local numContainerFrames = NUM_CONTAINER_FRAMES or 13
+            for i = 1, numContainerFrames do
+                local containerFrame = _G["ContainerFrame" .. i]
+                if containerFrame and containerFrame:IsShown() and containerFrame:GetID() == bag then
+                    local itemButton = _G["ContainerFrame" .. i .. "Item" .. slot]
+                    if itemButton then
+                        local link = GetContainerItemLink(bag, slot)
+                        if link then
+                            local _, _, quality = GetItemInfo(link)
+                            SetOverlayQuality(itemButton, quality)
+                        else
+                            SetOverlayQuality(itemButton, nil)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ============================================================================
+-- MERCHANT FRAME
+-- ============================================================================
+
+local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE or 10
+
+local function UpdateMerchantItems()
+    if not IsModuleEnabled() then return end
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+
+    for i = 1, MERCHANT_ITEMS_PER_PAGE do
+        local button = _G["MerchantItem" .. i .. "ItemButton"]
+        if button then
+            local link = GetMerchantItemLink(i)
+            if link then
+                local _, _, quality = GetItemInfo(link)
+                SetOverlayQuality(button, quality)
+            else
+                SetOverlayQuality(button, nil)
+            end
+        end
+    end
+
+    -- Buyback item
+    local buybackButton = _G["MerchantBuyBackItemItemButton"]
+    if buybackButton then
+        local link = GetBuybackItemLink(GetNumBuybackItems())
+        if link then
+            local _, _, quality = GetItemInfo(link)
+            SetOverlayQuality(buybackButton, quality)
+        else
+            SetOverlayQuality(buybackButton, nil)
+        end
+    end
+end
+
+-- ============================================================================
+-- GUILD BANK
+-- ============================================================================
+
+local function UpdateGuildBankSlots()
+    if not IsModuleEnabled() then return end
+    if not GuildBankFrame or not GuildBankFrame:IsShown() then return end
+
+    local tab = GetCurrentGuildBankTab and GetCurrentGuildBankTab() or 1
+    -- Guild bank: 7 columns, 14 slots each = 98 slots per tab
+    for col = 1, 7 do
+        for slot = 1, 14 do
+            local buttonIndex = (col - 1) * 14 + slot
+            local button = _G["GuildBankColumn" .. col .. "Button" .. slot]
+            if button then
+                local link = GetGuildBankItemLink and GetGuildBankItemLink(tab, buttonIndex)
+                if link then
+                    local _, _, quality = GetItemInfo(link)
+                    SetOverlayQuality(button, quality)
+                else
+                    SetOverlayQuality(button, nil)
+                end
+            end
+        end
+    end
+end
+
+-- ============================================================================
+-- REFRESH ALL
+-- ============================================================================
+
+local function UpdateAllQualityBorders()
+    if not IsModuleEnabled() then return end
+    UpdateAllCharacterSlots()
+    UpdateAllBags()
+    UpdateBankSlots()
+    UpdateMerchantItems()
+    UpdateGuildBankSlots()
+end
+
+-- ============================================================================
+-- APPLY / RESTORE SYSTEM
+-- ============================================================================
+
+local function ApplyItemQualitySystem()
+    if ItemQualityModule.applied then return end
+
+    -- Character Panel: hook PaperDollItemSlotButton_Update
+    if not ItemQualityModule.hooks["PaperDoll"] and PaperDollItemSlotButton_Update then
+        hooksecurefunc("PaperDollItemSlotButton_Update", function(button)
+            if not IsModuleEnabled() then return end
+            UpdateCharacterSlot(button)
+        end)
+        ItemQualityModule.hooks["PaperDoll"] = true
+    end
+
+    -- Inspect Frame: hook InspectPaperDollItemSlotButton_Update
+    if not ItemQualityModule.hooks["Inspect"] then
+        -- This function may not exist until the Inspect addon loads
+        if InspectPaperDollItemSlotButton_Update then
+            hooksecurefunc("InspectPaperDollItemSlotButton_Update", function(button)
+                if not IsModuleEnabled() then return end
+                UpdateInspectSlot(button)
+            end)
+            ItemQualityModule.hooks["Inspect"] = true
+        end
+    end
+
+    -- Bags: hook ContainerFrame_Update
+    if not ItemQualityModule.hooks["ContainerFrame"] and ContainerFrame_Update then
+        hooksecurefunc("ContainerFrame_Update", function(frame)
+            if not IsModuleEnabled() then return end
+            if not frame then return end
+            local bag = frame:GetID()
+            local numSlots = GetContainerNumSlots(bag)
+            local frameName = frame:GetName()
+            for btnIdx = 1, numSlots do
+                local itemButton = _G[frameName .. "Item" .. btnIdx]
+                if itemButton then
+                    -- Use button's actual slot ID (items are displayed in reverse order)
+                    local realSlot = itemButton:GetID()
+                    UpdateBagSlot(itemButton, bag, realSlot)
+                end
+            end
+        end)
+        ItemQualityModule.hooks["ContainerFrame"] = true
+    end
+
+    -- Also hook bag open/close
+    if not ItemQualityModule.hooks["ToggleBackpack"] then
+        hooksecurefunc("ToggleBackpack", function()
+            if not IsModuleEnabled() then return end
+            addon:After(0.1, UpdateAllBags)
+        end)
+        ItemQualityModule.hooks["ToggleBackpack"] = true
+    end
+
+    if not ItemQualityModule.hooks["ToggleBag"] then
+        hooksecurefunc("ToggleBag", function()
+            if not IsModuleEnabled() then return end
+            addon:After(0.1, UpdateAllBags)
+        end)
+        ItemQualityModule.hooks["ToggleBag"] = true
+    end
+
+    -- Also hook OpenBackpack / OpenBag for the "open all bags" scenario
+    if not ItemQualityModule.hooks["OpenBackpack"] and OpenBackpack then
+        hooksecurefunc("OpenBackpack", function()
+            if not IsModuleEnabled() then return end
+            addon:After(0.1, UpdateAllBags)
+        end)
+        ItemQualityModule.hooks["OpenBackpack"] = true
+    end
+
+    -- Merchant: hook MerchantFrame_UpdateMerchantInfo
+    if not ItemQualityModule.hooks["Merchant"] and MerchantFrame_UpdateMerchantInfo then
+        hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
+            if not IsModuleEnabled() then return end
+            UpdateMerchantItems()
+        end)
+        ItemQualityModule.hooks["Merchant"] = true
+    end
+
+    -- Merchant Buyback
+    if not ItemQualityModule.hooks["MerchantBuyback"] and MerchantFrame_UpdateBuybackInfo then
+        hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function()
+            if not IsModuleEnabled() then return end
+            UpdateMerchantItems()
+        end)
+        ItemQualityModule.hooks["MerchantBuyback"] = true
+    end
+
+    -- Guild Bank
+    if not ItemQualityModule.hooks["GuildBank"] and GuildBankFrame_Update then
+        hooksecurefunc("GuildBankFrame_Update", function()
+            if not IsModuleEnabled() then return end
+            UpdateGuildBankSlots()
+        end)
+        ItemQualityModule.hooks["GuildBank"] = true
+    end
+
+    -- Initial update
+    addon:After(0.5, UpdateAllQualityBorders)
+
+    ItemQualityModule.applied = true
+    ItemQualityModule.initialized = true
+end
+
+local function RestoreItemQualitySystem()
+    if not ItemQualityModule.applied then return end
+
+    -- Hide all tracked quality overlays
+    for frame, overlay in pairs(ItemQualityModule.overlays) do
+        if overlay then overlay:Hide() end
+    end
+
+    ItemQualityModule.applied = false
+end
+
+-- ============================================================================
+-- PROFILE CHANGE HANDLER
+-- ============================================================================
+
+local function OnProfileChanged()
+    if IsModuleEnabled() then
+        RestoreItemQualitySystem()
+        ItemQualityModule.applied = false
+        ApplyItemQualitySystem()
+    else
+        RestoreItemQualitySystem()
+    end
+end
+
+-- ============================================================================
+-- INITIALIZATION
+-- ============================================================================
+
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+eventFrame:RegisterEvent("BAG_UPDATE")
+eventFrame:RegisterEvent("BANKFRAME_OPENED")
+eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+eventFrame:RegisterEvent("MERCHANT_SHOW")
+eventFrame:RegisterEvent("MERCHANT_UPDATE")
+
+eventFrame:SetScript("OnEvent", function(self, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == "DragonUI" then
+        if not IsModuleEnabled() then return end
+
+        -- Register profile callbacks
+        addon:After(0.5, function()
+            if addon.db and addon.db.RegisterCallback then
+                addon.db.RegisterCallback(addon, "OnProfileChanged", OnProfileChanged)
+                addon.db.RegisterCallback(addon, "OnProfileCopied", OnProfileChanged)
+                addon.db.RegisterCallback(addon, "OnProfileReset", OnProfileChanged)
+            end
+        end)
+
+        -- Late hook for Inspect (loaded on demand)
+        addon:After(1.0, function()
+            if not ItemQualityModule.hooks["Inspect"] and InspectPaperDollItemSlotButton_Update then
+                hooksecurefunc("InspectPaperDollItemSlotButton_Update", function(button)
+                    if not IsModuleEnabled() then return end
+                    UpdateInspectSlot(button)
+                end)
+                ItemQualityModule.hooks["Inspect"] = true
+            end
+        end)
+
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        if not IsModuleEnabled() then return end
+        addon:After(1.0, function()
+            ApplyItemQualitySystem()
+        end)
+
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
+        if not IsModuleEnabled() then return end
+        addon:After(0.2, UpdateAllCharacterSlots)
+
+    elseif event == "BAG_UPDATE" then
+        if not IsModuleEnabled() then return end
+        addon:After(0.2, UpdateAllBags)
+
+    elseif event == "BANKFRAME_OPENED" or event == "PLAYERBANKSLOTS_CHANGED" then
+        if not IsModuleEnabled() then return end
+        addon:After(0.2, UpdateBankSlots)
+
+    elseif event == "MERCHANT_SHOW" or event == "MERCHANT_UPDATE" then
+        if not IsModuleEnabled() then return end
+        addon:After(0.2, UpdateMerchantItems)
+    end
+end)
+
+-- Export for external use
+addon.ApplyItemQualitySystem = ApplyItemQualitySystem
+addon.RestoreItemQualitySystem = RestoreItemQualitySystem
+addon.UpdateAllQualityBorders = UpdateAllQualityBorders

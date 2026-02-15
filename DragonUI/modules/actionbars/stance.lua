@@ -2,7 +2,6 @@ local addon = select(2,...);
 local config = addon.config;
 local event = addon.package;
 local class = addon._class;
-local pUiMainBar = addon.pUiMainBar;
 local unpack = unpack;
 local select = select;
 local pairs = pairs;
@@ -33,12 +32,25 @@ end
 -- ============================================================================
 
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.stance
+    return addon:GetModuleConfig("stance")
 end
 
 local function IsModuleEnabled()
-    local cfg = GetModuleConfig()
-    return cfg and cfg.enabled
+    return addon:IsModuleEnabled("stance")
+end
+
+-- Nil-safe accessor for stance-specific config (addon.db.profile.additional.stance)
+local STANCE_DEFAULTS = {
+    x_position = -230,
+    y_offset = 0,
+    button_size = 36,
+    button_spacing = 6,
+}
+local function GetStanceConfig()
+    if addon.db and addon.db.profile and addon.db.profile.additional and addon.db.profile.additional.stance then
+        return addon.db.profile.additional.stance
+    end
+    return STANCE_DEFAULTS
 end
 
 -- ============================================================================
@@ -83,7 +95,7 @@ local function stancebar_update()
     if not IsModuleEnabled() or not anchor then return end
     
     -- READ VALUES FROM DATABASE
-    local stanceConfig = addon.db.profile.additional.stance
+    local stanceConfig = GetStanceConfig()
     local x_position = stanceConfig.x_position or -230  -- X position from center
     local y_offset = stanceConfig.y_offset or 0         -- Additional Y offset
     local base_y = 200                                  -- Base Y position from bottom
@@ -246,8 +258,8 @@ local function stancebutton_position()
     if not IsModuleEnabled() or not stancebar or not anchor then return end
     
     -- READ VALUES FROM DATABASE
-    local stanceConfig = addon.db.profile.additional.stance
-    local additionalConfig = addon.db.profile.additional
+    local stanceConfig = GetStanceConfig()
+    local additionalConfig = (addon.db and addon.db.profile and addon.db.profile.additional) or {}
     local btnsize = stanceConfig.button_size or additionalConfig.size or 36
     local space = stanceConfig.button_spacing or additionalConfig.spacing or 6
     
@@ -456,7 +468,7 @@ local function ApplyStanceSystem()
                 -- Position overlay at anchor location
                 if anchor then
                     -- Calculate width based on config and stance buttons
-                    local stanceConfig = addon.db.profile.additional.stance
+                    local stanceConfig = GetStanceConfig()
                     local numForms = GetNumShapeshiftForms() or 0
                     local buttonWidth = stanceConfig.button_size or 36
                     local spacing = stanceConfig.button_spacing or 6
@@ -573,8 +585,8 @@ function addon.RefreshStance()
 	end
 	
 	-- Update button size and spacing (scale-based - matching stancebutton_position)
-	local stanceConfig = addon.db.profile.additional.stance
-	local additionalConfig = addon.db.profile.additional
+	local stanceConfig = GetStanceConfig()
+	local additionalConfig = (addon.db and addon.db.profile and addon.db.profile.additional) or {}
 	local btnsize = stanceConfig.button_size or additionalConfig.size or 36
 	local space = stanceConfig.button_spacing or additionalConfig.spacing or 6
 	
@@ -620,7 +632,7 @@ function addon.DebugStanceBar()
 		anchorExists = anchor and true or false,
 		stanceBarExists = _G.pUiStanceBar and true or false,
 		numShapeshiftForms = GetNumShapeshiftForms(),
-		stanceConfig = addon.db.profile.additional.stance
+		stanceConfig = GetStanceConfig()
 	};
 	
 	

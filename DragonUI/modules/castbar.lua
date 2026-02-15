@@ -1610,9 +1610,9 @@ local function OnEvent(self, event, unit, ...)
     elseif event == 'PLAYER_FOCUS_CHANGED' then
         CastbarModule:HandleFocusChanged()
     elseif event == 'PLAYER_ENTERING_WORLD' then
-        -- Protección total para reload en combate
+        -- Full protection for reload during combat
         if addon.core and addon.core.ScheduleTimer then
-            -- Path normal con timers
+            -- Normal path with timers
             addon.core:ScheduleTimer(function()
                 CastbarModule:RefreshCastbar("player")
                 CastbarModule:RefreshCastbar("target")
@@ -1631,12 +1631,12 @@ local function OnEvent(self, event, unit, ...)
                 end, 1.0)
             end, 0.5)
         else
-            -- Fallback inmediato sin timers (reload en combate)
+            -- Immediate fallback without timers (reload during combat)
             CastbarModule:RefreshCastbar("player")
             CastbarModule:RefreshCastbar("target")
             CastbarModule:RefreshCastbar("focus")
             
-            -- Segundo paso también inmediato
+            -- Second step also immediate
             if IsEnabled("player") then
                 HideBlizzardCastbar("player")
             end

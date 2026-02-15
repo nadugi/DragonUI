@@ -20,11 +20,11 @@ function addon:CreateOptionsTable()
         name = "DragonUI",
         type = 'group',
         args = {
-            --  BOTÓN PARA ACTIVAR EL MODO DE EDICIÓN
+            --  BUTTON TO ACTIVATE EDITOR MODE
             toggle_editor_mode = {
                 type = 'execute',
                 name = function()
-                    -- El nombre del botón cambia dinámicamente y maneja la lógica de estado
+                    -- The button name changes dynamically and handles state logic
                     if addon.EditorMode then
                         local success, isActive = pcall(function()
                             return addon.EditorMode:IsActive()
@@ -37,20 +37,20 @@ function addon:CreateOptionsTable()
                 end,
                 desc = "Unlock UI elements to move them with your mouse. A button will appear to exit this mode.",
                 func = function()
-                    --  CORRECCIÓN 3: Ocultar el tooltip para que no se quede pegado.
+                    --  FIX 3: Hide the tooltip so it doesn't get stuck.
                     GameTooltip:Hide()
 
-                    -- Usar la función de la librería para cerrar su propia ventana.
+                    -- Use the library function to close its own window.
                     LibStub("AceConfigDialog-3.0"):Close("DragonUI")
 
-                    -- Llama a la función Toggle del editor_mode.lua
+                    -- Call the Toggle function from editor_mode.lua
                     if addon.EditorMode then
                         addon.EditorMode:Toggle()
                     end
                 end,
                 -- FORCE button to be enabled initially to avoid AceConfig timing issues
                 disabled = false,
-                order = 0 -- El orden más bajo para que aparezca primero
+                order = 0 -- Lowest order so it appears first
             },
             
             -- ✅ KEYBINDING MODE BUTTON
@@ -82,14 +82,14 @@ function addon:CreateOptionsTable()
                 order = 0.3
             },
             
-            --  SEPARADOR VISUAL
+            --  VISUAL SEPARATOR
             editor_separator = {
                 type = 'header',
-                name = ' ', -- Un espacio en blanco actúa como separador
+                name = ' ', -- A blank space acts as a separator
                 order = 0.5
             },
 
-            -- NUEVA SECCIÓN: MODULES
+            -- NEW SECTION: MODULES
             modules = {
                 type = 'group',
                 name = "Modules",
@@ -1427,7 +1427,7 @@ function addon:CreateOptionsTable()
                 type = "group",
                 order = 10,
                 args = {
-                    --  CONFIGURACIONES BÁSICAS DEL MINIMAP
+                    --  BASIC MINIMAP SETTINGS
                     scale = {
                         type = "range",
                         name = "Scale",
@@ -1519,7 +1519,7 @@ function addon:CreateOptionsTable()
                         order = 6
                     },
 
-                    --  SECCIÓN TIEMPO Y CALENDARIO INTEGRADA
+                    --  INTEGRATED TIME AND CALENDAR SECTION
                     time_header = {
                         type = 'header',
                         name = "Time & Calendar",
@@ -1578,7 +1578,7 @@ function addon:CreateOptionsTable()
                         order = 4.8
                     },
 
-                    --  OTRAS CONFIGURACIONES DEL MINIMAP
+                    --  OTHER MINIMAP SETTINGS
                     display_header = {
                         type = 'header',
                         name = "Display Settings",
@@ -1667,7 +1667,7 @@ function addon:CreateOptionsTable()
                         name = "Reset Position",
                         desc = "Reset minimap to default position (top-right corner)",
                         func = function()
-                            --  SOLO RESETEAR SISTEMA WIDGETS
+                            --  ONLY RESET WIDGET SYSTEM
                             if not addon.db.profile.widgets then
                                 addon.db.profile.widgets = {}
                             end
@@ -2031,7 +2031,7 @@ function addon:CreateOptionsTable()
                                 end,
                                 order = 7,
                                 disabled = function()
-                                    --  CORRECCIÓN LÓGICA: Deshabilitar si el modo es "simple"
+                                    --  LOGIC FIX: Disable if mode is "simple"
                                     return (addon.db.profile.castbar.target and
                                                addon.db.profile.castbar.target.text_mode) == "simple"
                                 end
@@ -2055,7 +2055,7 @@ function addon:CreateOptionsTable()
                                 end,
                                 order = 8,
                                 disabled = function()
-                                    --  CORRECCIÓN LÓGICA: Deshabilitar si el modo es "simple"
+                                    --  LOGIC FIX: Disable if mode is "simple"
                                     return (addon.db.profile.castbar.target and
                                                addon.db.profile.castbar.target.text_mode) == "simple"
                                 end
@@ -2382,7 +2382,7 @@ function addon:CreateOptionsTable()
                                 end,
                                 set = function(info, value)
                                     addon.db.profile.unitframe.scale = value
-                                    --  TRIGGER DIRECTO SIN THROTTLING
+                                    --  TRIGGER DIRECTLY WITHOUT THROTTLING
                                     if addon.RefreshUnitFrames then
                                         addon.RefreshUnitFrames()
                                     end
@@ -2409,7 +2409,7 @@ function addon:CreateOptionsTable()
                                 end,
                                 set = function(info, value)
                                     addon.db.profile.unitframe.player.scale = value
-                                    --  REFRESH AUTOMÁTICO
+                                    --  AUTOMATIC REFRESH
                                     if addon.PlayerFrame and addon.PlayerFrame.RefreshPlayerFrame then
                                         addon.PlayerFrame.RefreshPlayerFrame()
                                     end
@@ -2425,7 +2425,7 @@ function addon:CreateOptionsTable()
                                 end,
                                 set = function(info, value)
                                     addon.db.profile.unitframe.player.classcolor = value
-                                    --  TRIGGER INMEDIATO
+                                    --  IMMEDIATE TRIGGER
                                     if addon.PlayerFrame and addon.PlayerFrame.UpdatePlayerHealthBarColor then
                                         addon.PlayerFrame.UpdatePlayerHealthBarColor()
                                     end
@@ -2598,7 +2598,7 @@ function addon:CreateOptionsTable()
                                 end,
                                 set = function(info, value)
                                     addon.db.profile.unitframe.target.classcolor = value
-                                    --  TRIGGER INMEDIATO
+                                    --  IMMEDIATE TRIGGER
                                     if addon.TargetFrame and addon.TargetFrame.UpdateTargetHealthBarColor then
                                         addon.TargetFrame.UpdateTargetHealthBarColor()
                                     end
@@ -3304,25 +3304,25 @@ function addon:CreateOptionsTable()
             },
 
             profiles = (function()
-                -- Obtenemos la tabla de opciones de perfiles estándar
+                -- Get the standard profile options table
                 local profileOptions = LibStub("AceDBOptions-3.0"):GetOptionsTable(addon.db)
 
-                -- Modificamos los textos para que sean más concisos
+                -- Modify the texts to be more concise
                 profileOptions.name = "Profiles"
                 profileOptions.desc = "Manage UI settings profiles."
                 profileOptions.order = 99
 
-                --  COMPROBAMOS QUE LA TABLA DE PERFIL EXISTE ANTES DE MODIFICARLA
+                --  CHECK THAT THE PROFILE TABLE EXISTS BEFORE MODIFYING IT
                 if profileOptions.args and profileOptions.args.profile then
                     profileOptions.args.profile.name = "Active Profile"
                     profileOptions.args.profile.desc = "Choose the profile to use for your settings."
                 end
 
-                -- AÑADIMOS LA DESCRIPCIÓN Y EL BOTÓN DE RECARGA
+                -- ADD THE DESCRIPTION AND RELOAD BUTTON
                 profileOptions.args.reload_warning = {
                     type = 'description',
                     name = "\n|cffFFD700It's recommended to reload the UI after switching profiles.|r",
-                    order = 15 -- Justo después del selector de perfiles
+                    order = 15 -- Right after the profile selector
                 }
 
                 profileOptions.args.reload_execute = {
@@ -3331,7 +3331,7 @@ function addon:CreateOptionsTable()
                     func = function()
                         ReloadUI()
                     end,
-                    order = 16 -- Justo después del texto de advertencia
+                    order = 16 -- Right after the warning text
                 }
 
                 return profileOptions

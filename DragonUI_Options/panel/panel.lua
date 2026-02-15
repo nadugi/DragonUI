@@ -503,5 +503,3 @@ end
 function Panel:IsOpen()
     return self.frame and self.frame:IsShown()
 end
-
-print("|cFF00FF00[DragonUI]|r Options panel loaded")

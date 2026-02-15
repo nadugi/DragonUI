@@ -22,26 +22,9 @@ local CONFIG = {
 -- OPTIMIZED SYSTEMS
 -- ============================================================================
 
--- Shared timer system for memory efficiency
-local delayedActions = {}
-local sharedTimer = CreateFrame("Frame")
-sharedTimer:SetScript("OnUpdate", function(self, elapsed)
-    for i = #delayedActions, 1, -1 do
-        local action = delayedActions[i]
-        action.elapsed = action.elapsed + elapsed
-        if action.elapsed >= action.delay then
-            action.func()
-            table.remove(delayedActions, i)
-        end
-    end
-    if #delayedActions == 0 then
-        self:SetScript("OnUpdate", nil)
-    end
-end)
-
+-- Timer helper: delegates to centralized addon:After() (note: arg order is func, delay)
 local function DelayedCall(func, delay)
-    table.insert(delayedActions, { func = func, delay = delay, elapsed = 0 })
-    sharedTimer:SetScript("OnUpdate", sharedTimer:GetScript("OnUpdate"))
+    addon:After(delay, func)
 end
 
 -- Cache system for addon loading checks
@@ -196,62 +179,59 @@ behaviors.CompactRaidFrameFix = function(addonName, addonInfo)
     
 
     
-    -- Create a frame for simple polling system (more reliable than events)
+    -- Polling frame that ONLY runs while in combat (auto-disables otherwise)
     local pollingFrame = CreateFrame("Frame")
     local checkInterval = 0
     
-    pollingFrame:SetScript("OnUpdate", function(self, elapsed)
-        checkInterval = checkInterval + elapsed
-        
-        if checkInterval >= 0.5 then -- Check every 0.5 seconds
+    local function StartPolling()
+        checkInterval = 0
+        pollingFrame:SetScript("OnUpdate", function(self, elapsed)
+            checkInterval = checkInterval + elapsed
+            if checkInterval < 0.5 then return end
             checkInterval = 0
             
-            local currentlyInCombat = InCombatLockdown()
             local currentPartySize = GetNumPartyMembers()
-            
-
-            
-            -- Detect combat state change
-            if inCombat and not currentlyInCombat then
-                -- Just exited combat
-                if needsRefresh then
-                    -- Check what type of party change happened during combat
-                    if currentPartySize == 0 and partySizeWhenCombatStarted > 0 then
-                        -- LEFT party during combat - AUTO-CLEAN
-                        CleanPartyFrames()
-                    elseif currentPartySize > 0 and partySizeWhenCombatStarted == 0 then
-                        -- JOINED party during combat - show reload dialog
-                        ShowPartyReloadDialog()
-                    elseif currentPartySize > 0 and partySizeWhenCombatStarted > 0 then
-                        -- Party composition changed but still in party - clean and refresh
-                        CleanPartyFrames()
-                    end
-                    needsRefresh = false
-                end
-                
-                -- Update tracking variables for next cycle
-                lastPartySize = currentPartySize
-                partySizeWhenCombatStarted = 0
-            elseif not inCombat and currentlyInCombat then
-                -- Just entered combat - save the party size when combat started
-                partySizeWhenCombatStarted = currentPartySize
-                lastPartySize = currentPartySize
-            end
-            
-            -- Detect party change during combat
-            if currentlyInCombat and (currentPartySize ~= lastPartySize) then
+            if currentPartySize ~= lastPartySize then
                 needsRefresh = true
-                -- Don't update lastPartySize here - we need original value for comparison
             end
-            
-            -- Update combat state
-            inCombat = currentlyInCombat
+        end)
+    end
+    
+    local function StopPolling()
+        pollingFrame:SetScript("OnUpdate", nil)
+        
+        if needsRefresh then
+            local currentPartySize = GetNumPartyMembers()
+            if currentPartySize == 0 and partySizeWhenCombatStarted > 0 then
+                CleanPartyFrames()
+            elseif currentPartySize > 0 and partySizeWhenCombatStarted > 0 then
+                CleanPartyFrames()
+            elseif currentPartySize > 0 and partySizeWhenCombatStarted == 0 then
+                ShowPartyReloadDialog()
+            end
+            needsRefresh = false
+        end
+        
+        lastPartySize = GetNumPartyMembers()
+        partySizeWhenCombatStarted = 0
+        inCombat = false
+    end
+    
+    -- Use events to toggle polling on/off (much cheaper than always polling)
+    pollingFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    pollingFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    pollingFrame:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_DISABLED" then
+            inCombat = true
+            partySizeWhenCombatStarted = GetNumPartyMembers()
+            lastPartySize = partySizeWhenCombatStarted
+            StartPolling()
+        elseif event == "PLAYER_REGEN_ENABLED" then
+            StopPolling()
         end
     end)
     
 
-    
-    print("|cFFFFFF00DragonUI:|r CompactRaidFrame compatibility system ready!")
 end
 
 

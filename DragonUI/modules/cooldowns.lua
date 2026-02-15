@@ -162,7 +162,7 @@ local isHooked = false
 function addon.InitializeCooldowns()
     if isHooked then return end
     
-    -- MEJORAR: Verificar que el botón existe antes de hookear
+    -- TODO: Verify that the button exists before hooking
     if not _G.ActionButton1Cooldown then
 
         return

@@ -5,7 +5,7 @@
 
 local addon = select(2, ...);
 
---  CREAR MÓDULO USANDO EL SISTEMA DE DRAGONUI
+--  CREATE MODULE USING THE DRAGONUI SYSTEM
 local BuffFrameModule = {}
 addon.BuffFrameModule = BuffFrameModule
 
@@ -14,12 +14,12 @@ if addon.RegisterModule then
     addon:RegisterModule("buffs", BuffFrameModule, "Buff Frame", "Custom buff frame styling, positioning and toggle button")
 end
 
---  VARIABLES LOCALES
+--  LOCAL VARIABLES
 local buffFrame = nil
 local toggleButton = nil
-local dragonUIBuffFrame = nil  --  NUESTRO FRAME CUSTOM COMO RETAILUI
+local dragonUIBuffFrame = nil  --  OUR CUSTOM FRAME LIKE RETAILUI
 
---  FUNCIÓN PARA REEMPLAZAR BUFFFRAME (IGUAL QUE RETAILUI)
+--  FUNCTION TO REPLACE BUFFFRAME (SAME AS RETAILUI)
 local function ReplaceBlizzardFrame(frame)
     frame.toggleButton = frame.toggleButton or CreateFrame('Button', nil, UIParent)
     toggleButton = frame.toggleButton
@@ -75,7 +75,7 @@ local function ReplaceBlizzardFrame(frame)
     consolidatedBuffFrame:SetPoint("RIGHT", toggleButton, "LEFT", -6, 0)
 end
 
---  FUNCIÓN PARA MOSTRAR/OCULTAR EL BOTÓN SEGÚN BUFFS (IGUAL QUE RETAILUI)
+--  FUNCTION TO SHOW/HIDE THE BUTTON BASED ON BUFFS (SAME AS RETAILUI)
 local function ShowToggleButtonIf(condition)
     if condition then
         dragonUIBuffFrame.toggleButton:Show()
@@ -84,7 +84,7 @@ local function ShowToggleButtonIf(condition)
     end
 end
 
---  FUNCIÓN PARA CONTAR BUFFS (IGUAL QUE RETAILUI)
+--  FUNCTION TO COUNT BUFFS (SAME AS RETAILUI)
 local function GetUnitBuffCount(unit, range)
     local count = 0
     for index = 1, range do
@@ -96,7 +96,7 @@ local function GetUnitBuffCount(unit, range)
     return count
 end
 
---  FUNCIÓN PARA POSICIONAR EL BUFF FRAME (SIMPLIFICADA COMO RETAILUI)
+--  FUNCTION TO POSITION THE BUFF FRAME (SIMPLIFIED LIKE RETAILUI)
 function BuffFrameModule:UpdatePosition()
     if not addon.db or not addon.db.profile or not addon.db.profile.widgets or not addon.db.profile.widgets.buffs then
         return
@@ -106,7 +106,7 @@ function BuffFrameModule:UpdatePosition()
     dragonUIBuffFrame:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
 end
 
---  FUNCIÓN PARA HABILITAR/DESHABILITAR EL MÓDULO
+--  FUNCTION TO ENABLE/DISABLE THE MODULE
 function BuffFrameModule:Toggle(enabled)
     if not addon.db or not addon.db.profile then return end
     
@@ -119,14 +119,14 @@ function BuffFrameModule:Toggle(enabled)
     end
 end
 
---  FUNCIÓN PARA HABILITAR EL MÓDULO (IGUAL QUE RETAILUI)
+--  FUNCTION TO ENABLE THE MODULE (SAME AS RETAILUI)
 function BuffFrameModule:Enable()
     if not addon.db.profile.buffs.enabled then return end
     
-    --  CREAR BUFFFRAME USANDO CreateUIFrame (IGUAL QUE RETAILUI)
+    --  CREATE BUFFFRAME USING CreateUIFrame (SAME AS RETAILUI)
     dragonUIBuffFrame = addon.CreateUIFrame(BuffFrame:GetWidth(), BuffFrame:GetHeight(), "Auras")
     
-    --  REGISTRAR EN SISTEMA CENTRALIZADO
+    --  REGISTER IN CENTRALIZED SYSTEM
     addon:RegisterEditableFrame({
         name = "buffs",
         frame = dragonUIBuffFrame,
@@ -138,7 +138,7 @@ function BuffFrameModule:Enable()
         module = self
     })
     
-    --  CONFIGURAR EVENTOS (IGUAL QUE RETAILUI)
+    --  CONFIGURE EVENTS (SAME AS RETAILUI)
     if not buffFrame then
         buffFrame = CreateFrame("Frame")
         buffFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -172,7 +172,7 @@ function BuffFrameModule:Enable()
     
 end
 
---  FUNCIÓN PARA DESHABILITAR EL MÓDULO (SIMPLIFICADA)
+--  FUNCTION TO DISABLE THE MODULE (SIMPLIFIED)
 function BuffFrameModule:Disable()
     if buffFrame then
         buffFrame:UnregisterAllEvents()
@@ -193,12 +193,12 @@ function BuffFrameModule:Disable()
     
 end
 
---  INICIALIZACIÓN AUTOMÁTICA
+--  AUTOMATIC INITIALIZATION
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", function(self, event, addonName)
     if addonName == "DragonUI" then
-        -- Inicializar el módulo si está habilitado
+        -- Initialize the module if enabled
         if addon.db and addon.db.profile and addon.db.profile.buffs and addon.db.profile.buffs.enabled then
             BuffFrameModule:Enable()
         end
@@ -206,7 +206,7 @@ initFrame:SetScript("OnEvent", function(self, event, addonName)
     end
 end)
 
---  FUNCIÓN PARA SER LLAMADA DESDE OPTIONS.LUA
+--  FUNCTION TO BE CALLED FROM OPTIONS.LUA
 function addon:RefreshBuffFrame()
     if BuffFrameModule and addon.db.profile.buffs.enabled then
         BuffFrameModule:UpdatePosition()

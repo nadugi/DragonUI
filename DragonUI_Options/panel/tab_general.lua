@@ -63,5 +63,3 @@ end
 
 -- Register the tab
 Panel:RegisterTab("general", "General", BuildGeneralTab, 1)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: General loaded")

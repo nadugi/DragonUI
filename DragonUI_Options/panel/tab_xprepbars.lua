@@ -112,5 +112,3 @@ end
 
 -- Register the tab (order 5 = after Additional Bars)
 Panel:RegisterTab("xprepbars", "XP & Rep Bars", BuildXpRepTab, 5)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: XP & Rep Bars loaded")

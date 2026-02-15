@@ -712,5 +712,3 @@ function Controls:AddSubTabs(parent, tabs, activeKey, onSelect)
 
     return row
 end
-
-print("|cFF00FF00[DragonUI]|r Panel controls library loaded")

@@ -85,5 +85,3 @@ end
 
 -- Register the tab
 Panel:RegisterTab("questtracker", "Quest Tracker", BuildQuesttrackerTab, 10)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: Quest Tracker loaded")

@@ -157,5 +157,3 @@ end
 
 -- Register the tab
 Panel:RegisterTab("minimap", "Minimap", BuildMinimapTab, 8)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: Minimap loaded")

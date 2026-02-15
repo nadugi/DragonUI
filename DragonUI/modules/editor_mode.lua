@@ -7,7 +7,7 @@ local gridOverlay = nil;
 local exitEditorButton = nil;
 local resetAllButton = nil;
 
--- StaticPopup para reiniciar UI después de salir del modo editor
+-- StaticPopup to reload UI after exiting editor mode
 StaticPopupDialogs["DRAGONUI_RELOAD_UI"] = {
     text = "UI elements have been repositioned. Reload UI to ensure all graphics display correctly?",
     button1 = "Reload Now",
@@ -74,7 +74,7 @@ local function styleEditorButton(button)
     end
 end
 
---  BOTÓN DE SALIDA DEL MODO EDITOR
+--  EXIT EDITOR MODE BUTTON
 local function createExitButton()
     if exitEditorButton then return; end
 
@@ -95,7 +95,7 @@ local function createExitButton()
     exitEditorButton:Hide();
 end
 
---  BOTÓN DE RESET ALL POSITIONS
+--  RESET ALL POSITIONS BUTTON
 local function createResetAllButton()
     if resetAllButton then return; end
 
@@ -116,30 +116,30 @@ local function createResetAllButton()
     resetAllButton:Hide();
 end
 
---  TU GRID MEJORADO - AHORA CUADRADOS SIMÉTRICOS
+--  YOUR IMPROVED GRID - NOW SYMMETRICAL SQUARES
 local function createGridOverlay()
     if gridOverlay then return; end
 
-    --  CAMBIO: Hacer cuadrados SIMÉTRICOS con línea central EXACTA
+    --  CHANGE: Make SYMMETRICAL squares with EXACT center line
     local screenWidth = GetScreenWidth()
     local screenHeight = GetScreenHeight()
     
-    --  ALGORITMO SIMÉTRICO: Partir desde el centro hacia afuera
-    local cellSize = 32  -- Tamaño base de celda
+    --  SYMMETRICAL ALGORITHM: Split from center outward
+    local cellSize = 32  -- Base cell size
     
-    -- Calcular cuántas celdas completas caben desde el centro hacia cada lado
+    -- Calculate how many complete cells fit from center to each side
     local halfCellsHorizontal = math.floor((screenWidth / 2) / cellSize)
     local halfCellsVertical = math.floor((screenHeight / 2) / cellSize)
     
-    -- Total de celdas (siempre par para que el centro sea exacto)
+    -- Total cells (always even so the center is exact)
     local totalHorizontalCells = halfCellsHorizontal * 2
     local totalVerticalCells = halfCellsVertical * 2
     
-    -- Recalcular el tamaño real de celda para que sea perfectamente simétrico
+    -- Recalculate actual cell size for perfect symmetry
     local actualCellWidth = screenWidth / totalHorizontalCells
     local actualCellHeight = screenHeight / totalVerticalCells
     
-    -- Posición exacta del centro
+    -- Exact center position
     local centerX = screenWidth / 2
     local centerY = screenHeight / 2
     
@@ -148,23 +148,23 @@ local function createGridOverlay()
     gridOverlay:SetFrameStrata("BACKGROUND")
     gridOverlay:SetFrameLevel(0)
 
-    --  AÑADIR CAPA DE FONDO OSCURA SEMI-TRANSPARENTE
+    --  ADD SEMI-TRANSPARENT DARK BACKGROUND LAYER
     local background = gridOverlay:CreateTexture("DragonUIGridBackground", 'BACKGROUND')
     background:SetAllPoints(gridOverlay)
-    background:SetTexture(0, 0, 0, 0.3)  -- Negro semi-transparente
-    background:SetDrawLayer('BACKGROUND', -1)  -- Detrás de todo
+    background:SetTexture(0, 0, 0, 0.3)  -- Semi-transparent black
+    background:SetDrawLayer('BACKGROUND', -1)  -- Behind everything
 
     local lineThickness = 1
 
-    -- === LÍNEAS VERTICALES SIMÉTRICAS ===
+    -- === SYMMETRICAL VERTICAL LINES ===
     for i = 0, totalHorizontalCells do
         local line = gridOverlay:CreateTexture("DragonUIGridV"..i, 'BACKGROUND')
         
-        -- La línea central es exactamente en halfCellsHorizontal
+        -- The center line is exactly at halfCellsHorizontal
         if i == halfCellsHorizontal then
-            line:SetTexture(1, 0, 0, 0.8)  -- Línea central roja EXACTA
+            line:SetTexture(1, 0, 0, 0.8)  -- EXACT red center line
         else
-            line:SetTexture(1, 1, 1, 0.3)  -- Líneas blancas simétricas
+            line:SetTexture(1, 1, 1, 0.3)  -- Symmetrical white lines
         end
         
         local x = i * actualCellWidth
@@ -172,15 +172,15 @@ local function createGridOverlay()
         line:SetPoint('BOTTOMRIGHT', gridOverlay, 'BOTTOMLEFT', x + (lineThickness / 2), 0)
     end
 
-    -- === LÍNEAS HORIZONTALES SIMÉTRICAS ===
+    -- === SYMMETRICAL HORIZONTAL LINES ===
     for i = 0, totalVerticalCells do
         local line = gridOverlay:CreateTexture("DragonUIGridH"..i, 'BACKGROUND')
         
-        -- La línea central es exactamente en halfCellsVertical
+        -- The center line is exactly at halfCellsVertical
         if i == halfCellsVertical then
-            line:SetTexture(1, 0, 0, 0.8)  -- Línea central roja EXACTA
+            line:SetTexture(1, 0, 0, 0.8)  -- EXACT red center line
         else
-            line:SetTexture(1, 1, 1, 0.3)  -- Líneas blancas simétricas
+            line:SetTexture(1, 1, 1, 0.3)  -- Symmetrical white lines
         end
         
         local y = i * actualCellHeight
@@ -188,7 +188,7 @@ local function createGridOverlay()
         line:SetPoint('BOTTOMRIGHT', gridOverlay, 'TOPRIGHT', 0, -y - (lineThickness / 2))
     end
     
-    --  DEBUG: Mostrar información de simetría
+    --  DEBUG: Show symmetry information
     
     
     
@@ -209,7 +209,7 @@ function EditorMode:Show()
     exitEditorButton:Show()
     resetAllButton:Show()
 
-    --  NUEVO: USAR SISTEMA CENTRALIZADO - UNA SOLA LÍNEA
+    --  NEW: USE CENTRALIZED SYSTEM - SINGLE LINE
     addon:ShowAllEditableFrames()
     
     --  NEW: Enable action bar overlays for mouse blocking during editor mode
@@ -217,7 +217,7 @@ function EditorMode:Show()
         addon.EnableActionBarOverlays()
     end
     
-    --  HOOK: Mantener escalas configuradas durante editor mode
+    --  HOOK: Maintain configured scales during editor mode
     EditorMode:InstallScaleHooks()
     
     -- Update overlay sizes after showing
@@ -237,7 +237,7 @@ function EditorMode:Hide(showReloadPopup)
     if exitEditorButton then exitEditorButton:Hide() end
     if resetAllButton then resetAllButton:Hide() end
 
-    --  NUEVO: USAR SISTEMA CENTRALIZADO - UNA SOLA LÍNEA
+    --  NEW: USE CENTRALIZED SYSTEM - SINGLE LINE
     addon:HideAllEditableFrames(true) -- true = refresh and save positions
     
     --  NEW: Disable action bar overlays to allow normal interaction with action buttons
@@ -245,13 +245,13 @@ function EditorMode:Hide(showReloadPopup)
         addon.DisableActionBarOverlays()
     end
     
-    --  UNHOOK: Remover hooks de escala cuando se sale del editor mode
+    --  UNHOOK: Remove scale hooks when exiting editor mode
     EditorMode:RemoveScaleHooks()
     
     -- Refresh AceConfig to update button state
     self:RefreshOptionsUI()
     
-    -- NUEVO: Solo mostrar popup de reload UI si no viene desde reset positions
+    -- NEW: Only show reload UI popup if not coming from reset positions
     if showReloadPopup ~= false then
         StaticPopup_Show("DRAGONUI_RELOAD_UI")
     end
@@ -272,7 +272,7 @@ end
 
 function EditorMode:Toggle()
     if self:IsActive() then 
-        self:Hide(true) -- true = mostrar popup de reload UI (salida normal)
+        self:Hide(true) -- true = show reload UI popup (normal exit)
     else 
         self:Show() 
     end
@@ -283,19 +283,19 @@ function EditorMode:IsActive()
     return gridOverlay and gridOverlay:IsShown()
 end
 
---  COMANDO SLASH
+--  SLASH COMMAND
 SLASH_DRAGONUI_EDITOR1 = "/duiedit"
 SLASH_DRAGONUI_EDITOR2 = "/dragonedit"
 SlashCmdList["DRAGONUI_EDITOR"] = function()
     EditorMode:Toggle()
 end
 
---  HOOKS PARA MANTENER ESCALAS DURANTE EDITOR MODE
+--  HOOKS TO MAINTAIN SCALES DURING EDITOR MODE
 local scaleHooks = {}
 
 function EditorMode:InstallScaleHooks()
     --  DISABLED: Conflicting with RetailUI pattern in mainbars.lua
-    -- Hook para MainMenuExpBar
+    -- Hook for MainMenuExpBar
     --[[ 
     if MainMenuExpBar and not scaleHooks.xpbar then
         scaleHooks.xpbar = function()
@@ -304,7 +304,7 @@ function EditorMode:InstallScaleHooks()
             end
         end
         
-        -- Hook a los eventos que pueden cambiar la escala
+        -- Hook to events that can change the scale
         hooksecurefunc(MainMenuExpBar, "SetScale", scaleHooks.xpbar)
         hooksecurefunc(MainMenuExpBar, "SetPoint", scaleHooks.xpbar)
         hooksecurefunc(MainMenuExpBar, "ClearAllPoints", scaleHooks.xpbar)
@@ -312,7 +312,7 @@ function EditorMode:InstallScaleHooks()
     ]]--
     
     --  DISABLED: Conflicting with RetailUI pattern in mainbars.lua
-    -- Hook para ReputationWatchBar
+    -- Hook for ReputationWatchBar
     --[[
     if ReputationWatchBar and not scaleHooks.repbar then
         scaleHooks.repbar = function()
@@ -321,7 +321,7 @@ function EditorMode:InstallScaleHooks()
             end
         end
         
-        -- Hook a los eventos que pueden cambiar la escala
+        -- Hook to events that can change the scale
         hooksecurefunc(ReputationWatchBar, "SetScale", scaleHooks.repbar)
         hooksecurefunc(ReputationWatchBar, "SetPoint", scaleHooks.repbar)
         hooksecurefunc(ReputationWatchBar, "ClearAllPoints", scaleHooks.repbar)
@@ -330,29 +330,29 @@ function EditorMode:InstallScaleHooks()
 end
 
 function EditorMode:RemoveScaleHooks()
-    -- Los hooks securefunc no se pueden remover directamente,
-    -- así que simplemente marcamos como removidos para que no se ejecuten
+    -- Secure hooks cannot be removed directly,
+    -- so we simply mark them as removed so they don't execute
     scaleHooks.xpbar = nil
     scaleHooks.repbar = nil
 end
 
---  FUNCIÓN DE CONFIRMACIÓN PARA RESET ALL POSITIONS
+--  CONFIRMATION FUNCTION FOR RESET ALL POSITIONS
 function EditorMode:ShowResetConfirmation()
     StaticPopup_Show("DRAGONUI_RESET_ALL_POSITIONS")
 end
 
---  FUNCIÓN PARA RESETEAR SOLO WIDGETS USANDO ACE3 (FUERA DEL EDITOR MODE)
+--  FUNCTION TO RESET ONLY WIDGETS USING ACE3 (OUTSIDE EDITOR MODE)
 function EditorMode:ResetAllPositions()
     if not addon.db or not addon.db.profile then
         return
     end
     
-    -- Ocultar el editor mode sin mostrar el popup genérico
+    -- Hide editor mode without showing the generic popup
     if self:IsActive() then
-        self:Hide(false) -- false = no mostrar popup de reload UI
+        self:Hide(false) -- false = don't show reload UI popup
     end
     
-    -- Resetear solo la sección widgets usando los defaults de Ace3
+    -- Reset only the widgets section using Ace3 defaults
     if addon.defaults and addon.defaults.profile and addon.defaults.profile.widgets then
         addon.db.profile.widgets = addon:CopyTable(addon.defaults.profile.widgets)
     else
@@ -369,7 +369,7 @@ function EditorMode:ResetAllPositions()
         end
     end
     
-    -- NUEVO: Resetear también additional.totem para multicast
+    -- NEW: Also reset additional.totem for multicast
     if addon.defaults and addon.defaults.profile and addon.defaults.profile.additional then
         if not addon.db.profile.additional then
             addon.db.profile.additional = {}
@@ -377,11 +377,11 @@ function EditorMode:ResetAllPositions()
         addon.db.profile.additional.totem = addon:CopyTable(addon.defaults.profile.additional.totem)
     end
     
-    -- Usar ReloadUI para aplicar completamente los cambios
+    -- Use ReloadUI to fully apply the changes
     ReloadUI()
 end
 
---  FUNCIÓN HELPER PARA DEEP COPY (si no existe ya en addon)
+--  HELPER FUNCTION FOR DEEP COPY (if not already in addon)
 if not addon.CopyTable then
     function addon:CopyTable(orig)
         local orig_type = type(orig)
@@ -399,7 +399,7 @@ if not addon.CopyTable then
     end
 end
 
---  DEFINIR EL POPUP DE CONFIRMACIÓN
+--  DEFINE THE CONFIRMATION POPUP
 StaticPopupDialogs["DRAGONUI_RESET_ALL_POSITIONS"] = {
     text = "Are you sure you want to reset all interface elements to their default positions?",
     button1 = "Yes",

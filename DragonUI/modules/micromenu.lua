@@ -40,12 +40,11 @@ end
 -- ============================================================================
 
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.micromenu
+    return addon:GetModuleConfig("micromenu")
 end
 
 local function IsModuleEnabled()
-    local cfg = GetModuleConfig()
-    return cfg and cfg.enabled
+    return addon:IsModuleEnabled("micromenu")
 end
 
 -- ============================================================================
@@ -894,14 +893,14 @@ local function ApplyMicromenuSystem()
         end
     end
     local function SetupCharacterButton(button)
-        -- PASO 1: Usar el portrait nativo de Blizzard (como RetailUI)
+        -- STEP 1: Use Blizzard's native portrait (like RetailUI)
         local portraitTexture = MicroButtonPortrait
         portraitTexture:ClearAllPoints()
-        portraitTexture:SetPoint('CENTER', button, 'CENTER', 0, -0.5) -- Sin offset
-        portraitTexture:SetSize(18, 24) -- Tamaño ajustable
-        portraitTexture:SetAlpha(1) -- Visible siempre
+        portraitTexture:SetPoint('CENTER', button, 'CENTER', 0, -0.5) -- No offset
+        portraitTexture:SetSize(18, 24) -- Adjustable size
+        portraitTexture:SetAlpha(1) -- Always visible
 
-        -- PASO 2: Solo background (como otros botones)
+        -- STEP 2: Background only (like other buttons)
         if not button.DragonUIBackground then
             local microTexture = 'Interface\\AddOns\\DragonUI\\Textures\\Micromenu\\uimicromenu2x'
             local dx, dy = -1, 1
@@ -923,7 +922,7 @@ local function ApplyMicromenuSystem()
             bgPushed:Hide()
             button.DragonUIBackgroundPushed = bgPushed
 
-            -- PASO 3: Initialize state tracking properties
+            -- STEP 3: Initialize state tracking properties
             button.dragonUIState = {
                 pushed = false
             }
@@ -941,7 +940,7 @@ local function ApplyMicromenuSystem()
                 end
             end
 
-            -- PASO 4: Timer simple (sin tocar el portrait)
+            -- STEP 4: Simple timer (without touching the portrait)
             button:SetScript('OnUpdate', function(self, elapsed)
                 -- Ensure timer is initialized
                 if not self.dragonUITimer then
@@ -975,7 +974,7 @@ local function ApplyMicromenuSystem()
     -- Create global bags bar
     _G.pUiBagsBar = CreateFrame('Frame', 'pUiBagsBar', UIParent);
     local pUiBagsBar = _G.pUiBagsBar;
-    -- NO parentar automáticamente - se hará en el setup cuando sea necesario
+    -- DON'T parent automatically - will be done in setup when necessary
     KeyRingButton:SetParent(_G.CharacterBag3Slot);
 
     function MainMenuMicroButtonMixin:bagbuttons_setup()
@@ -989,7 +988,7 @@ local function ApplyMicromenuSystem()
         MainMenuBarBackpackButton:GetCheckedTexture():set_atlas('bag-main-highlight-2x')
         MainMenuBarBackpackButtonIconTexture:set_atlas('bag-main-2x')
 
-        -- NO posicionar MainMenuBarBackpackButton aquí si va a usar overlay - será posicionado por el overlay
+        -- DON'T position MainMenuBarBackpackButton here if using overlay - will be positioned by the overlay
         -- MainMenuBarBackpackButton:ClearAllPoints()
         -- MainMenuBarBackpackButton:SetPoint('BOTTOMRIGHT', UIParent, 'BOTTOMRIGHT', 1, 41)
 
@@ -1089,10 +1088,10 @@ local function ApplyMicromenuSystem()
         end
 
         if not pUiBagsBar.registeredInEditor then
-            -- Crear frame contenedor usando el sistema estándar
+            -- Create container frame using the standard system
             local bagsFrame = addon.CreateUIFrame(210, 50, "BagsBar")
 
-            -- Aplicar posición desde database o usar default
+            -- Apply position from database or use default
             local bagsConfig = addon.db and addon.db.profile.widgets and addon.db.profile.widgets.bagsbar
             if bagsConfig and bagsConfig.anchor then
                 bagsFrame:SetPoint(bagsConfig.anchor or "BOTTOMRIGHT", UIParent, bagsConfig.anchor or "BOTTOMRIGHT",
@@ -1102,12 +1101,12 @@ local function ApplyMicromenuSystem()
 
             end
 
-            -- Asegurar que el frame de bolsas real siga al frame contenedor
+            -- Ensure the real bags frame follows the container frame
             MainMenuBarBackpackButton:SetParent(UIParent)
             MainMenuBarBackpackButton:ClearAllPoints()
-            MainMenuBarBackpackButton:SetPoint("CENTER", bagsFrame, "CENTER", 80, 0) -- Centrado en el overlay
+            MainMenuBarBackpackButton:SetPoint("CENTER", bagsFrame, "CENTER", 80, 0) -- Centered in the overlay
 
-            -- Hook para que las bolsas sigan al contenedor cuando se mueva
+            -- Hook so bags follow the container when it moves
             bagsFrame:HookScript("OnDragStop", function(self)
                 MainMenuBarBackpackButton:ClearAllPoints()
                 MainMenuBarBackpackButton:SetPoint("CENTER", self, "CENTER", 80, 0)
@@ -1118,7 +1117,7 @@ local function ApplyMicromenuSystem()
                 MainMenuBarBackpackButton:SetPoint("CENTER", self, "CENTER", 80, 0)
             end)
 
-            -- Hook continuo para mantener la posición
+            -- Continuous hook to maintain position
             bagsFrame:HookScript("OnUpdate", function(self)
                 if not MainMenuBarBackpackButton:GetPoint() then
                     MainMenuBarBackpackButton:ClearAllPoints()
@@ -1595,7 +1594,7 @@ end
 
         local frameInfo = addon:GetEditableFrameInfo("bagsbar")
         if frameInfo and frameInfo.frame then
-            -- Aplicar posición desde database o usar default
+            -- Apply position from database or use default
             local bagsConfig = addon.db and addon.db.profile.widgets and addon.db.profile.widgets.bagsbar
             if bagsConfig and bagsConfig.anchor then
                 frameInfo.frame:ClearAllPoints()
@@ -1606,11 +1605,11 @@ end
                 frameInfo.frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 1, 41)
             end
 
-            -- Asegurar que las bolsas sigan al contenedor con posicionamiento corregido
+            -- Ensure bags follow the container with corrected positioning
             MainMenuBarBackpackButton:ClearAllPoints()
             MainMenuBarBackpackButton:SetPoint("CENTER", frameInfo.frame, "CENTER", 80, 0)
         else
-            -- Fallback al método anterior si no hay contenedor
+            -- Fallback to previous method if no container
             if not addon.db or not addon.db.profile or not addon.db.profile.bags then
                 return
             end
@@ -1674,10 +1673,10 @@ end
     local configMode = useGrayscale and "grayscale" or "normal"
     local config = addon.db.profile.micromenu[configMode]
 
-    -- CORREGIDO: Solo aplicar escala, NO posición (eso lo maneja el editor)
+    -- FIXED: Only apply scale, NOT position (editor handles that)
     _G.pUiMicroMenu:SetScale(config.scale_menu)
 
-    -- ELIMINADO: No sobrescribir posición del editor
+    -- REMOVED: Don't overwrite editor position
     -- _G.pUiMicroMenu:ClearAllPoints()
     -- _G.pUiMicroMenu:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMRIGHT', xOffset + config.x_position, config.y_position)
 
@@ -1929,7 +1928,7 @@ end
         end
 
         addon.core:ScheduleTimer(function()
-            -- Verificar si los frames necesitan ser registrados
+            -- Check if frames need to be registered
             if _G.pUiMicroMenu and not _G.pUiMicroMenu.registeredInEditor then
                 -- Force re-setup to register frames
                 setupMicroButtons(xOffset)
@@ -2066,19 +2065,19 @@ end
 -- Keep all the existing refresh functions as they are
 -- They will only work when the module is enabled
 -- ============================================================================
--- Función para cargar configuración por defecto de widgets
+-- Function to load default widget settings
 -- ============================================================================
 
--- Añadir esta función cerca del final del archivo, antes de la inicialización:
+-- Add this function near the end of the file, before initialization:
 
 local function LoadDefaultWidgetSettings()
-    -- Asegurar que existe la configuración de widgets
+    -- Ensure widget configuration exists
     if not addon.db.profile.widgets then
         addon.db.profile.widgets = {}
     end
 
     if not addon.db.profile.widgets.micromenu then
-        -- Calcular posición por defecto basada en configuración actual
+        -- Calculate default position based on current configuration
         local useGrayscale = addon.db.profile.micromenu and addon.db.profile.micromenu.grayscale_icons
         local configMode = useGrayscale and "grayscale" or "normal"
         local config = addon.db.profile.micromenu and addon.db.profile.micromenu[configMode]
@@ -2091,7 +2090,7 @@ local function LoadDefaultWidgetSettings()
                 posY = config.y_position
             }
         else
-            -- Fallback absoluto
+            -- Absolute fallback
             addon.db.profile.widgets.micromenu = {
                 anchor = "BOTTOMRIGHT",
                 posX = -166,
@@ -2109,10 +2108,10 @@ local function Initialize()
         return
     end
 
-    -- AÑADIDO: Cargar configuración por defecto de widgets
+    -- ADDED: Load default widget settings
     LoadDefaultWidgetSettings()
 
-    -- Solo apply if module is enabled
+    -- Only apply if module is enabled
     if IsModuleEnabled() then
         -- Wait for PLAYER_LOGIN to apply system
         addon.package:RegisterEvents(function()

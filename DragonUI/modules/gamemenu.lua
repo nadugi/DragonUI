@@ -4,17 +4,17 @@ local addon = select(2,...);
 -- DRAGONUI GAME MENU BUTTON MODULE (WOW 3.3.5A)
 -- =================================================================
 
--- Variables locales para compatibilidad WoW 3.3.5a
+-- Local variables for WoW 3.3.5a compatibility
 local CreateFrame = CreateFrame
 local GameMenuFrame = GameMenuFrame
 local HideUIPanel = HideUIPanel
 
--- Estado del botón
+-- Button state
 local dragonUIButton = nil
 local buttonAdded = false
-local buttonPositioned = false -- Nuevo flag para evitar reposicionamiento múltiple
+local buttonPositioned = false -- New flag to prevent multiple repositioning
 
--- Lista de todos los botones del game menu en orden de aparición (WoW 3.3.5a)
+-- List of all game menu buttons in order of appearance (WoW 3.3.5a)
 local GAME_MENU_BUTTONS = {
     "GameMenuButtonHelp",
     "GameMenuButtonWhatsNew", 
@@ -29,29 +29,29 @@ local GAME_MENU_BUTTONS = {
     "GameMenuButtonContinue"
 }
 
--- Función para encontrar la posición correcta del botón DragonUI
+-- Function to find the correct position for the DragonUI button
 local function FindInsertPosition()
-    -- Insertar SIEMPRE después del botón "Return to Game" (Continue) al final del menú
+    -- ALWAYS insert after the "Return to Game" (Continue) button at the end of the menu
     local afterButton = _G["GameMenuButtonContinue"]
     
-    -- Si Continue no existe, insertar después de Quit
+    -- If Continue doesn't exist, insert after Quit
     if not afterButton then
         afterButton = _G["GameMenuButtonQuit"]
     end
     
-    -- Si tampoco existe Quit, insertar después de Logout
+    -- If Quit doesn't exist either, insert after Logout
     if not afterButton then
         afterButton = _G["GameMenuButtonLogout"]
     end
     
-    return afterButton, nil -- No hay beforeButton ya que va al final
+    return afterButton, nil -- No beforeButton since it goes at the end
 end
 
--- Función para posicionar el botón DragonUI de forma muy conservadora
+-- Function to position the DragonUI button conservatively
 local function PositionDragonUIButton()
     if not dragonUIButton then return end
     
-    -- IMPORTANTE: Solo posicionar una vez para evitar acumulación de desplazamientos
+    -- IMPORTANT: Only position once to prevent offset accumulation
     if buttonPositioned then 
         return 
     end
@@ -59,30 +59,30 @@ local function PositionDragonUIButton()
     local afterButton, beforeButton = FindInsertPosition()
     
     if not afterButton then
-        -- Fallback: posicionar al final del menú
+        -- Fallback: position at the end of the menu
         dragonUIButton:ClearAllPoints()
         dragonUIButton:SetPoint("TOP", GameMenuFrame, "TOP", 0, -200)
         buttonPositioned = true
         return
     end
     
-    -- Posicionar SOLO el botón DragonUI inmediatamente después del botón de referencia
+    -- Position ONLY the DragonUI button immediately after the reference button
     dragonUIButton:ClearAllPoints()
     dragonUIButton:SetPoint("TOP", afterButton, "BOTTOM", 0, -1)
     
-    -- Ajustar MÍNIMAMENTE la altura del GameMenuFrame SOLO una vez
+    -- MINIMALLY adjust the GameMenuFrame height ONLY once
     local buttonHeight = dragonUIButton:GetHeight() or 16
     local spacing = 1
     local currentHeight = GameMenuFrame:GetHeight()
     GameMenuFrame:SetHeight(currentHeight + buttonHeight + spacing)
     
-    -- Al estar al final del menú, no necesitamos mover otros botones
+    -- Since it's at the end of the menu, we don't need to move other buttons
     
-    -- Marcar como posicionado para evitar ejecuciones futuras
+    -- Mark as positioned to prevent future executions
     buttonPositioned = true
 end
 
--- Función para abrir la interfaz de configuración de DragonUI
+-- Function to open the DragonUI configuration interface
 local function OpenDragonUIConfig()
     -- Close game menu first
     HideUIPanel(GameMenuFrame)
@@ -102,65 +102,65 @@ local function OpenDragonUIConfig()
     print("|cFFFF0000[DragonUI]|r Unable to open configuration")
 end
 
--- Función principal para crear el botón DragonUI
+-- Main function to create the DragonUI button
 local function CreateDragonUIButton()
-    -- Verificar que no se haya creado ya
+    -- Check that it hasn't been created already
     if dragonUIButton or buttonAdded then 
         return true 
     end
     
-    -- Verificar que GameMenuFrame esté disponible
+    -- Check that GameMenuFrame is available
     if not GameMenuFrame then 
         return false 
     end
     
-    -- Crear el botón con template apropiado para WoW 3.3.5a
+    -- Create the button with appropriate template for WoW 3.3.5a
     dragonUIButton = CreateFrame("Button", "DragonUIGameMenuButton", GameMenuFrame, "GameMenuButtonTemplate")
     
-    -- Configurar el texto del botón
+    -- Set the button text
     dragonUIButton:SetText("DragonUI")
     
-    -- Configurar el ancho para que coincida con otros botones
-    dragonUIButton:SetWidth(144) -- Ancho estándar de botones del game menu en 3.3.5a
+    -- Set the width to match other buttons
+    dragonUIButton:SetWidth(144) -- Standard width for game menu buttons in 3.3.5a
     
-    -- Aplicar colores azulados estilo Dragonflight
+    -- Apply Dragonflight-style blue colors
     local fontString = dragonUIButton:GetFontString()
     if fontString then
-        -- Color azul dragonflight para el texto: RGB(100, 180, 255) 
+        -- Dragonflight blue text color: RGB(100, 180, 255) 
         fontString:SetTextColor(0.39, 0.71, 1.0, 1.0)
         
-        -- Efecto de sombra azul suave
+        -- Soft blue shadow effect
         fontString:SetShadowColor(0.2, 0.4, 0.8, 0.8)
         fontString:SetShadowOffset(1, -1)
         
-        -- Fuente más pequeña
+        -- Smaller font
         fontString:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
     end
     
-    -- Configurar colores de hover/pressed con fuente más pequeña
+    -- Set hover/pressed colors with smaller font
     if dragonUIButton.SetNormalFontObject then
         dragonUIButton:SetNormalFontObject("GameFontNormal")
         dragonUIButton:SetHighlightFontObject("GameFontHighlight") 
     end
     
-    -- Intentar colorear el fondo del botón (compatible con 3.3.5a)
+    -- Try to color the button background (3.3.5a compatible)
     local normalTexture = dragonUIButton:GetNormalTexture()
     if normalTexture then
-        -- Tinte azul suave para el fondo: RGB(50, 100, 200) con alpha 0.8
+        -- Soft blue tint for the background: RGB(50, 100, 200) with alpha 0.8
         normalTexture:SetVertexColor(0.2, 0.4, 0.8, 0.8)
     end
     
     local highlightTexture = dragonUIButton:GetHighlightTexture()
     if highlightTexture then
-        -- Tinte azul más brillante en hover: RGB(80, 140, 255) con alpha 0.9
+        -- Brighter blue tint on hover: RGB(80, 140, 255) with alpha 0.9
         highlightTexture:SetVertexColor(0.31, 0.55, 1.0, 0.9)
     end
     
-    -- Configurar efectos visuales adicionales para el hover
+    -- Set up additional visual effects for hover
     dragonUIButton:SetScript("OnEnter", function(self)
         local fontString = self:GetFontString()
         if fontString then
-            -- Color más brillante al hacer hover: RGB(150, 200, 255)
+            -- Brighter color on hover: RGB(150, 200, 255)
             fontString:SetTextColor(0.59, 0.78, 1.0, 1.0)
         end
     end)
@@ -168,19 +168,19 @@ local function CreateDragonUIButton()
     dragonUIButton:SetScript("OnLeave", function(self)
         local fontString = self:GetFontString()
         if fontString then
-            -- Volver al color normal: RGB(100, 180, 255)
+            -- Revert to normal color: RGB(100, 180, 255)
             fontString:SetTextColor(0.39, 0.71, 1.0, 1.0)
         end
     end)
     
-    -- Configurar el click handler
+    -- Set the click handler
     dragonUIButton:SetScript("OnClick", function(self, button)
         if button == "LeftButton" then
             OpenDragonUIConfig()
         end
     end)
     
-    -- Posicionar solo el botón DragonUI
+    -- Position only the DragonUI button
     PositionDragonUIButton()
     
     buttonAdded = true
@@ -188,7 +188,7 @@ local function CreateDragonUIButton()
     return true
 end
 
--- Función para intentar crear el botón con reintentos
+-- Function to attempt creating the button with retries
 local function TryCreateButton()
     local attempts = 0
     local maxAttempts = 5
@@ -197,20 +197,12 @@ local function TryCreateButton()
         attempts = attempts + 1
         
         if CreateDragonUIButton() then
-            return -- Éxito
+            return -- Success
         end
         
         if attempts < maxAttempts then
-            -- Reintento con delay
-            local frame = CreateFrame("Frame")
-            local elapsed = 0
-            frame:SetScript("OnUpdate", function(self, dt)
-                elapsed = elapsed + dt
-                if elapsed >= 0.5 then
-                    self:SetScript("OnUpdate", nil)
-                    attempt()
-                end
-            end)
+            -- Retry after delay
+            addon:After(0.5, attempt)
         else
            
         end
@@ -219,27 +211,21 @@ local function TryCreateButton()
     attempt()
 end
 
--- Event frame para manejar la inicialización
+-- Event frame to handle initialization
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "DragonUI" then
-        -- Intentar agregar el botón después de que DragonUI se cargue
+        -- Try to add the button after DragonUI loads
         TryCreateButton()
         
     elseif event == "PLAYER_LOGIN" then
-        -- Segundo intento después del login
-        local frame = CreateFrame("Frame")
-        local elapsed = 0
-        frame:SetScript("OnUpdate", function(self, dt)
-            elapsed = elapsed + dt
-            if elapsed >= 1.0 then
-                self:SetScript("OnUpdate", nil)
-                if not buttonAdded then
-                    TryCreateButton()
-                end
+        -- Second attempt after login
+        addon:After(1.0, function()
+            if not buttonAdded then
+                TryCreateButton()
             end
         end)
         
@@ -249,13 +235,13 @@ end)
 
 -- Phase 2: hooksecurefunc instead of direct .Show override to avoid taint
 hooksecurefunc(GameMenuFrame, "Show", function(self)
-    -- Intentar crear el botón si no existe
+    -- Try to create the button if it doesn't exist
     if not buttonAdded then
         CreateDragonUIButton()
     elseif dragonUIButton then
-        -- Si ya existe, asegurar que esté visible PERO NO reposicionar
+        -- If it already exists, ensure it's visible but DO NOT reposition
         dragonUIButton:Show()
-        -- Comentado para evitar bug de acumulación: PositionDragonUIButton()
+        -- Commented out to prevent accumulation bug: PositionDragonUIButton()
     end
 end)
 

@@ -1,17 +1,12 @@
 --[[
-    DragonUI Minimap Module - Adaptado de RetailUI
-    Código base por Dmitriy (RetailUI) adaptado para DragonUI
+    DragonUI Minimap Module - Adapted from RetailUI
+    Base code by Dmitriy (RetailUI) adapted for DragonUI
 ]] local addon = select(2, ...);
 
 --  Import DragonUI atlas function for tracking icons
 local atlas = addon.minimap_SetAtlas;
 
---  Ensure _noop function exists
-if not addon._noop then
-    addon._noop = function()
-        return
-    end
-end
+-- _noop defined centrally in core/api.lua
 
 -- #################################################################
 -- ##                    DragonUI Minimap Module                  ##
@@ -19,7 +14,7 @@ end
 -- ##        Based on RetailUI pattern                            ##
 -- #################################################################
 
--- Convertir el módulo para usar DragonUI module pattern
+-- Convert module to use DragonUI module pattern
 local MinimapModule = {
     initialized = false,
     applied = false,
@@ -42,17 +37,13 @@ if addon.RegisterModule then
     addon:RegisterModule("minimap", MinimapModule, "Minimap", "Custom minimap styling, positioning, tracking icons and calendar")
 end
 
--- Función para obtener configuración del módulo
+-- Module config helpers (centralized in api.lua)
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.minimap
+    return addon:GetModuleConfig("minimap")
 end
 
 local function IsModuleEnabled()
-    local config = GetModuleConfig()
-    if config and config.enabled ~= nil then
-        return config.enabled
-    end
-    return true -- Default enabled
+    return addon:IsModuleEnabled("minimap")
 end
 
 local DEFAULT_MINIMAP_WIDTH = Minimap:GetWidth() * 1.36
@@ -62,7 +53,7 @@ local BORDER_SIZE = 71 * 2 * 2 ^ 0.5
 
 local ADDON_ORBIT_RADIUS = 15
 
---  ADDON ICON SKINNING: Definir whitelist y función ANTES de ReplaceBlizzardFrame
+--  ADDON ICON SKINNING: Define whitelist and function BEFORE ReplaceBlizzardFrame
 local WHITE_LIST = {'MiniMapBattlefieldFrame', 'MiniMapTrackingButton', 'MiniMapMailFrame', 'HelpOpenTicketButton',
                     'GatherMatePin', 'HandyNotesPin', 'TimeManagerClockButton', 'Archy', 'GatherNote', 'MinimMap',
                     'Spy_MapNoteList_mini', 'ZGVMarker', 'poiWorldMapPOIFrame', 'WorldMapPOIFrame', 'QuestMapPOI',
@@ -83,9 +74,9 @@ local function IsFrameWhitelisted(frameName)
     return false
 end
 
---  VERIFICAR FUNCIÓN ATLAS AL INICIO
+--  VERIFY ATLAS FUNCTION AT STARTUP
 local function GetAtlasFunction()
-    -- Verificar múltiples posibles ubicaciones de la función atlas
+    -- Check multiple possible locations of the atlas function
     if addon.minimap_SetAtlas then
         return addon.minimap_SetAtlas
     elseif addon.SetAtlas then
@@ -97,13 +88,13 @@ local function GetAtlasFunction()
     end
 end
 
--- SECURE HOOKS: Agregar hooks seguros para funciones críticas
+-- SECURE HOOKS: Add secure hooks for critical functions
 local function SetupSecureHooks()
     if MinimapModule.hooks.CloseDropDownMenus then
         return -- Already hooked
     end
 
-    -- Hook seguro para CloseDropDownMenus
+    -- Secure hook for CloseDropDownMenus
     MinimapModule.hooks.CloseDropDownMenus = function()
         if not MinimapModule.applied then return end
         if MiniMapTrackingIcon and MiniMapTrackingIcon:GetAlpha() > 0 then
@@ -113,7 +104,7 @@ local function SetupSecureHooks()
     end
     hooksecurefunc("CloseDropDownMenus", MinimapModule.hooks.CloseDropDownMenus)
 
-    -- Hook seguro para SetTracking
+    -- Secure hook for SetTracking
     MinimapModule.hooks.SetTracking = function()
         if MinimapModule.applied then
             MinimapModule:UpdateTrackingIcon()
@@ -134,7 +125,7 @@ local function SetupSecureHooks()
     end
 end
 
--- CLEANUP: Función para limpiar hooks
+-- CLEANUP: Function for cleaning up hooks
 -- Phase 3B: Use flag-based approach instead of clearing table
 -- (hooksecurefunc can't be undone; clearing the table enables re-registration and duplication)
 local function CleanupSecureHooks()
@@ -236,14 +227,66 @@ local function ReplaceBlizzardFrame(frame)
 
     UpdateCalendarDate()
 
-    -- Configurar DurabilityFrame correctamente
+    -- Configure DurabilityFrame properly
     local durabilityFrame = DurabilityFrame
     if durabilityFrame then
         durabilityFrame:ClearAllPoints()
-        -- Posicionar debajo del minimap con offset apropiado
-        durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, 0)
-        -- Ajustar escala para que coincida con el minimap
+        -- Position below the minimap with appropriate offset
+        durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+        -- Adjust scale to match the minimap
         durabilityFrame:SetScale(3 / blipScale)
+    end
+
+    -- Track whether capture bar is currently active
+    local durability_captureBarActive = false
+
+    -- Reposition DurabilityFrame when a capture bar is visible to avoid overlap
+    -- forceState: true = capture bar definitely visible, false = definitely hidden, nil = auto-detect
+    local function UpdateDurabilityPosition(forceState)
+        if not durabilityFrame then return end
+        local captureBarVisible
+        if forceState ~= nil then
+            captureBarVisible = forceState
+        else
+            captureBarVisible = false
+            for i = 1, 5 do
+                local bar = _G['WorldStateCaptureBar' .. i]
+                if bar and bar:IsVisible() then
+                    captureBarVisible = true
+                    break
+                end
+            end
+        end
+        durability_captureBarActive = captureBarVisible
+        if not durabilityFrame.DragonUI_SettingPoint then
+            durabilityFrame.DragonUI_SettingPoint = true
+            durabilityFrame:ClearAllPoints()
+            if captureBarVisible then
+                -- Move down below the capture bar (same horizontal center)
+                durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -35)
+            else
+                -- Default position: centered below the minimap
+                durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+            end
+            durabilityFrame.DragonUI_SettingPoint = nil
+        end
+    end
+
+    -- Hook DurabilityFrame:SetPoint to prevent Blizzard from overriding our position
+    if durabilityFrame and not durabilityFrame._dragonUISetPointHooked then
+        hooksecurefunc(durabilityFrame, "SetPoint", function(self)
+            if not self.DragonUI_SettingPoint then
+                self.DragonUI_SettingPoint = true
+                self:ClearAllPoints()
+                if durability_captureBarActive then
+                    self:SetPoint("TOP", Minimap, "BOTTOM", 0, -35)
+                else
+                    self:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+                end
+                self.DragonUI_SettingPoint = nil
+            end
+        end)
+        durabilityFrame._dragonUISetPointHooked = true
     end
 
     local minimapBattlefieldFrame = MiniMapBattlefieldFrame
@@ -253,7 +296,7 @@ local function ReplaceBlizzardFrame(frame)
     local minimapInstanceFrame = MiniMapInstanceDifficulty
     minimapInstanceFrame:ClearAllPoints()
     minimapInstanceFrame:SetPoint("TOP", minimapBorderTop, 'BOTTOMRIGHT', -20, 6)
-    minimapInstanceFrame:SetScale(0.85) -- Escala fija para el icono de dificultad
+    minimapInstanceFrame:SetScale(0.85) -- Fixed scale for difficulty icon
 
     local minimapTracking = MiniMapTracking
     minimapTracking:ClearAllPoints()
@@ -442,6 +485,12 @@ local function ReplaceBlizzardFrame(frame)
                     end
                 end
             end)
+            -- Hook Show/Hide to update durability position dynamically
+            hooksecurefunc(bar, "Show", function() UpdateDurabilityPosition(true) end)
+            hooksecurefunc(bar, "Hide", function() UpdateDurabilityPosition(false) end)
+            -- OnHide fires after the frame is actually hidden (more reliable than Hide hook)
+            bar:HookScript("OnHide", function() UpdateDurabilityPosition(false) end)
+            bar:HookScript("OnShow", function() UpdateDurabilityPosition(true) end)
             bar._dragonUISetPointHooked = true
         end
         -- Always force our position (safe even with the hook's recursion guard)
@@ -455,15 +504,19 @@ local function ReplaceBlizzardFrame(frame)
 
     -- Check and reposition all capture bars (there can be multiple in some BGs)
     local function SetupWorldStateCaptureBar()
-        local found = false
+        local anyVisible = false
         for i = 1, 5 do
             local bar = _G['WorldStateCaptureBar' .. i]
             if bar then
                 RepositionCaptureBar(bar)
-                found = true
+                if bar:IsVisible() then
+                    anyVisible = true
+                end
             end
         end
-        return found
+        -- Update durability frame position based on capture bar visibility
+        UpdateDurabilityPosition(anyVisible)
+        return anyVisible
     end
 
     -- Try to setup immediately (frame rarely exists at load time)
@@ -481,8 +534,26 @@ local function ReplaceBlizzardFrame(frame)
     captureBarWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
     captureBarWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     captureBarWatcher:RegisterEvent("ZONE_CHANGED")
-    captureBarWatcher:SetScript("OnEvent", function()
+    captureBarWatcher:SetScript("OnEvent", function(self, event)
         SetupWorldStateCaptureBar()
+        -- After reload/login, capture bars may not exist yet — do delayed re-checks
+        if event == "PLAYER_ENTERING_WORLD" then
+            local elapsed = 0
+            local retries = 0
+            local delayFrame = CreateFrame("Frame")
+            delayFrame:SetScript("OnUpdate", function(self, dt)
+                elapsed = elapsed + dt
+                if elapsed >= 0.5 then
+                    elapsed = 0
+                    retries = retries + 1
+                    SetupWorldStateCaptureBar()
+                    -- Stop after 5 retries (2.5 seconds total)
+                    if retries >= 5 then
+                        self:SetScript("OnUpdate", nil)
+                    end
+                end
+            end)
+        end
     end)
 
     --  Add right-click functionality to clear tracking
@@ -499,12 +570,12 @@ local function ReplaceBlizzardFrame(frame)
         end
     end)
 
-    --  CONTROLAR MANUALMENTE EL MOVIMIENTO DEL BOTÓN
+    --  MANUALLY CONTROL BUTTON MOVEMENT
     minimapTrackingButton:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
-            -- Mover el icono/botón manualmente - TÚ CONTROLAS CUÁNTO
+            -- Move the icon/button manually - YOU CONTROL HOW MUCH
             if MiniMapTrackingIcon and MiniMapTrackingIcon:GetAlpha() > 0 then
-                -- Mover icono OLD STYLE: 1 pixel abajo-derecha (sutil)
+                -- Move icon OLD STYLE: 1 pixel down-right (subtle)
                 MiniMapTrackingIcon:ClearAllPoints()
                 MiniMapTrackingIcon:SetPoint('CENTER', MiniMapTracking, 'CENTER', 2, -2)
             end
@@ -513,7 +584,7 @@ local function ReplaceBlizzardFrame(frame)
 
     minimapTrackingButton:SetScript("OnMouseUp", function(self, button)
         if button == "LeftButton" then
-            -- Restaurar posición original cuando sueltas
+            -- Restore original position on release
             if MiniMapTrackingIcon and MiniMapTrackingIcon:GetAlpha() > 0 then
                 MiniMapTrackingIcon:ClearAllPoints()
                 MiniMapTrackingIcon:SetPoint('CENTER', MiniMapTracking, 'CENTER', 0, 0)
@@ -521,7 +592,7 @@ local function ReplaceBlizzardFrame(frame)
         end
     end)
 
-    --  HOOK PARA RESETEAR POSICIÓN DEL ICONO DESPUÉS DE CLICKS
+    --  HOOK TO RESET ICON POSITION AFTER CLICKS
     local function ResetTrackingIconPosition()
         if MiniMapTrackingIcon and MiniMapTrackingIcon:GetAlpha() > 0 then
             MiniMapTrackingIcon:ClearAllPoints()
@@ -560,7 +631,7 @@ local function IsFadeEnabled()
         and addon.db.profile.minimap.addon_button_fade or false
 end
 
--- Funciones de fade para hover effect (check setting dynamically)
+-- Fade functions for hover effect (check setting dynamically)
 local function fadein(self)
     if not IsFadeEnabled() then return end
     securecall(UIFrameFadeIn, self, 0.2, self:GetAlpha(), 1.0)
@@ -571,7 +642,7 @@ local function fadeout(self)
     securecall(UIFrameFadeOut, self, 0.2, self:GetAlpha(), 0.2)
 end
 
--- Función para aplicar skin personalizado a iconos de addons
+-- Function to apply custom skin to addon icons
 -- Non-destructive: repositions originals, creates border overlay; all reversible.
 local function ApplyAddonIconSkin(button)
     if not button or button:GetObjectType() ~= 'Button' then
@@ -732,7 +803,7 @@ local function UnskinAddonButton(button)
     button:SetAlpha(1)
 end
 
---  BORDER REMOVAL: Aplicar skin a iconos (SIMPLE como oldminimapcore.lua)
+--  BORDER REMOVAL: Apply skin to icons (SIMPLE like oldminimapcore.lua)
 
 -- Function to apply skins to all minimap buttons (exposed for re-application on addon load)
 local function ApplySkinsToAllMinimapButtons()
@@ -796,7 +867,7 @@ local function RemoveAllMinimapIconBorders()
         MiniMapLFGFrameBorder:SetTexture(nil)
     end
 
-    -- Aplicar inmediatamente
+    -- Apply immediately
     ApplySkinsToAllMinimapButtons()
 end
 
@@ -821,23 +892,23 @@ minimapButtonSkinFrame:SetScript("OnEvent", function(self, event, addonName)
     end
 end)
 
---  PVP STYLING: Estilizar frame PVP con faction detection (del minimapa_old.lua)
+--  PVP STYLING: Style PVP frame with faction detection (from minimapa_old.lua)
 local function StylePVPBattlefieldFrame()
     if not MiniMapBattlefieldFrame then
         return
     end
 
-    -- Configurar el frame PVP como en minimapa_old.lua
+    -- Configure the PVP frame like in minimapa_old.lua
     MiniMapBattlefieldFrame:SetSize(44, 44)
     MiniMapBattlefieldFrame:ClearAllPoints()
     MiniMapBattlefieldFrame:SetPoint('BOTTOMLEFT', Minimap, 0, 18)
     MiniMapBattlefieldFrame:SetNormalTexture('')
     MiniMapBattlefieldFrame:SetPushedTexture('')
 
-    -- Detectar facción del jugador y aplicar texturas apropiadas
+    -- Detect player faction and apply appropriate textures
     local faction = string.lower(UnitFactionGroup('player'))
 
-    -- Aplicar texturas usando SetAtlasTexture
+    -- Apply textures using SetAtlasTexture
     if MiniMapBattlefieldFrame:GetNormalTexture() then
         SetAtlasTexture(MiniMapBattlefieldFrame:GetNormalTexture(), 'Minimap-PVP-' .. faction .. '-Normal')
     end
@@ -845,7 +916,7 @@ local function StylePVPBattlefieldFrame()
         SetAtlasTexture(MiniMapBattlefieldFrame:GetPushedTexture(), 'Minimap-PVP-' .. faction .. '-Pushed')
     end
 
-    -- Configurar script de click como en minimapa_old.lua
+    -- Configure click script like in minimapa_old.lua
     MiniMapBattlefieldFrame:SetScript('OnClick', function(self, button)
         GameTooltip:Hide()
         if MiniMapBattlefieldFrame.status == "active" then
@@ -859,7 +930,7 @@ local function StylePVPBattlefieldFrame()
         elseif button == "RightButton" then
             ToggleDropDownMenu(1, nil, MiniMapBattlefieldDropDown, "MiniMapBattlefieldFrame", 0, -5)
         else
-            --  SIMPLE: Usar la misma función que el botón PVP del micromenu
+            --  SIMPLE: Use the same function as the PVP micromenu button
             TogglePVPFrame()
         end
     end)
@@ -885,7 +956,7 @@ local function RemoveBlizzardFrames()
     if MinimapNorthTag then MinimapNorthTag:Hide() end
     if MinimapCompassTexture then MinimapCompassTexture:Hide() end
 
-    --  LLAMAR A LAS NUEVAS FUNCIONES
+    --  CALL THE NEW FUNCTIONS
     RemoveAllMinimapIconBorders()
     StylePVPBattlefieldFrame()
 end
@@ -924,7 +995,7 @@ function MinimapModule:UpdateTrackingIcon()
     local useOldStyle = addon.db and addon.db.profile and addon.db.profile.minimap and
                             addon.db.profile.minimap.tracking_icons
 
-    --  VERIFICACIÓN DE SEGURIDAD
+    --  SECURITY CHECK
     if not addon or not addon.db then
         return
     end
@@ -933,7 +1004,7 @@ function MinimapModule:UpdateTrackingIcon()
         useOldStyle = false
     end
 
-    --  VERIFICACIÓN ADICIONAL: Asegurar que los frames existen
+    --  ADDITIONAL CHECK: Ensure frames exist
     if not MiniMapTrackingIcon or not MiniMapTrackingButton then
         return
     end
@@ -942,11 +1013,11 @@ function MinimapModule:UpdateTrackingIcon()
 
         if texture == 'Interface\\Minimap\\Tracking\\None' then
 
-            -- OLD STYLE + No tracking = Mostrar icono de lupa por defecto
+            -- OLD STYLE + No tracking = Show default magnifying glass icon
             MiniMapTrackingIcon:SetTexture('')
             MiniMapTrackingIcon:SetAlpha(0)
 
-            -- Mostrar el botón moderno como "icono de lupa" por defecto
+            -- Show the modern button as default "magnifying glass icon"
             local normalTexture = MiniMapTrackingButton:GetNormalTexture()
             if normalTexture then
                 SetAtlasTexture(normalTexture, 'Minimap-Tracking-Normal')
@@ -963,7 +1034,7 @@ function MinimapModule:UpdateTrackingIcon()
             end
         else
 
-            -- OLD STYLE + Tracking active = Mostrar el icono específico del tracking
+            -- OLD STYLE + Tracking active = Show the specific tracking icon
             MiniMapTrackingIcon:SetTexture(texture)
             MiniMapTrackingIcon:SetTexCoord(0, 1, 0, 1)
             MiniMapTrackingIcon:SetSize(20, 20)
@@ -971,7 +1042,7 @@ function MinimapModule:UpdateTrackingIcon()
             MiniMapTrackingIcon:ClearAllPoints()
             MiniMapTrackingIcon:SetPoint('CENTER', MiniMapTracking, 'CENTER', 0, 0)
 
-            -- Limpiar texturas del botón para que no interfieran con el icono específico
+            -- Clear button textures so they don't interfere with the specific icon
             MiniMapTrackingButton:SetNormalTexture('')
             MiniMapTrackingButton:SetPushedTexture('')
             local highlightTexture = MiniMapTrackingButton:GetHighlightTexture()
@@ -981,13 +1052,13 @@ function MinimapModule:UpdateTrackingIcon()
         end
     else
 
-        --  MODERN STYLE: Siempre mostrar botón moderno (RetailUI style)
+        --  MODERN STYLE: Always show modern button (RetailUI style)
 
-        -- Limpiar el icono clásico para que no interfiera
+        -- Clear the classic icon so it doesn't interfere
         MiniMapTrackingIcon:SetTexture('')
         MiniMapTrackingIcon:SetAlpha(0)
 
-        -- Usar las texturas de RetailUI que ya funcionan (las que están en ReplaceBlizzardFrame)
+        -- Use the RetailUI textures that already work (the ones from ReplaceBlizzardFrame)
         local normalTexture = MiniMapTrackingButton:GetNormalTexture()
         if normalTexture then
             SetAtlasTexture(normalTexture, 'Minimap-Tracking-Normal')
@@ -1005,7 +1076,7 @@ function MinimapModule:UpdateTrackingIcon()
 
     end
 
-    -- Siempre ocultar overlay
+    -- Always hide overlay
     if MiniMapTrackingIconOverlay then
         MiniMapTrackingIconOverlay:SetAlpha(0)
     end
@@ -1044,12 +1115,12 @@ local function MiniMapInstanceDifficulty_OnEvent(self)
 
         MiniMapInstanceDifficultyText:SetText(maxPlayers)
 
-        -- Posicionar texto: ligeramente a la izquierda y hacia abajo (escala 0.85 maneja el tamaño)
+        -- Position text: slightly to the left and downward (scale 0.85 handles the size)
         MiniMapInstanceDifficultyText:ClearAllPoints()
         MiniMapInstanceDifficultyText:SetPoint("CENTER", self, "CENTER", -1, -8)
 
         local minimapInstanceTexture = MiniMapInstanceDifficultyTexture
-        self:SetScale(0.85) -- Escala fija para el icono de dificultad
+        self:SetScale(0.85) -- Fixed scale for difficulty icon
         self:Show()
     else
         self:Hide()
@@ -1075,7 +1146,7 @@ function MinimapModule:StoreOriginalSettings()
         }
     end
 
-    -- NUEVO: Store original DurabilityFrame settings
+    -- NEW: Store original DurabilityFrame settings
     if DurabilityFrame then
         local point, relativeTo, relativePoint, xOfs, yOfs = DurabilityFrame:GetPoint(1)
         self.originalMinimapSettings.durability = {
@@ -1237,14 +1308,14 @@ function MinimapModule:InitializeMinimapSystem()
 
     self.minimapFrame = CreateUIFrame(230, 230, "MinimapFrame")
 
-    --  REGISTRO AUTOMÁTICO EN EL SISTEMA CENTRALIZADO
+    --  AUTOMATIC REGISTRATION IN THE CENTRALIZED SYSTEM
     addon:RegisterEditableFrame({
         name = "minimap",
         frame = self.minimapFrame,
         blizzardFrame = MinimapCluster,
         configPath = {"widgets", "minimap"},
         onHide = function()
-            self:UpdateWidgets() -- Aplicar nueva configuración al salir del editor
+            self:UpdateWidgets() -- Apply new configuration on editor exit
         end,
         module = self
     })
@@ -1265,7 +1336,7 @@ function MinimapModule:InitializeMinimapSystem()
     RemoveBlizzardFrames()
     ReplaceBlizzardFrame(self.minimapFrame)
 
-    --  AÑADIR ESTA LÍNEA PARA APLICAR TODAS LAS CONFIGURACIONES AL INICIO
+    --  ADD THIS LINE TO APPLY ALL SETTINGS AT STARTUP
     self:UpdateSettings()
 
     -- Hook tracking changes to update icon automatically
@@ -1295,15 +1366,15 @@ function MinimapModule:Initialize()
     self.initialized = true
 end
 
--- Eliminar las funciones que no existen más y convertir en funciones DragonUI
+-- Remove functions that no longer exist and convert to DragonUI functions
 function MinimapModule:UpdateSettings()
     local scale = addon.db.profile.minimap.scale or 1.0
 
     if self.minimapFrame then
-        --  MANEJAR POSICIÓN: Prioridad a widgets (editor mode), fallback a x,y
+        --  HANDLE POSITION: Priority to widgets (editor mode), fallback to x,y
         local x, y, anchor
 
-        -- 1. Intentar usar posición del editor mode (widgets)
+        -- 1. Try to use editor mode position (widgets)
         if addon.db.profile.widgets and addon.db.profile.widgets.minimap then
             local widgetConfig = addon.db.profile.widgets.minimap
             anchor = widgetConfig.anchor or "TOPRIGHT"
@@ -1311,25 +1382,25 @@ function MinimapModule:UpdateSettings()
             y = widgetConfig.posY or 0
 
         else
-            -- 2. Fallback a posición legacy (x, y)
+            -- 2. Fallback to legacy position (x, y)
             x = addon.db.profile.minimap.x or -7
             y = addon.db.profile.minimap.y or 0
             anchor = "TOPRIGHT"
 
         end
 
-        -- NUEVO: Actualizar posición del DurabilityFrame cuando cambien las configuraciones
+        -- NEW: Update DurabilityFrame position when settings change
         if DurabilityFrame then
             DurabilityFrame:ClearAllPoints()
             DurabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, 0)
             DurabilityFrame:SetScale(scale)
         end
         
-        --  APLICAR POSICIÓN
+        --  APPLY POSITION
         self.minimapFrame:ClearAllPoints()
         self.minimapFrame:SetPoint(anchor, UIParent, anchor, x, y)
 
-        --  APLICAR ESCALA (funciona perfecto ahora)
+        --  APPLY SCALE (works perfectly now)
         if MinimapCluster then
             MinimapCluster:SetScale(scale)
 
@@ -1339,11 +1410,11 @@ function MinimapModule:UpdateSettings()
             self.borderFrame:SetScale(scale)
         end
 
-        --  APLICAR TODAS LAS CONFIGURACIONES
+        --  APPLY ALL SETTINGS
         self:ApplyAllSettings()
     end
 
-    --  CONFIGURACIONES GLOBALES DEL MINIMAP
+    --  GLOBAL MINIMAP SETTINGS
     if Minimap then
         -- Apply blip texture based on user setting (new vs old style)
         local useNewBlipStyle = addon.db.profile.minimap.blip_skin
@@ -1362,7 +1433,7 @@ function MinimapModule:UpdateSettings()
         end
     end
 
-    --  REFRESCAR OTROS ELEMENTOS
+    --  REFRESH OTHER ELEMENTS
     self:UpdateTrackingIcon()
 
 end
@@ -1372,7 +1443,7 @@ local function GetClockTextFrame()
         return nil
     end
 
-    -- Intentar múltiples métodos para encontrar el texto del reloj
+    -- Try multiple methods to find the clock text
     local clockText = TimeManagerClockButton.text
     if clockText then
         return clockText
@@ -1383,7 +1454,7 @@ local function GetClockTextFrame()
         return clockText
     end
 
-    -- Buscar en los children
+    -- Search in children
     for i = 1, TimeManagerClockButton:GetNumChildren() do
         local child = select(i, TimeManagerClockButton:GetChildren())
         if child and child.GetFont then
@@ -1391,7 +1462,7 @@ local function GetClockTextFrame()
         end
     end
 
-    -- Buscar en las regiones
+    -- Search in regions
     for i = 1, TimeManagerClockButton:GetNumRegions() do
         local region = select(i, TimeManagerClockButton:GetRegions())
         if region and region.GetFont then
@@ -1402,7 +1473,7 @@ local function GetClockTextFrame()
     return nil
 end
 
---  NUEVA FUNCIÓN PARA APLICAR TODAS LAS CONFIGURACIONES
+--  NEW FUNCTION TO APPLY ALL SETTINGS
 function MinimapModule:ApplyAllSettings()
     if not addon.db or not addon.db.profile or not addon.db.profile.minimap then
         return
@@ -1410,12 +1481,12 @@ function MinimapModule:ApplyAllSettings()
 
     local settings = addon.db.profile.minimap
 
-    --  APLICAR BORDER ALPHA
+    --  APPLY BORDER ALPHA
     if MinimapBorderTop and settings.border_alpha then
         MinimapBorderTop:SetAlpha(settings.border_alpha)
     end
 
-    --  APLICAR ZOOM BUTTONS VISIBILITY
+    --  APPLY ZOOM BUTTONS VISIBILITY
     if settings.zoom_buttons ~= nil then
         if MinimapZoomIn and MinimapZoomOut then
             if settings.zoom_buttons then
@@ -1428,7 +1499,7 @@ function MinimapModule:ApplyAllSettings()
         end
     end
 
-    --  APLICAR CALENDAR VISIBILITY
+    --  APPLY CALENDAR VISIBILITY
     if settings.calendar ~= nil then
         if GameTimeFrame then
             if settings.calendar then
@@ -1439,12 +1510,12 @@ function MinimapModule:ApplyAllSettings()
         end
     end
 
-    --  APLICAR CLOCK VISIBILITY Y AJUSTAR ZONA TEXT
+    --  APPLY CLOCK VISIBILITY AND ADJUST ZONE TEXT
     if settings.clock ~= nil then
         if TimeManagerClockButton then
             if settings.clock then
                 TimeManagerClockButton:Show()
-                -- Clock visible: zona text alineado a la izquierda (posición original)
+                -- Clock visible: zone text left-aligned (original position)
                 if MinimapZoneTextButton then
                     MinimapZoneTextButton:ClearAllPoints()
                     MinimapZoneTextButton:SetPoint("LEFT", MinimapBorderTop, "LEFT", 7, 1)
@@ -1455,11 +1526,11 @@ function MinimapModule:ApplyAllSettings()
                 end
             else
                 TimeManagerClockButton:Hide()
-                -- Clock oculto: centrar zona text en todo el border
+                -- Clock hidden: center zone text across the entire border
                 if MinimapZoneTextButton then
                     MinimapZoneTextButton:ClearAllPoints()
                     MinimapZoneTextButton:SetPoint("CENTER", MinimapBorderTop, "CENTER", 0, 1)
-                    MinimapZoneTextButton:SetWidth(150) -- Más ancho para texto centrado
+                    MinimapZoneTextButton:SetWidth(150) -- Wider for centered text
                 end
                 if MinimapZoneText then
                     MinimapZoneText:SetJustifyH("CENTER")
@@ -1468,7 +1539,7 @@ function MinimapModule:ApplyAllSettings()
         end
     end
 
-    --  APLICAR CLOCK FONT SIZE (MEJORADO)
+    --  APPLY CLOCK FONT SIZE (IMPROVED)
     if settings.clock_font_size and TimeManagerClockButton then
         local clockText = GetClockTextFrame()
         if clockText then
@@ -1480,20 +1551,20 @@ function MinimapModule:ApplyAllSettings()
         end
     end
 
-    --  APLICAR ZONE TEXT FONT SIZE
+    --  APPLY ZONE TEXT FONT SIZE
     if settings.zonetext_font_size and MinimapZoneText then
         local font, _, flags = MinimapZoneText:GetFont()
         MinimapZoneText:SetFont(font, settings.zonetext_font_size, flags)
     end
 
-    --  APLICAR BLIP TEXTURE (NEW VS OLD STYLE)
+    --  APPLY BLIP TEXTURE (NEW VS OLD STYLE)
     if settings.blip_skin ~= nil and Minimap then
         local blipTexture = settings.blip_skin and "Interface\\AddOns\\DragonUI\\assets\\objecticons" or
                                 'Interface\\Minimap\\ObjectIcons'
         Minimap:SetBlipTexture(blipTexture)
     end
 
-    --  APLICAR PLAYER ARROW SIZE
+    --  APPLY PLAYER ARROW SIZE
     if settings.player_arrow_size and Minimap then
         Minimap:SetPlayerTextureHeight(settings.player_arrow_size)
         Minimap:SetPlayerTextureWidth(settings.player_arrow_size)
@@ -1501,7 +1572,7 @@ function MinimapModule:ApplyAllSettings()
 end
 --  Editor Mode Functions
 function MinimapModule:LoadDefaultSettings()
-    --  USAR LA BASE DE DATOS CORRECTA: addon.db (no addon.core.db)
+    --  USE THE CORRECT DATABASE: addon.db (not addon.core.db)
     if not addon.db.profile.widgets then
         addon.db.profile.widgets = {}
     end
@@ -1513,7 +1584,7 @@ function MinimapModule:LoadDefaultSettings()
 end
 
 function MinimapModule:UpdateWidgets()
-    --  USAR LA BASE DE DATOS CORRECTA: addon.db (no addon.core.db)
+    --  USE THE CORRECT DATABASE: addon.db (not addon.core.db)
     if not addon.db or not addon.db.profile.widgets or not addon.db.profile.widgets.minimap then
 
         self:LoadDefaultSettings()
@@ -1525,9 +1596,9 @@ function MinimapModule:UpdateWidgets()
 
 end
 
---  FUNCIONES EDITOR MODE ELIMINADAS - AHORA USA SISTEMA CENTRALIZADO
+--  EDITOR MODE FUNCTIONS REMOVED - NOW USES CENTRALIZED SYSTEM
 
--- Función de refresh para ser llamada desde options.lua
+-- Refresh function to be called from options.lua
 function addon:RefreshMinimap()
     if MinimapModule.isEnabled then
         MinimapModule:UpdateSettings()
@@ -1548,7 +1619,7 @@ function addon:RefreshMinimap()
     end
 end
 
--- Profile Callbacks para manejo de cambios de configuración
+-- Profile Callbacks for configuration change handling
 MinimapModule.OnProfileChanged = function()
     addon:RefreshMinimapSystem()
 end
@@ -1561,7 +1632,7 @@ MinimapModule.OnProfileReset = function()
     addon:RefreshMinimapSystem()
 end
 
--- Función de refresh del sistema para habilitar/deshabilitar
+-- System refresh function for enable/disable
 function addon:RefreshMinimapSystem()
     local isEnabled =
         addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.minimap and
@@ -1578,19 +1649,19 @@ function addon:RefreshMinimapSystem()
     end
 end
 
---  NUEVA FUNCIÓN: Limpiar skinning de todos los botones
+--  NEW FUNCTION: Clean skinning from all buttons
 local function CleanAllMinimapButtons()
     for i = 1, Minimap:GetNumChildren() do
         local child = select(i, Minimap:GetChildren())
         if child and child:GetObjectType() == "Button" and child.circle then
-            -- Limpiar el border del oldminimapcore.lua style
+            -- Clean the border from oldminimapcore.lua style
             child.circle:Hide()
             child.circle = nil
         end
     end
 end
 
---  FUNCIÓN PARA DEBUGGING
+--  FUNCTION FOR DEBUGGING
 function addon:DebugMinimapButtons()
 
     for i = 1, Minimap:GetNumChildren() do
@@ -1605,10 +1676,10 @@ function addon:DebugMinimapButtons()
 end
 
 -- =================================================================
--- INICIALIZACIÓN
+-- INITIALIZATION
 -- =================================================================
 
--- Inicializar cuando el addon esté listo
+-- Initialize when the addon is ready
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")

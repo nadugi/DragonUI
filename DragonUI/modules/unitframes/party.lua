@@ -617,7 +617,7 @@ UpdateHealthText = function(statusBar, forceShow)
     end
     
     if not shouldShow then
-        -- Ocultar TODOS los elementos de texto (incluido formato both)
+        -- Hide ALL text elements (including both format)
         if healthText then healthText:Hide() end
         if frame.DragonUI_HealthTextLeft then frame.DragonUI_HealthTextLeft:Hide() end
         if frame.DragonUI_HealthTextRight then frame.DragonUI_HealthTextRight:Hide() end
@@ -632,9 +632,9 @@ UpdateHealthText = function(statusBar, forceShow)
         local breakUp = settings and settings.breakUpLargeNumbers
         local finalText = GetFormattedText(current, max, textFormat, breakUp)
         
-        -- Sistema dual: tabla para "both", string para otros formatos
+        -- Dual system: table for "both", string for other formats
         if textFormat == "both" and type(finalText) == "table" then
-            -- Formato dual: usar left y right, ocultar center
+            -- Dual format: use left and right, hide center
             if frame.DragonUI_HealthText then frame.DragonUI_HealthText:Hide() end
             if frame.DragonUI_HealthTextLeft then
                 frame.DragonUI_HealthTextLeft:SetText(finalText.left or "")
@@ -645,7 +645,7 @@ UpdateHealthText = function(statusBar, forceShow)
                 frame.DragonUI_HealthTextRight:Show()
             end
         else
-            -- Formato simple: usar center, ocultar left y right
+            -- Simple format: use center, hide left and right
             if frame.DragonUI_HealthTextLeft then frame.DragonUI_HealthTextLeft:Hide() end
             if frame.DragonUI_HealthTextRight then frame.DragonUI_HealthTextRight:Hide() end
             if healthText then
@@ -654,7 +654,7 @@ UpdateHealthText = function(statusBar, forceShow)
             end
         end
     else
-        -- Ocultar todos los textos si no hay datos válidos
+        -- Hide all texts if no valid data
         if healthText then healthText:Hide() end
         if frame.DragonUI_HealthTextLeft then frame.DragonUI_HealthTextLeft:Hide() end
         if frame.DragonUI_HealthTextRight then frame.DragonUI_HealthTextRight:Hide() end
@@ -699,7 +699,7 @@ UpdateManaText = function(statusBar, forceShow)
     end
     
     if not shouldShow then
-        -- Ocultar TODOS los elementos de texto (incluido formato both)
+        -- Hide ALL text elements (including both format)
         if customText then customText:Hide() end
         if frame.DragonUI_ManaTextLeft then frame.DragonUI_ManaTextLeft:Hide() end
         if frame.DragonUI_ManaTextRight then frame.DragonUI_ManaTextRight:Hide() end
@@ -714,9 +714,9 @@ UpdateManaText = function(statusBar, forceShow)
         local breakUp = settings and settings.breakUpLargeNumbers
         local finalText = GetFormattedText(current, max, textFormat, breakUp)
         
-        -- Sistema dual: tabla para "both", string para otros formatos
+        -- Dual system: table for "both", string for other formats
         if textFormat == "both" and type(finalText) == "table" then
-            -- Formato dual: usar left y right, ocultar center
+            -- Dual format: use left and right, hide center
             if customText then customText:Hide() end
             if frame.DragonUI_ManaTextLeft then
                 frame.DragonUI_ManaTextLeft:SetText(finalText.left or "")
@@ -727,7 +727,7 @@ UpdateManaText = function(statusBar, forceShow)
                 frame.DragonUI_ManaTextRight:Show()
             end
         else
-            -- Formato simple: usar center, ocultar left y right
+            -- Simple format: use center, hide left and right
             if frame.DragonUI_ManaTextLeft then frame.DragonUI_ManaTextLeft:Hide() end
             if frame.DragonUI_ManaTextRight then frame.DragonUI_ManaTextRight:Hide() end
             if customText then
@@ -736,7 +736,7 @@ UpdateManaText = function(statusBar, forceShow)
             end
         end
     else
-        -- Ocultar todos los textos si no hay datos válidos
+        -- Hide all texts if no valid data
         if customText then customText:Hide() end
         if frame.DragonUI_ManaTextLeft then frame.DragonUI_ManaTextLeft:Hide() end
         if frame.DragonUI_ManaTextRight then frame.DragonUI_ManaTextRight:Hide() end
@@ -759,8 +759,8 @@ local function CreateHoverFrames(frame, frameIndex)
         frame.DragonUI_HealthHover:SetScript("OnEnter", function()
             hoverStates[frameIndex].health = true
             HideBlizzardTexts(frame)
-            UpdateHealthText(healthBar, true) -- Solo mostrar texto de vida
-            -- NO mostrar texto de mana durante hover de vida
+            UpdateHealthText(healthBar, true) -- Only show health text
+            -- DON'T show mana text during health hover
             if frame.DragonUI_ManaText then frame.DragonUI_ManaText:Hide() end
             if frame.DragonUI_ManaTextLeft then frame.DragonUI_ManaTextLeft:Hide() end
             if frame.DragonUI_ManaTextRight then frame.DragonUI_ManaTextRight:Hide() end
@@ -768,7 +768,7 @@ local function CreateHoverFrames(frame, frameIndex)
         frame.DragonUI_HealthHover:SetScript("OnLeave", function()
             hoverStates[frameIndex].health = false
             HideBlizzardTexts(frame)
-            -- Volver a la visibilidad normal de ambos textos
+            -- Return to normal visibility for both texts
             UpdateHealthText(healthBar, false)
             if manaBar then UpdateManaText(manaBar, false) end
         end)
@@ -783,8 +783,8 @@ local function CreateHoverFrames(frame, frameIndex)
         frame.DragonUI_ManaHover:SetScript("OnEnter", function()
             hoverStates[frameIndex].mana = true
             HideBlizzardTexts(frame)
-            UpdateManaText(manaBar, true) -- Solo mostrar texto de mana
-            -- NO mostrar texto de vida durante hover de mana
+            UpdateManaText(manaBar, true) -- Only show mana text
+            -- DON'T show health text during mana hover
             if frame.DragonUI_HealthText then frame.DragonUI_HealthText:Hide() end
             if frame.DragonUI_HealthTextLeft then frame.DragonUI_HealthTextLeft:Hide() end
             if frame.DragonUI_HealthTextRight then frame.DragonUI_HealthTextRight:Hide() end
@@ -792,7 +792,7 @@ local function CreateHoverFrames(frame, frameIndex)
         frame.DragonUI_ManaHover:SetScript("OnLeave", function()
             hoverStates[frameIndex].mana = false
             HideBlizzardTexts(frame)
-            -- Volver a la visibilidad normal de ambos textos
+            -- Return to normal visibility for both texts
             if healthBar then UpdateHealthText(healthBar, false) end
             UpdateManaText(manaBar, false)
         end)
@@ -827,7 +827,7 @@ CreateCustomTexts = function(frame)
     -- Create custom health text elements (dual system for "both" format)
     local healthBar = _G[frame:GetName() .. 'HealthBar']
     if healthBar then
-        -- Texto central para formatos simples (numeric, percentage, formatted)
+        -- Center text for simple formats (numeric, percentage, formatted)
         if not frame.DragonUI_HealthText then
             frame.DragonUI_HealthText = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
             frame.DragonUI_HealthText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -836,7 +836,7 @@ CreateCustomTexts = function(frame)
             frame.DragonUI_HealthText:SetJustifyH("CENTER")
             frame.DragonUI_HealthText:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
-        -- Texto izquierdo para formato "both" (porcentaje)
+        -- Left text for "both" format (percentage)
         if not frame.DragonUI_HealthTextLeft then
             frame.DragonUI_HealthTextLeft = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
             frame.DragonUI_HealthTextLeft:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -845,7 +845,7 @@ CreateCustomTexts = function(frame)
             frame.DragonUI_HealthTextLeft:SetJustifyH("LEFT")
             frame.DragonUI_HealthTextLeft:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
-        -- Texto derecho para formato "both" (números)
+        -- Right text for "both" format (numbers)
         if not frame.DragonUI_HealthTextRight then
             frame.DragonUI_HealthTextRight = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
             frame.DragonUI_HealthTextRight:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -859,7 +859,7 @@ CreateCustomTexts = function(frame)
     -- Create custom mana text elements (dual system for "both" format)
     local manaBar = _G[frame:GetName() .. 'ManaBar']
     if manaBar then
-        -- Texto central para formatos simples
+        -- Center text for simple formats
         if not frame.DragonUI_ManaText then
             frame.DragonUI_ManaText = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
             frame.DragonUI_ManaText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -868,7 +868,7 @@ CreateCustomTexts = function(frame)
             frame.DragonUI_ManaText:SetJustifyH("CENTER")
             frame.DragonUI_ManaText:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
-        -- Texto izquierdo para formato "both" (porcentaje)
+        -- Left text for "both" format (percentage)
         if not frame.DragonUI_ManaTextLeft then
             frame.DragonUI_ManaTextLeft = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
             frame.DragonUI_ManaTextLeft:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -877,7 +877,7 @@ CreateCustomTexts = function(frame)
             frame.DragonUI_ManaTextLeft:SetJustifyH("LEFT")
             frame.DragonUI_ManaTextLeft:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
-        -- Texto derecho para formato "both" (números)
+        -- Right text for "both" format (numbers)
         if not frame.DragonUI_ManaTextRight then
             frame.DragonUI_ManaTextRight = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
             frame.DragonUI_ManaTextRight:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -888,13 +888,13 @@ CreateCustomTexts = function(frame)
         end
     end
     
-    -- Create invisible dummy frames for independent hover (sin taint)
+    -- Create invisible dummy frames for independent hover (taint-free)
     CreateHoverFrames(frame, frameIndex)
     
     frame.DragonUI_CustomTexts = true
 end
 
--- (Funciones UpdateHealthText y UpdateManaText movidas arriba antes de CreateHoverFrames)
+-- (UpdateHealthText and UpdateManaText functions moved above before CreateHoverFrames)
 
 -- Update party colors function
 local function UpdatePartyColors(frame)
@@ -1350,7 +1350,7 @@ local function SetupPartyHooks()
                 end
             end
             
-            -- Update our custom texts - AÑADIDA ACTUALIZACIÓN AQUÍ
+            -- Update our custom texts - ADDED UPDATE HERE
             local healthbar = _G[frame:GetName() .. 'HealthBar']
             local manabar = _G[frame:GetName() .. 'ManaBar']
             if healthbar then UpdateHealthText(healthbar, false) end
@@ -1358,7 +1358,7 @@ local function SetupPartyHooks()
         end
     end)
 
-    -- Hook adicional para party member updates (compatible con 3.3.5a)
+    -- Additional hook for party member updates (compatible with 3.3.5a)
     hooksecurefunc("PartyMemberFrame_OnEvent", function(frame, event)
         if frame and frame:GetName() and frame:GetName():match("^PartyMemberFrame%d+$") then
             if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then

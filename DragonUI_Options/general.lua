@@ -75,5 +75,3 @@ addon.Options.args.editor_separator = {
     name = ' ',
     order = 0.5
 }
-
-print("|cFF00FF00[DragonUI]|r General options loaded")

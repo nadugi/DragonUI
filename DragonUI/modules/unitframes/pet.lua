@@ -28,23 +28,23 @@ local POWER_TEXTURES = PET_TEX.POWER_TEXTURES
 local COMBAT_TEX_COORDS = PET_TEX.COMBAT_TEX_COORDS
 
 -- ===============================================================
--- ANIMACIONES COMBAT PULSE
+-- COMBAT PULSE ANIMATIONS
 -- ===============================================================
 
---  CONFIGURACIÓN PARA PULSO DE COLOR
+--  COLOR PULSE CONFIGURATION
 local COMBAT_PULSE_SETTINGS = {
-    speed = 9,              -- Velocidad del latido
-    minIntensity = 0.3,     -- Intensidad mínima del rojo (0.4 = rojo oscuro)
-    maxIntensity = 0.7,     -- Intensidad máxima del rojo (1.0 = rojo brillante)
-    enabled = true          -- Activar/desactivar animación
+    speed = 9,              -- Heartbeat speed
+    minIntensity = 0.3,     -- Minimum red intensity (0.4 = dark red)
+    maxIntensity = 0.7,     -- Maximum red intensity (1.0 = bright red)
+    enabled = true          -- Enable/disable animation
 }
 
---  VARIABLE DE ESTADO
+--  STATE VARIABLE
 local combatPulseTimer = 0
 
 
 -- ===============================================================
--- NUEVA FUNCIÓN DE ANIMACIÓN CON CAMBIO DE COLOR
+-- NEW ANIMATION FUNCTION WITH COLOR CHANGE
 -- ===============================================================
 local function AnimatePetCombatPulse(elapsed)
     if not COMBAT_PULSE_SETTINGS.enabled then
@@ -56,15 +56,15 @@ local function AnimatePetCombatPulse(elapsed)
         return
     end
     
-    -- Incrementar timer
+    -- Increment timer
     combatPulseTimer = combatPulseTimer + (elapsed * COMBAT_PULSE_SETTINGS.speed)
     
-    -- Calcular intensidad del rojo usando función seno
+    -- Calculate red intensity using sine function
     local intensity = COMBAT_PULSE_SETTINGS.minIntensity + 
                      (COMBAT_PULSE_SETTINGS.maxIntensity - COMBAT_PULSE_SETTINGS.minIntensity) * 
                      (math.sin(combatPulseTimer) * 0.5 + 0.5)
     
-    --  CAMBIAR COLOR EN LUGAR DE ALPHA
+    --  CHANGE COLOR INSTEAD OF ALPHA
     texture:SetVertexColor(intensity, 0.0, 0.0, 1.0)
 end
 
@@ -81,7 +81,7 @@ local moduleState = {
 -- UTILITY FUNCTIONS
 -- ===============================================================
 local function noop() end
--- Oculta de forma persistente los textos vanilla del PetFrame (vida/poder)
+-- Persistently hides the vanilla PetFrame texts (health/power)
 local function HideBlizzardPetTexts()
     local petTexts = {
         _G.PetFrameHealthBar and _G.PetFrameHealthBar.TextString,
@@ -115,13 +115,13 @@ local function ApplyFramePositioning()
     
     PetFrame:SetScale(config.scale or 1.0)
     
-    --  PRIORIDAD: Usar anchor frame si existe (sistema centralizado)
+    --  PRIORITY: Use anchor frame if it exists (centralized system)
     if PetFrameModule.anchor then
         PetFrame:ClearAllPoints()
         PetFrame:SetPoint("CENTER", PetFrameModule.anchor, "CENTER", 0, 0)
         
     elseif config.override then
-        --  FALLBACK: Sistema legacy de configuración manual
+        --  FALLBACK: Legacy manual configuration system
         PetFrame:ClearAllPoints()
         local anchor = config.anchorFrame and _G[config.anchorFrame] or UIParent
         PetFrame:SetPoint(
@@ -164,20 +164,20 @@ local function ConfigureCombatMode()
     
     texture:SetTexture(ATLAS_TEXTURE)
     texture:SetTexCoord(unpack(COMBAT_TEX_COORDS))
-    texture:SetVertexColor(1.0, 0.0, 0.0, 1.0)  -- Color inicial
+    texture:SetVertexColor(1.0, 0.0, 0.0, 1.0)  -- Initial color
     texture:SetBlendMode("ADD")
-    texture:SetAlpha(0.8)  -- Alpha fijo
+    texture:SetAlpha(0.8)  -- Fixed alpha
     texture:SetDrawLayer("OVERLAY", 9)
     texture:ClearAllPoints()
     texture:SetPoint('CENTER', PetFrame, 'CENTER', -7, -2)
     texture:SetSize(114, 47)
     
-    --  REINICIAR TIMER
+    --  RESET TIMER
     combatPulseTimer = 0
 end
 
 -- ===============================================================
--- FUNCIÓN OnUpdate PARA EL PET FRAME
+-- OnUpdate FUNCTION FOR THE PET FRAME
 -- ===============================================================
 local function PetFrame_OnUpdate(self, elapsed)
     AnimatePetCombatPulse(elapsed)
@@ -187,23 +187,23 @@ end
 -- THREAT GLOW SYSTEM 
 -- ===============================================================
 local function ConfigurePetThreatGlow()
-    --  El pet frame usa PetFrameFlash para el threat glow
+    --  The pet frame uses PetFrameFlash for the threat glow
     local threatFlash = _G.PetFrameFlash
     if not threatFlash then return end
     
-    --  APLICAR TU TEXTURA PERSONALIZADA
+    --  APPLY YOUR CUSTOM TEXTURE
     threatFlash:SetTexture(ATLAS_TEXTURE)  
     threatFlash:SetTexCoord(unpack(COMBAT_TEX_COORDS))
-    --  COORDENADAS DE TEXTURA (ajustar según tu textura)
-    -- Formato: left, right, top, bottom (valores entre 0 y 1)
+    --  TEXTURE COORDINATES (adjust according to your texture)
+    -- Format: left, right, top, bottom (values between 0 and 1)
    
     
-    --  CONFIGURACIÓN VISUAL
-    threatFlash:SetBlendMode("ADD")  -- Efecto luminoso
-    threatFlash:SetAlpha(0.7)  -- Transparencia
-    threatFlash:SetDrawLayer("OVERLAY", 10)  -- Por encima de todo
+    --  VISUAL CONFIGURATION
+    threatFlash:SetBlendMode("ADD")  -- Glow effect
+    threatFlash:SetAlpha(0.7)  -- Transparency
+    threatFlash:SetDrawLayer("OVERLAY", 10)  -- Above everything
     
-    --  POSICIONAMIENTO PARA PET FRAME
+    --  POSITIONING FOR PET FRAME
     threatFlash:ClearAllPoints()
     threatFlash:SetPoint("CENTER", PetFrame, "CENTER", -7, -2)  
     threatFlash:SetSize(114, 47)  
@@ -251,7 +251,7 @@ local function UpdatePetTextSystemUnit()
     end
     
     local hasVehicleUI = UnitHasVehicleUI("player")
-    -- LÓGICA CORRECTA: Cuando estás en vehículo, PetFrame debe mostrar al JUGADOR como "mascota"
+    -- CORRECT LOGIC: When in a vehicle, PetFrame should show the PLAYER as "pet"
     local targetUnit = hasVehicleUI and "player" or "pet"
     
     -- Update both the public unit field and internal reference
@@ -349,25 +349,25 @@ local function ReplaceBlizzardPetFrame()
             ConfigureCombatMode()
         end)
         
-        --  MODIFICAR EL HOOK DE SetVertexColor PARA NO INTERFERIR
+        --  MODIFY THE SetVertexColor HOOK TO NOT INTERFERE
         hooksecurefunc(_G.PetAttackModeTexture, "SetVertexColor", function(self, r, g, b, a)
-            -- Solo intervenir si no es nuestro rango de colores del pulso
+            -- Only intervene if not in our pulse color range
             if not COMBAT_PULSE_SETTINGS.enabled then
                 if r ~= 1.0 or g ~= 0.0 or b ~= 0.0 then
                     self:SetVertexColor(1.0, 0.0, 0.0, 1.0)
                 end
             end
-            -- Si el pulso está activo, dejamos que la animación controle el color
+            -- If the pulse is active, let the animation control the color
         end)
         
         moduleState.hooks.combatMode = true
     end
 
-    -- Configurar threat glow personalizado
+    -- Configure custom threat glow
     if not moduleState.hooks.threatGlow then
         ConfigurePetThreatGlow()
         
-        --  HOOK para mantener la configuración
+        --  HOOK to maintain configuration
         hooksecurefunc(_G.PetFrameFlash, "Show", ConfigurePetThreatGlow)
         
         moduleState.hooks.threatGlow = true
@@ -441,7 +441,7 @@ local function OnPetFrameUpdate()
         moduleState.textSystem.update()
     end
 
-    -- Asegurar que los textos vanilla sigan ocultos
+    -- Ensure vanilla texts remain hidden
     HideBlizzardPetTexts()
 end
 
@@ -453,7 +453,7 @@ function PetFrameModule:OnEnable()
         hooksecurefunc('PetFrame_Update', OnPetFrameUpdate)
         moduleState.hooks.petUpdate = true
     end
-    -- Ocultar textos vanilla al habilitar el módulo
+    -- Hide vanilla texts when enabling the module
     HideBlizzardPetTexts()
 end
 
@@ -465,7 +465,7 @@ end
 
 function PetFrameModule:PLAYER_ENTERING_WORLD()
     ReplaceBlizzardPetFrame()
-    -- Redundancia defensiva por si Blizzard re-activa los textos
+    -- Defensive redundancy in case Blizzard re-activates the texts
     HideBlizzardPetTexts()
 end
 
@@ -513,20 +513,20 @@ end)
 -- CENTRALIZED SYSTEM INTEGRATION
 -- ===============================================================
 
--- Variables para el sistema centralizado
+-- Variables for the centralized system
 PetFrameModule.anchor = nil
 PetFrameModule.initialized = false
 
--- Create auxiliary frame for anchoring (como party.lua y castbar.lua)
+-- Create auxiliary frame for anchoring (like party.lua and castbar.lua)
 local function CreatePetAnchorFrame()
     if PetFrameModule.anchor then
         return PetFrameModule.anchor
     end
 
-    --  USAR FUNCIÓN CENTRALIZADA DE CORE.LUA
+    --  USE CENTRALIZED FUNCTION FROM CORE.LUA
     PetFrameModule.anchor = addon.CreateUIFrame(130, 44, "PetFrame")
     
-    --  PERSONALIZAR TEXTO PARA PET FRAME
+    --  CUSTOMIZE TEXT FOR PET FRAME
     if PetFrameModule.anchor.editorText then
         PetFrameModule.anchor.editorText:SetText("Pet Frame")
     end
@@ -534,14 +534,14 @@ local function CreatePetAnchorFrame()
     return PetFrameModule.anchor
 end
 
---  FUNCIÓN PARA APLICAR POSICIÓN DESDE WIDGETS (COMO party.lua)
+--  FUNCTION TO APPLY POSITION FROM WIDGETS (LIKE party.lua)
 local function ApplyWidgetPosition()
     if not PetFrameModule.anchor then
         
         return
     end
 
-    --  ASEGURAR QUE EXISTE LA CONFIGURACIÓN
+    --  ENSURE CONFIGURATION EXISTS
     if not addon.db or not addon.db.profile or not addon.db.profile.widgets then
         
         return
@@ -555,16 +555,16 @@ local function ApplyWidgetPosition()
         PetFrameModule.anchor:SetPoint(anchor, UIParent, anchor, widgetConfig.posX, widgetConfig.posY)
         
     else
-        --  POSICIÓN POR DEFECTO COMO RETAILUI (esquina superior derecha)
+        --  DEFAULT POSITION LIKE RETAILUI (upper right corner)
         PetFrameModule.anchor:ClearAllPoints()
         PetFrameModule.anchor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -50, -150)
         
     end
 end
 
---  FUNCIONES REQUERIDAS POR EL SISTEMA CENTRALIZADO
+--  FUNCTIONS REQUIRED BY THE CENTRALIZED SYSTEM
 function PetFrameModule:LoadDefaultSettings()
-    --  ASEGURAR QUE EXISTE LA CONFIGURACIÓN EN WIDGETS
+    --  ENSURE CONFIGURATION EXISTS IN WIDGETS
     if not addon.db.profile.widgets then
         addon.db.profile.widgets = {}
     end
@@ -578,40 +578,40 @@ function PetFrameModule:LoadDefaultSettings()
         
     end
     
-    --  ASEGURAR QUE EXISTE LA CONFIGURACIÓN EN UNITFRAME.PET
+    --  ENSURE CONFIGURATION EXISTS IN UNITFRAME.PET
     if not addon.db.profile.unitframe then
         addon.db.profile.unitframe = {}
     end
     
     if not addon.db.profile.unitframe.pet then
-        -- La configuración del pet ya debería existir en database.lua
+        -- Pet configuration should already exist in database.lua
         
     end
 end
 
 function PetFrameModule:UpdateWidgets()
     ApplyWidgetPosition()
-    --  REPOSICIONAR EL PET FRAME RELATIVO AL ANCHOR ACTUALIZADO
+    --  REPOSITION THE PET FRAME RELATIVE TO THE UPDATED ANCHOR
     if not InCombatLockdown() then
-        -- El pet frame debería seguir al anchor
+        -- The pet frame should follow the anchor
         ApplyFramePositioning()
     end
 end
 
---  FUNCIÓN PARA VERIFICAR SI EL PET FRAME DEBE ESTAR VISIBLE
--- SIGUIENDO A RETAILUI: Siempre visible en editor, NO filtrado por clases
+--  FUNCTION TO CHECK IF THE PET FRAME SHOULD BE VISIBLE
+-- FOLLOWING RETAILUI: Always visible in editor, NOT filtered by class
 local function ShouldPetFrameBeVisible()
     -- RetailUI siempre permite editar el PET frame independientemente de la clase
     return true
 end
 
---  FUNCIONES DE TESTEO PARA EL EDITOR
+--  TESTING FUNCTIONS FOR THE EDITOR
 local function ShowPetFrameTest()
-    -- Mostrar el PET frame aunque no haya mascota
+    -- Show the PET frame even if there is no pet
     if PetFrame then
         PetFrame:Show()
         
-        -- Simular que hay una mascota para el test
+        -- Simulate having a pet for the test
         if PetName then
             PetName:SetText("Test Pet")
             PetName:Show()
@@ -636,15 +636,15 @@ local function ShowPetFrameTest()
 end
 
 local function HidePetFrameTest()
-    -- Restaurar el estado normal del PET frame
+    -- Restore the normal state of the PET frame
     if PetFrame then
         if UnitExists("pet") then
-            -- Si hay mascota real, restaurar valores reales
+            -- If there is a real pet, restore real values
             if PetName then
                 PetName:SetText(UnitName("pet") or "")
             end
             
-            -- Forzar actualización de las barras con valores reales
+            -- Force update bars with real values
             if PetFrameHealthBar then
                 PetFrameHealthBar:SetMinMaxValues(0, UnitHealthMax("pet"))
                 PetFrameHealthBar:SetValue(UnitHealth("pet"))
@@ -655,10 +655,10 @@ local function HidePetFrameTest()
                 PetFrameManaBar:SetValue(UnitPower("pet"))
             end
         else
-            -- Si no hay mascota real, ocultar todo
+            -- If there is no real pet, hide everything
             PetFrame:Hide()
             
-            -- Limpiar los valores de prueba
+            -- Clear test values
             if PetName then
                 PetName:SetText("")
             end
@@ -666,20 +666,20 @@ local function HidePetFrameTest()
     end
 end
 
---  FUNCIÓN DE INICIALIZACIÓN DEL SISTEMA CENTRALIZADO
+--  CENTRALIZED SYSTEM INITIALIZATION FUNCTION
 local function InitializePetFrameForEditor()
-    -- Crear el anchor frame
+    -- Create the anchor frame
     CreatePetAnchorFrame()
     
-    --  REGISTRO COMPLETO CON TODAS LAS FUNCIONES (COMO party.lua y castbar.lua)
+    --  FULL REGISTRATION WITH ALL FUNCTIONS (LIKE party.lua and castbar.lua)
     addon:RegisterEditableFrame({
         name = "PetFrame",
         frame = PetFrameModule.anchor,
-        configPath = {"widgets", "pet"},  --  Array como otros módulos
-        hasTarget = ShouldPetFrameBeVisible,  --  Siempre true (como RetailUI)
-        showTest = ShowPetFrameTest,  --  Minúscula como party.lua
-        hideTest = HidePetFrameTest,  --  Minúscula como party.lua
-        onHide = function() PetFrameModule:UpdateWidgets() end,  --  Para aplicar cambios
+        configPath = {"widgets", "pet"},  --  Array like other modules
+        hasTarget = ShouldPetFrameBeVisible,  --  Always true (like RetailUI)
+        showTest = ShowPetFrameTest,  --  Lowercase like party.lua
+        hideTest = HidePetFrameTest,  --  Lowercase like party.lua
+        onHide = function() PetFrameModule:UpdateWidgets() end,  --  To apply changes
         LoadDefaultSettings = function() PetFrameModule:LoadDefaultSettings() end,
         UpdateWidgets = function() PetFrameModule:UpdateWidgets() end
     })
@@ -688,15 +688,15 @@ local function InitializePetFrameForEditor()
     
 end
 
---  INICIALIZACIÓN
+--  INITIALIZATION
 InitializePetFrameForEditor()
 
---  LISTENER PARA CUANDO EL ADDON ESTÉ COMPLETAMENTE CARGADO
+--  LISTENER FOR WHEN THE ADDON IS FULLY LOADED
 local readyFrame = CreateFrame("Frame")
 readyFrame:RegisterEvent("ADDON_LOADED")
 readyFrame:SetScript("OnEvent", function(self, event, addonName)
     if addonName == "DragonUI" then
-        -- Aplicar posición del widget cuando el addon esté listo
+        -- Apply widget position when the addon is ready
         if PetFrameModule.UpdateWidgets then
             PetFrameModule:UpdateWidgets()
         end

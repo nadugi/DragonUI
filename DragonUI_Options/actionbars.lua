@@ -454,5 +454,3 @@ local actionbarsOptions = {
 -- ============================================================================
 
 addon:RegisterOptionsGroup("actionbars", actionbarsOptions)
-
-print("|cFF00FF00[DragonUI]|r Action bars options loaded")

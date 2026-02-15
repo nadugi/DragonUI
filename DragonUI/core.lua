@@ -207,5 +207,3 @@ function addon.core:SlashCommand(input)
         end
     end
 end
-
-print("|cFF00FF00[DragonUI]|r Core loaded")

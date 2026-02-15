@@ -113,5 +113,3 @@ end
 
 -- Register the tab (order 4 = right after Action Bars)
 Panel:RegisterTab("additionalbars", "Additional Bars", BuildAdditionalBarsTab, 4)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: Additional Bars loaded")

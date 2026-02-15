@@ -683,5 +683,3 @@ local castbarsOptions = {
 -- ============================================================================
 
 addon:RegisterOptionsGroup("castbars", castbarsOptions)
-
-print("|cFF00FF00[DragonUI]|r Cast bars options loaded")

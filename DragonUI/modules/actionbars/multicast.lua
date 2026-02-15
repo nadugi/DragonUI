@@ -12,7 +12,7 @@ local function GetPlayerClass()
 end
 
 -- noop function for protecting frames
-local noop = addon._noop or function() end
+local noop = addon._noop
 
 -- =============================================================================
 -- MODULE STATE TRACKING
@@ -31,21 +31,9 @@ local MulticastModule = {
 -- Module frames (created only when enabled)
 local anchor, totembar
 
--- =============================================================================
--- OPTIMIZED TIMER HELPER (with timer pool for better memory management)
--- =============================================================================
-local timerPool = {}
+-- Timer helper: delegates to centralized addon:After()
 local function DelayedCall(delay, func)
-    local timer = table.remove(timerPool) or CreateFrame("Frame")
-    timer.elapsed = 0
-    timer:SetScript("OnUpdate", function(self, elapsed)
-        self.elapsed = self.elapsed + elapsed
-        if self.elapsed >= delay then
-            self:SetScript("OnUpdate", nil)
-            table.insert(timerPool, self)
-            func()
-        end
-    end)
+    addon:After(delay, func)
 end
 
 -- Forward declaration for PositionTotemButtons (defined later)

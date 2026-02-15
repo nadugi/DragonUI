@@ -34,4 +34,13 @@
     
     <!-- Editor Mode module -->
     <Script file="editor_mode.lua"/>
+    
+    <!-- Dark Mode module -->
+    <Script file="darkmode.lua"/>
+    
+    <!-- Tooltip Enhancement module -->
+    <Script file="tooltip.lua"/>
+    
+    <!-- Item Quality Borders module -->
+    <Script file="itemquality.lua"/>
 </Ui>

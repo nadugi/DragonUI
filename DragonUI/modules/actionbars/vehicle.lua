@@ -45,12 +45,11 @@ local vehicleExitButton = nil
 -- ============================================================================
 
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.vehicle
+    return addon:GetModuleConfig("vehicle")
 end
 
 local function IsModuleEnabled()
-    local cfg = GetModuleConfig()
-    return cfg and cfg.enabled
+    return addon:IsModuleEnabled("vehicle")
 end
 
 local function IsMainbarsModuleEnabled()

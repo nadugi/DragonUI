@@ -161,5 +161,3 @@ end
 
 -- Register the tab
 Panel:RegisterTab("profiles", "Profiles", BuildProfilesTab, 99)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: Profiles loaded")

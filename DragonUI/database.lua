@@ -210,7 +210,7 @@ local defaults = {
             nobar_offset = 18,
             repbar_abovexp_offset = 16,
             repbar_offset = 2,
-            -- Escalas configurables para las barras
+            -- Configurable scales for the bars
             expbar_scale = 0.9,
             repbar_scale = 0.9
         },
@@ -249,7 +249,10 @@ local defaults = {
                 font_size = 16,
                 position = {'CENTER', 0, 1}
             },
-            border_color = {1, 1, 1, 1}
+            border_color = {1, 1, 1, 1},
+            range_indicator = {
+                enabled = true -- Tint action buttons red when target is out of range
+            }
         },
 
         additional = {
@@ -297,7 +300,7 @@ local defaults = {
             addon_button_fade = false
         },
 
-        --  BUFFS SETTINGS (NUEVO)
+        --  BUFFS SETTINGS (NEW)
         buffs = {
             enabled = true,
             show_toggle_button = true
@@ -366,12 +369,12 @@ local defaults = {
 
         -- CHAT SETTINGS
         chat = {
-            enabled = true, -- Por defecto deshabilitado para no interferir con el chat original
+            enabled = true, -- Disabled by default to avoid interfering with the original chat
             scale = 1.0,
-            x_position = 42, -- X relativo a BOTTOM LEFT
-            y_position = 35, -- Y relativo a BOTTOM LEFT
-            size_x = 295, -- Ancho del chat
-            size_y = 120 -- Alto del chat
+            x_position = 42, -- X relative to BOTTOM LEFT
+            y_position = 35, -- Y relative to BOTTOM LEFT
+            size_x = 295, -- Chat width
+            size_y = 120 -- Chat height
         },
 
         -- UNIT FRAMES SETTINGS
@@ -525,6 +528,24 @@ local defaults = {
             },
             questtracker = {
                 enabled = true -- Enable DragonUI quest tracker positioning and styling
+            },
+            darkmode = {
+                enabled = false, -- Apply darker tinted textures to UI chrome
+                intensity_preset = 3, -- 1 = Light, 2 = Medium, 3 = Dark
+                use_custom_color = false, -- Override presets with custom color
+                custom_color = { r = 0.15, g = 0.15, b = 0.15 } -- Custom tint RGB
+            },
+            tooltip = {
+                enabled = false, -- Enhanced tooltip styling with class colors
+                class_colored_border = true, -- Color tooltip border by class/reaction
+                class_colored_name = true, -- Color unit name by class
+                target_of_target = true, -- Show target-of-target line
+                health_bar = true, -- Show health bar on tooltip
+                anchor_cursor = false -- Anchor tooltip to cursor
+            },
+            itemquality = {
+                enabled = false, -- Color item borders by quality in bags, character panel, bank, merchant
+                min_quality = 2 -- Minimum quality to show (2 = Uncommon/green)
             }
         }
     }

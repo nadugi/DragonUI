@@ -120,5 +120,3 @@ local questtrackerOptions = {
 -- ============================================================================
 
 addon:RegisterOptionsGroup("questtracker", questtrackerOptions)
-
-print("|cFF00FF00[DragonUI]|r Quest tracker options loaded")

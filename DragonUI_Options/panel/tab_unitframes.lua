@@ -576,5 +576,3 @@ end
 
 -- Register the tab
 Panel:RegisterTab("unitframes", "Unit Frames", BuildUnitframesTab, 6)
-
-print("|cFF00FF00[DragonUI]|r Panel tab: Unit Frames loaded")

@@ -388,5 +388,3 @@ addon.CommandHandlers = {
     ShowVersion = ShowVersion,
     ShowHelp = ShowHelp
 }
-
-print("|cFF00FF00[DragonUI]|r Commands loaded")

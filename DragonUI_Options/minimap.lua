@@ -281,5 +281,3 @@ local minimapOptions = {
 -- ============================================================================
 
 addon:RegisterOptionsGroup("minimap", minimapOptions)
-
-print("|cFF00FF00[DragonUI]|r Minimap options loaded")

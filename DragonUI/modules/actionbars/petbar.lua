@@ -19,12 +19,11 @@ local hooksecurefunc = hooksecurefunc;
 
 -- DragonUI Configuration Functions
 local function GetModuleConfig()
-    return addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.petbar
+    return addon:GetModuleConfig("petbar")
 end
 
 local function IsModuleEnabled()
-    local cfg = GetModuleConfig()
-    return cfg and cfg.enabled
+    return addon:IsModuleEnabled("petbar")
 end
 
 local function GetPetbarConfig()
@@ -70,13 +69,14 @@ local function GetDynamicConfig()
     
     if not petConfig then return defaults end
     
+    -- Use parentheses to ensure correct or/and precedence
     return {
-        x_position = petConfig.x_position or additionalConfig and additionalConfig.pet and additionalConfig.pet.x_position or defaults.x_position,
-        y_position = petConfig.y_position or additionalConfig and additionalConfig.pet and additionalConfig.pet.y_position or defaults.y_position,
+        x_position = petConfig.x_position or (additionalConfig and additionalConfig.pet and additionalConfig.pet.x_position) or defaults.x_position,
+        y_position = petConfig.y_position or (additionalConfig and additionalConfig.pet and additionalConfig.pet.y_position) or defaults.y_position,
         leftbar_offset = petConfig.leftbar_offset or defaults.leftbar_offset,
         rightbar_offset = petConfig.rightbar_offset or defaults.rightbar_offset,
-        size = petConfig.size or additionalConfig and additionalConfig.size or defaults.size,
-        spacing = petConfig.spacing or additionalConfig and additionalConfig.spacing or defaults.spacing,
+        size = petConfig.size or (additionalConfig and additionalConfig.size) or defaults.size,
+        spacing = petConfig.spacing or (additionalConfig and additionalConfig.spacing) or defaults.spacing,
         grid = petConfig.grid or defaults.grid
     }
 end
