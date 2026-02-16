@@ -26,7 +26,6 @@
 - Durability frame now dynamically repositions below the minimap when PvP capture bars (Eye of the Storm, etc.) appear, preventing overlap
 - All Spanish code comments translated to English across the codebase
 - Internal code cleanup: centralized timer system, shared module helpers, and removed redundant utility functions
-- And more...
 
 ## 📅 2026-02-14
 
