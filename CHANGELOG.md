@@ -6,8 +6,10 @@
 
 ### Fixed
 - Converted critical bar textures (XP, Rep, ToT, Party, Castbar, NameBackground) from BLP to TGA to prevent white texture corruption when changing texture resolution in Video Settings
-- Vehicle module: main action bar no longer hides when entering a vehicle with Blizzard Art Style disabled — vehicle abilities now remain visible via page switching
+- Vehicle module: action bars (main and secondary) no longer hide when entering a vehicle with Blizzard Art Style disabled
 - Vehicle exit button now appears for multi-seat mount passengers (previously only showed for vehicles with full UI)
+- Vehicle: empty button slots are now hidden, bars behave correctly on reload and in combat for both art style modes
+- Party frames: horizontal layout persists after reload, correct power type colors (energy, rage, etc.), better default spacing
 
 ## 📅 2026-02-16
 

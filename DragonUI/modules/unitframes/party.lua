@@ -158,7 +158,7 @@ function PartyFrames:LoadDefaultSettings()
             showHealthTextAlways = false,
             showManaTextAlways = false,
             orientation = 'vertical',
-            padding = 15,
+            padding = 50,
             scale = 1.0,
             override = false,
             anchor = 'TOPLEFT',
@@ -260,7 +260,7 @@ local function GetSettings()
             showHealthTextAlways = false,
             showManaTextAlways = false,
             orientation = 'vertical',
-            padding = 15,
+            padding = 50,
             scale = 1.0,
             override = false,
             anchor = 'TOPLEFT',
@@ -1013,6 +1013,9 @@ local function StylePartyFrames()
 
                 -- Configure dynamic clipping
                 SetupManaBarClipping(frame)
+
+                -- Apply correct power type texture (energy, rage, etc.)
+                UpdateManaBarTexture(frame)
             end
 
             -- Name styling
@@ -1284,8 +1287,14 @@ local function SetupPartyHooks()
                 if frameIndex and frameIndex >= 1 and frameIndex <= 4 then
                     frame:ClearAllPoints()
                     local step = GetPartyStep()
-                    local yOffset = (frameIndex - 1) * -step
-                    frame:SetPoint("TOPLEFT", PartyFrames.anchor, "TOPLEFT", 0, yOffset)
+                    local orientation = GetOrientation()
+                    if orientation == 'horizontal' then
+                        local xOffset = (frameIndex - 1) * step
+                        frame:SetPoint("TOPLEFT", PartyFrames.anchor, "TOPLEFT", xOffset, 0)
+                    else
+                        local yOffset = (frameIndex - 1) * -step
+                        frame:SetPoint("TOPLEFT", PartyFrames.anchor, "TOPLEFT", 0, yOffset)
+                    end
                 end
             end
 
@@ -1367,6 +1376,8 @@ local function SetupPartyHooks()
                     UpdateHealthText(healthbar, false)
                 end
             elseif event == "UNIT_POWER" or event == "UNIT_MAXPOWER" or event == "UNIT_DISPLAYPOWER" then
+                -- Update power bar texture on power type change (e.g. druid shifting)
+                UpdateManaBarTexture(frame)
                 local manabar = _G[frame:GetName() .. 'ManaBar']
                 if manabar then
                     UpdateManaText(manabar, false)
@@ -1482,12 +1493,18 @@ function PartyFrames:UpdateSettings()
     -- Reposition buffs
     RepositionBlizzardBuffs()
     
-    -- Refresh all texts with new settings
+    -- Update anchor size for new orientation
+    UpdatePartyAnchorSize()
+    
+    -- Refresh all texts and power bar textures with new settings
     for i = 1, MAX_PARTY_MEMBERS do
         local frame = _G['PartyMemberFrame' .. i]
         if frame then
             HideBlizzardTexts(frame)
             CreateCustomTexts(frame)
+            
+            -- Refresh power bar texture (energy, rage, etc.)
+            UpdateManaBarTexture(frame)
             
             local healthbar = _G[frame:GetName() .. 'HealthBar']
             local manabar = _G[frame:GetName() .. 'ManaBar']

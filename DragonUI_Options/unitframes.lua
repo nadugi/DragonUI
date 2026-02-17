@@ -1082,8 +1082,8 @@ local unitframeOptions = {
                     type = 'range',
                     name = "Padding",
                     desc = "Space between party frames",
-                    min = 0,
-                    max = 50,
+                    min = 25,
+                    max = 150,
                     step = 1,
                     get = function()
                         return addon.db.profile.unitframe.party.padding

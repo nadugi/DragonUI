@@ -549,7 +549,7 @@ local function BuildPartySection(scroll)
         label = "Padding",
         desc = "Space between party frames.",
         dbPath = "unitframe.party.padding",
-        min = 0, max = 50, step = 1,
+        min = 25, max = 150, step = 1,
         width = 200,
         callback = refreshParty,
     })
