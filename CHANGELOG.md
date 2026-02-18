@@ -6,7 +6,9 @@
 
 ### Added
 - **Latency Indicator** - Color-coded StatusBar overlay on the HelpMicroButton showing latency (green < 200 ms, yellow 200–300 ms, red > 300 ms). Tooltip displays ms. Toggleable in DragonUI Micro Menu options
-- Party frames: separate vertical/horizontal padding options
+
+### Changed
+- Party frames: the single "Gap" slider has been split into two separate sliders - one for vertical spacing and one for horizontal spacing
 
 ### Fixed
 - Buff frame: buff/debuff positioning, second row alignment, and GM ticket interaction no longer break debuff layout
