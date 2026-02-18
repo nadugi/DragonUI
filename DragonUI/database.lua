@@ -186,6 +186,7 @@ local defaults = {
             hide_on_vehicle = false,
             bags_collapsed = false,
             grayscale_icons = false,
+            show_latency_indicator = true,
 
             -- Grayscale icons configuration
             grayscale = {

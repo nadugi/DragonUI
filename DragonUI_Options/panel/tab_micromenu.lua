@@ -70,6 +70,15 @@ local function BuildMicromenuTab(scroll)
         end,
     })
 
+    C:AddToggle(menu, {
+        label = "Show Latency Indicator",
+        desc = "Show a colored bar below the Help button indicating connection quality (green/yellow/red). Requires UI reload.",
+        dbPath = "micromenu.show_latency_indicator",
+        callback = function()
+            StaticPopup_Show("DRAGONUI_RELOAD_UI")
+        end,
+    })
+
     -- ====================================================================
     -- BAGS
     -- ====================================================================

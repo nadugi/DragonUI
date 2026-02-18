@@ -113,6 +113,19 @@ local micromenuOptions = {
                 end
             end,
             order = 9
+        },
+        show_latency_indicator = {
+            type = 'toggle',
+            name = "Show Latency Indicator",
+            desc = "Show a colored bar below the Help button indicating connection quality (green/yellow/red). Requires UI reload.",
+            get = function()
+                return addon.db.profile.micromenu.show_latency_indicator
+            end,
+            set = function(info, value)
+                addon.db.profile.micromenu.show_latency_indicator = value
+                StaticPopup_Show("DRAGONUI_RELOAD_UI")
+            end,
+            order = 10
         }
     }
 }

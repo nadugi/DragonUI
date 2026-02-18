@@ -58,8 +58,8 @@ local hooksecurefunc = hooksecurefunc;
 local _G = _G;
 
 -- Performance constants
-local PERFORMANCEBAR_LOW_LATENCY = 300;
-local PERFORMANCEBAR_MEDIUM_LATENCY = 600;
+local PERFORMANCEBAR_LOW_LATENCY = 200;
+local PERFORMANCEBAR_MEDIUM_LATENCY = 300;
 
 -- Frame references
 local MainMenuBarBackpackButton = _G.MainMenuBarBackpackButton;
@@ -1509,6 +1509,81 @@ local function ApplyMicromenuSystem()
             end
         end
         UpdateCharacterPortraitVisibility()
+
+        -- ====================================================================
+        -- LATENCY INDICATOR (StatusBar overlay on HelpMicroButton)
+        -- Green (<300ms), Yellow (300-600ms), Red (>600ms)
+        -- Uses StatusBar frame with performance bar texture as vertical
+        -- overlay covering the full height of HelpMicroButton.
+        -- ====================================================================
+        local showLatency = addon.db.profile.micromenu.show_latency_indicator
+        if showLatency and HelpMicroButton then
+            if not MicromenuModule.frames.latencyIndicator then
+                local latencyBar = CreateFrame("StatusBar", "DragonUIPerformanceBar", HelpMicroButton)
+                latencyBar.updateInterval = 0
+
+                latencyBar:SetStatusBarTexture(addon._dir .. "ui-mainmenubar-performancebar")
+                latencyBar:SetStatusBarColor(0, 1, 0)
+                latencyBar:GetStatusBarTexture():SetBlendMode("ADD")
+                latencyBar:GetStatusBarTexture():SetDrawLayer("OVERLAY")
+
+                -- Tooltip on hover
+                latencyBar:EnableMouse(true)
+                latencyBar:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                    local _, _, latency = GetNetStats()
+                    latency = latency or 0
+                    GameTooltip:AddLine("Network", 1, 1, 1)
+                    GameTooltip:AddDoubleLine("Latency", latency .. " ms", 1, 1, 1, 1, 1, 0)
+                    GameTooltip:Show()
+                end)
+                latencyBar:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
+                end)
+
+                latencyBar:SetScript("OnUpdate", function(self, elapsed)
+                    if self.updateInterval > 0 then
+                        self.updateInterval = self.updateInterval - elapsed
+                    else
+                        self.updateInterval = 10
+                        local _, _, latency = GetNetStats()
+                        latency = latency or 0
+                        if latency > PERFORMANCEBAR_MEDIUM_LATENCY then
+                            self:SetStatusBarColor(1, 0, 0)
+                        elseif latency > PERFORMANCEBAR_LOW_LATENCY then
+                            self:SetStatusBarColor(1, 1, 0)
+                        else
+                            self:SetStatusBarColor(0, 1, 0)
+                        end
+                    end
+                end)
+
+                MicromenuModule.frames.latencyIndicator = latencyBar
+            end
+
+            -- Size and position adapt to grayscale vs colored mode
+            local bar = MicromenuModule.frames.latencyIndicator
+            bar:SetParent(HelpMicroButton)
+            bar:SetFrameStrata(HelpMicroButton:GetFrameStrata())
+            bar:SetFrameLevel(HelpMicroButton:GetFrameLevel() + 5)
+
+            local barW, barH, offX, offY
+            if useGrayscale then
+                barW, barH = 13, 36
+                offX, offY = 0, -3
+            else
+                barW, barH = 22, 60
+                offX, offY = 1, -6.5
+            end
+
+            bar:ClearAllPoints()
+            bar:SetSize(barW, barH)
+            bar:SetPoint("BOTTOM", HelpMicroButton, "BOTTOM", offX, offY)
+
+            bar:Show()
+        elseif MicromenuModule.frames.latencyIndicator then
+            MicromenuModule.frames.latencyIndicator:Hide()
+        end
     end
 
     -- ============================================================================

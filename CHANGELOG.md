@@ -4,6 +4,9 @@
 
 ## 📅 2026-02-18
 
+### Added
+- **Latency Indicator** on HelpMicroButton — color-coded StatusBar overlay (green <200ms, yellow 200-300ms, red >300ms) with tooltip showing latency in ms. Toggleable in DragonUI Micro Menu options 
+
 ### Fixed
 - Buff frame: buff/debuff positioning, second row alignment, and GM ticket interaction no longer break debuff layout
 - Buff toggle button: state now persists through aura updates and reloads
