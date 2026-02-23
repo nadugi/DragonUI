@@ -5,28 +5,23 @@
 ## 📅 2026-02-23
 
 ### Added
-- **Localization system (Beta)** — Full AceLocale-3.0 integration. Base language: enUS. Spanish (esES) fully translated. Locale stubs included for deDE, frFR, koKR, ptBR, ruRU, zhCN, zhTW. All UI strings, options panels, slash commands, popups, and editor labels are now localized
+- **Localization system (Beta)** — Full AceLocale-3.0 integration. Base language: enUS. Spanish (esES) translation (may be incomplete). Locale stubs included for deDE, frFR, koKR, ptBR, ruRU, zhCN, zhTW. All UI strings, options panels, slash commands, popups, and editor labels are now localized
 - Loot roll frames now moveable via editor mode
-- Castbar detailed mode: spell name auto-truncates with "..." when too long (UTF-8 safe)
-- Castbar channel ticks now use spell IDs via `GetSpellInfo()` — auto-localized for any client language
-- Castbar text_mode change now prompts for UI reload
-
-### Changed
-- Vehicle exit button repositioned independently with dual-bar offset support
-- Bags overlay dynamically resizes based on keyring visibility
-- DurabilityFrame shifted 6px left below minimap (PvP capture bar repositioning preserved)
-- Petbar and stance bar default positions synced with dual-bar offset system
-- Chat frame no longer moves when bar height changes (FCF_UpdateDockPosition override)
-- Editor mode no longer bakes dual-bar offset into saved positions
+- Castbar detailed mode: long spell names auto-truncate with "..."
+- Castbar channel ticks auto-localized for any client language
+- Castbar text mode change now prompts for UI reload
 
 ### Fixed
-- Quest tracker position now persists correctly after reload, even during combat
+- Chat frame no longer shifts when both XP and reputation bars are visible at the same time
+- Quest tracker position persists correctly after reload, even in combat
 - ToT/ToF health bar no longer flickers with class colors enabled
-- Castbar detailed mode: time now counts UP for casts (0→max) and DOWN for channels (max→0)
-- Castbar detailed mode: UTF-8 characters (accented letters) no longer corrupt when truncated
-- Editor mode: position drift on reload when dual-bar offset was active
-- Bags overlay anchor synced between setup and RefreshBagsPosition
+- Castbar time direction: counts up for casts, down for channels
+- DurabilityFrame no longer overlaps right side action bars
+- Petbar and stance bar now shift up correctly when both XP and reputation bars are visible
+- Editor mode saved positions no longer drift after reload
+- Vehicle exit button no longer anchored to stance bar
 - Action bar overlay sizing now matches actual bar dimensions
+- Bags editor mode overlay now matches actual bag area including keyring
 
 ## 📅 2026-02-22
 
