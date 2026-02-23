@@ -24,7 +24,7 @@ L["KeyBinding module not available"] = "Tastenbelegungs-Modul ist nicht verfügb
 L["Unable to open configuration"] = "Konfiguration kann nicht geöffnet werden"
 
 L["Error executing pending operation:"] = "Fehler beim Ausführen der ausstehenden Operation:"
-L["Error -- Addon 'DragonUI_Options' not found or is disabled."] = "Fehler - Addon 'DragonUI_Options' wurde nicht gefunden oder ist deaktiviert."
+L["Error -- Addon 'DragonUI_Options' not found or is disabled."] = "Fehler -- Addon 'DragonUI_Options' wurde nicht gefunden oder ist deaktiviert."
 
 -- ============================================================================
 -- SLASH COMMANDS / HELP
