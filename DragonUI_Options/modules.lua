@@ -11,14 +11,17 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- ADD MODULES OPTIONS TO addon.Options.args
 -- ============================================================================
 
 addon.Options.args.modules = {
     type = 'group',
-    name = "Modules",
-    desc = "Enable or disable specific DragonUI modules",
+    name = LO["Modules"],
+    desc = LO["Enable or disable specific DragonUI modules"],
     order = 0.6,
     args = {
         description = {
@@ -32,14 +35,14 @@ addon.Options.args.modules = {
         -- ====================================================================
         castbars_header = {
             type = 'header',
-            name = "Cast Bars",
+            name = LO["Cast Bars"],
             order = 10
         },
 
         player_castbar_enabled = {
             type = 'toggle',
-            name = "Player Castbar",
-            desc = "Enable DragonUI player castbar. When disabled, shows default Blizzard castbar.",
+            name = LO["Player Castbar"],
+            desc = LO["Enable DragonUI player castbar. When disabled, shows default Blizzard castbar."],
             get = function()
                 return addon.db.profile.castbar.enabled
             end,
@@ -54,8 +57,8 @@ addon.Options.args.modules = {
 
         target_castbar_enabled = {
             type = 'toggle',
-            name = "Target Castbar",
-            desc = "Enable DragonUI target castbar. When disabled, shows default Blizzard castbar.",
+            name = LO["Target Castbar"],
+            desc = LO["Enable DragonUI target castbar. When disabled, shows default Blizzard castbar."],
             get = function()
                 if not addon.db.profile.castbar.target then
                     return true
@@ -80,8 +83,8 @@ addon.Options.args.modules = {
 
         focus_castbar_enabled = {
             type = 'toggle',
-            name = "Focus Castbar",
-            desc = "Enable DragonUI focus castbar. When disabled, shows default Blizzard castbar.",
+            name = LO["Focus Castbar"],
+            desc = LO["Enable DragonUI focus castbar. When disabled, shows default Blizzard castbar."],
             get = function()
                 return addon.db.profile.castbar.focus.enabled
             end,
@@ -99,15 +102,15 @@ addon.Options.args.modules = {
         -- ====================================================================
         other_modules_header = {
             type = 'header',
-            name = "Other Modules",
+            name = LO["Other Modules"],
             order = 20
         },
 
         -- Unified Action Bars System
         actionbars_system_enabled = {
             type = 'toggle',
-            name = "Action Bars System",
-            desc = "Enable the complete DragonUI action bars system. This controls: Main action bars, vehicle interface, stance/shapeshift bars, pet action bars, multicast bars (totems/possess), button styling, and hide Blizzard elements. When disabled, all action bar related features will use default Blizzard interface.",
+            name = LO["Action Bars System"],
+            desc = LO["Enable the complete DragonUI action bars system. This controls: Main action bars, vehicle interface, stance/shapeshift bars, pet action bars, multicast bars (totems/possess), button styling, and hide Blizzard elements. When disabled, all action bar related features will use default Blizzard interface."],
             get = function()
                 local modules = addon.db.profile.modules
                 if not modules then
@@ -140,8 +143,8 @@ addon.Options.args.modules = {
         -- Micro Menu & Bags
         micromenu_enabled = {
             type = 'toggle',
-            name = "Micro Menu & Bags",
-            desc = "Apply DragonUI micro menu and bags system styling and positioning. Includes character button, spellbook, talents, etc. and bag management. When disabled, these elements will use default Blizzard positioning and styling.",
+            name = LO["Micro Menu & Bags"],
+            desc = LO["Apply DragonUI micro menu and bags system styling and positioning. Includes character button, spellbook, talents, etc. and bag management. When disabled, these elements will use default Blizzard positioning and styling."],
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.micromenu and
                        addon.db.profile.modules.micromenu.enabled
@@ -162,8 +165,8 @@ addon.Options.args.modules = {
         -- Cooldown Timers
         cooldowns_enabled = {
             type = 'toggle',
-            name = "Cooldown Timers",
-            desc = "Show cooldown timers on action buttons. When disabled, cooldown timers will be hidden and the system will be completely deactivated.",
+            name = LO["Cooldown Timers"],
+            desc = LO["Show cooldown timers on action buttons. When disabled, cooldown timers will be hidden and the system will be completely deactivated."],
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.cooldowns and
                        addon.db.profile.modules.cooldowns.enabled
@@ -186,8 +189,8 @@ addon.Options.args.modules = {
         -- Minimap System
         minimap_enabled = {
             type = 'toggle',
-            name = "Minimap System",
-            desc = "Enable DragonUI minimap enhancements including custom styling, positioning, tracking icons, and calendar. When disabled, uses default Blizzard minimap appearance and positioning.",
+            name = LO["Minimap System"],
+            desc = LO["Enable DragonUI minimap enhancements including custom styling, positioning, tracking icons, and calendar. When disabled, uses default Blizzard minimap appearance and positioning."],
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.minimap and
                        addon.db.profile.modules.minimap.enabled
@@ -208,8 +211,8 @@ addon.Options.args.modules = {
         -- Buff Frame System
         buffs_enabled = {
             type = 'toggle',
-            name = "Buff Frame System",
-            desc = "Enable DragonUI buff frame with custom styling, positioning, and toggle button functionality. When disabled, uses default Blizzard buff frame appearance and positioning.",
+            name = LO["Buff Frame System"],
+            desc = LO["Enable DragonUI buff frame with custom styling, positioning, and toggle button functionality. When disabled, uses default Blizzard buff frame appearance and positioning."],
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.buffs and
                        addon.db.profile.modules.buffs.enabled
@@ -235,7 +238,7 @@ addon.Options.args.modules = {
         -- ====================================================================
         enhancements_header = {
             type = 'header',
-            name = "Enhancements",
+            name = LO["Enhancements"],
             order = 50
         },
 
@@ -248,8 +251,8 @@ addon.Options.args.modules = {
         -- Dark Mode
         darkmode_enabled = {
             type = 'toggle',
-            name = "Dark Mode",
-            desc = "Apply darker tinted textures to all UI chrome: action bars, unit frames, minimap, bags, micro menu, and more.",
+            name = LO["Dark Mode"],
+            desc = LO["Apply darker tinted textures to all UI chrome: action bars, unit frames, minimap, bags, micro menu, and more."],
             width = "full",
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.darkmode and
@@ -270,12 +273,12 @@ addon.Options.args.modules = {
 
         darkmode_intensity = {
             type = 'select',
-            name = "Dark Mode Intensity",
+            name = LO["Dark Mode Intensity"],
             desc = "Choose how dark the UI chrome should be.",
             values = {
-                [1] = "Light (subtle)",
-                [2] = "Medium (balanced)",
-                [3] = "Dark (maximum)",
+                [1] = LO["Light (subtle)"],
+                [2] = LO["Medium (balanced)"],
+                [3] = LO["Dark (maximum)"],
             },
             get = function()
                 local config = addon.db.profile.modules and addon.db.profile.modules.darkmode
@@ -297,8 +300,8 @@ addon.Options.args.modules = {
         -- Range Indicator
         range_indicator_enabled = {
             type = 'toggle',
-            name = "Range Indicator",
-            desc = "Tint action button icons when target is out of range (red), not enough mana (blue), or unusable (gray).",
+            name = LO["Range Indicator"],
+            desc = LO["Tint action button icons when target is out of range (red), not enough mana (blue), or unusable (gray)."],
             width = "full",
             get = function()
                 return addon.db.profile.buttons and addon.db.profile.buttons.range_indicator and
@@ -315,8 +318,8 @@ addon.Options.args.modules = {
         -- Item Quality Borders
         itemquality_enabled = {
             type = 'toggle',
-            name = "Item Quality Borders",
-            desc = "Show colored glow borders on action buttons containing items, colored by item quality (green = uncommon, blue = rare, purple = epic, etc.).",
+            name = LO["Item Quality Borders"],
+            desc = LO["Show colored glow borders on action buttons containing items, colored by item quality (green = uncommon, blue = rare, purple = epic, etc.)."],
             width = "full",
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.itemquality and
@@ -337,8 +340,8 @@ addon.Options.args.modules = {
 
         itemquality_minquality = {
             type = 'select',
-            name = "Minimum Quality",
-            desc = "Only show colored borders for items at or above this quality level.",
+            name = LO["Minimum Quality"],
+            desc = LO["Only show colored borders for items at or above this quality level."],
             values = {
                 [0] = "|cff9d9d9dPoor|r",
                 [1] = "|cffffffffCommon|r",
@@ -367,14 +370,14 @@ addon.Options.args.modules = {
         -- Enhanced Tooltips
         tooltip_header = {
             type = 'header',
-            name = "Enhanced Tooltips",
+            name = LO["Enhanced Tooltips"],
             order = 60
         },
 
         tooltip_enabled = {
             type = 'toggle',
-            name = "Enable Enhanced Tooltips",
-            desc = "Improve GameTooltip with class-colored borders, class-colored names, target-of-target info, and styled health bars.",
+            name = LO["Enable Enhanced Tooltips"],
+            desc = LO["Improve GameTooltip with class-colored borders, class-colored names, target-of-target info, and styled health bars."],
             width = "full",
             get = function()
                 return addon.db.profile.modules and addon.db.profile.modules.tooltip and
@@ -395,8 +398,8 @@ addon.Options.args.modules = {
 
         tooltip_class_border = {
             type = 'toggle',
-            name = "Class-Colored Border",
-            desc = "Color the tooltip border by the unit's class (players) or reaction (NPCs).",
+            name = LO["Class-Colored Border"],
+            desc = LO["Color the tooltip border by the unit's class (players) or reaction (NPCs)."],
             get = function()
                 local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
                 return config and config.class_colored_border ~= false
@@ -415,8 +418,8 @@ addon.Options.args.modules = {
 
         tooltip_class_name = {
             type = 'toggle',
-            name = "Class-Colored Name",
-            desc = "Color the unit name text in the tooltip by class color (players only).",
+            name = LO["Class-Colored Name"],
+            desc = LO["Color the unit name text in the tooltip by class color (players only)."],
             get = function()
                 local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
                 return config and config.class_colored_name ~= false
@@ -435,8 +438,8 @@ addon.Options.args.modules = {
 
         tooltip_target_of_target = {
             type = 'toggle',
-            name = "Target of Target",
-            desc = "Add a 'Targeting: <name>' line to the tooltip showing who the unit is targeting.",
+            name = LO["Target of Target"],
+            desc = LO["Add a 'Targeting: <name>' line to the tooltip showing who the unit is targeting."],
             get = function()
                 local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
                 return config and config.target_of_target ~= false
@@ -455,8 +458,8 @@ addon.Options.args.modules = {
 
         tooltip_health_bar = {
             type = 'toggle',
-            name = "Styled Health Bar",
-            desc = "Restyle the tooltip health bar with class/reaction colors.",
+            name = LO["Styled Health Bar"],
+            desc = LO["Restyle the tooltip health bar with class/reaction colors."],
             get = function()
                 local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
                 return config and config.health_bar ~= false
@@ -475,8 +478,8 @@ addon.Options.args.modules = {
 
         tooltip_anchor_cursor = {
             type = 'toggle',
-            name = "Anchor to Cursor",
-            desc = "Make the tooltip follow the cursor position instead of using the default anchor.",
+            name = LO["Anchor to Cursor"],
+            desc = LO["Make the tooltip follow the cursor position instead of using the default anchor."],
             get = function()
                 local config = addon.db.profile.modules and addon.db.profile.modules.tooltip
                 return config and config.anchor_cursor
@@ -498,7 +501,7 @@ addon.Options.args.modules = {
         -- ====================================================================
         advanced_header = {
             type = 'header',
-            name = "Advanced - Individual Module Control",
+            name = LO["Advanced - Individual Module Control"],
             order = 100
         },
         
@@ -573,5 +576,5 @@ end
 local originalGet = addon.Options.args.modules.args.advanced_header.name
 addon.Options.args.modules.args.advanced_header.name = function()
     GenerateAdvancedModuleOptions()
-    return "Advanced - Individual Module Control"
+    return LO["Advanced - Individual Module Control"]
 end

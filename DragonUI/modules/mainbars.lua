@@ -643,43 +643,50 @@ end
 
     -- Resize container (editor overlay) frames to match current bar dimensions.
     -- Called when entering editor mode AND after layout changes so overlays stay in sync.
+    -- Overlay sizes are multiplied by the bar's scale so they wrap the visible
+    -- (scaled) bar rather than the larger, unscaled logical size.
     -- Uses ResizeContainerStable to avoid shifting bars on screen.
     function addon.UpdateOverlaySizes()
         local db = addon.db and addon.db.profile and addon.db.profile.mainbars
         if not db then return end
 
-        -- Main bar container: match pUiMainBar (includes padding for NineSlice)
+        -- Main bar container: match pUiMainBar scaled to visible size
         if addon.ActionBarFrames.mainbar and addon.pUiMainBar then
             local w, h = addon.pUiMainBar:GetSize()
-            ResizeContainerStable(addon.ActionBarFrames.mainbar, w, h)
+            local scale = db.scale_actionbar or 0.9
+            ResizeContainerStable(addon.ActionBarFrames.mainbar, w * scale, h * scale)
         end
 
         -- Right bar container (columns-based grid)
         if addon.ActionBarFrames.rightbar then
             local cfg = db.right or {}
             local w, h = BarContainerSize(cfg.columns or 1, cfg.buttons_shown or 12)
-            ResizeContainerStable(addon.ActionBarFrames.rightbar, w, h)
+            local scale = db.scale_rightbar or 0.9
+            ResizeContainerStable(addon.ActionBarFrames.rightbar, w * scale, h * scale)
         end
 
         -- Left bar container (columns-based grid)
         if addon.ActionBarFrames.leftbar then
             local cfg = db.left or {}
             local w, h = BarContainerSize(cfg.columns or 1, cfg.buttons_shown or 12)
-            ResizeContainerStable(addon.ActionBarFrames.leftbar, w, h)
+            local scale = db.scale_leftbar or 0.9
+            ResizeContainerStable(addon.ActionBarFrames.leftbar, w * scale, h * scale)
         end
 
         -- Bottom left container
         if addon.ActionBarFrames.bottombarleft then
             local cfg = db.bottom_left or {}
             local w, h = BarContainerSize(cfg.columns or 12, cfg.buttons_shown or 12)
-            ResizeContainerStable(addon.ActionBarFrames.bottombarleft, w, h)
+            local scale = db.scale_bottomleft or 0.9
+            ResizeContainerStable(addon.ActionBarFrames.bottombarleft, w * scale, h * scale)
         end
 
         -- Bottom right container
         if addon.ActionBarFrames.bottombarright then
             local cfg = db.bottom_right or {}
             local w, h = BarContainerSize(cfg.columns or 12, cfg.buttons_shown or 12)
-            ResizeContainerStable(addon.ActionBarFrames.bottombarright, w, h)
+            local scale = db.scale_bottomright or 0.9
+            ResizeContainerStable(addon.ActionBarFrames.bottombarright, w * scale, h * scale)
         end
     end
 
@@ -743,16 +750,21 @@ end
 
     -- Known default positions for BOTTOM-anchored frames.
     -- Used to detect if user moved a frame via editor mode.
+    -- IMPORTANT: Keep these in sync with addon.defaults (database.lua → widgets).
     local defaultBottomPositions = {
-        mainbar         = { posX = 0,  posY = 22  },
-        bottombarleft   = { posX = 0,  posY = 64  },
-        bottombarright  = { posX = 0,  posY = 105 },
-        petbar          = { posX = 1,  posY = 148 },
-        xpbar           = { posX = 1,  posY = 7   },
-        repbar          = { posX = 1,  posY = 23  },
+        mainbar         = { posX = 0,    posY = 22  },
+        bottombarleft   = { posX = 0,    posY = 64  },
+        bottombarright  = { posX = 0,    posY = 102 },
+        petbar          = { posX = 1,    posY = 141 },
+        vehicleExit     = { posX = -251, posY = 145 },
+        xpbar           = { posX = 1,    posY = 7   },
+        repbar          = { posX = 1,    posY = 23  },
     }
 
     -- Check if a widget is still at its default BOTTOM position (not moved by editor)
+    -- Also accepts positions saved with the dual-bar offset baked in, so that
+    -- saving via editor mode while both XP+Rep bars are visible doesn't
+    -- permanently break offset detection.
     local function IsWidgetAtDefaultPosition(widgetName)
         local known = defaultBottomPositions[widgetName]
         if not known then return false end
@@ -760,10 +772,16 @@ end
                   and addon.db.profile.widgets[widgetName]
         if not w then return true end -- No saved position = default
         if w.anchor and w.anchor ~= "BOTTOM" then return false end
-        -- Allow ±1 tolerance for floating-point rounding from previous saves
-        local dx = math.abs((w.posX or known.posX) - known.posX)
-        local dy = math.abs((w.posY or known.posY) - known.posY)
-        return dx <= 1 and dy <= 1
+        local savedX = w.posX or known.posX
+        local savedY = w.posY or known.posY
+        -- X must match within ±1
+        if math.abs(savedX - known.posX) > 1 then return false end
+        -- Y must match base position OR base + dual-bar offset (±1 tolerance)
+        if math.abs(savedY - known.posY) <= 1 then return true end
+        -- Check against base + max possible offset (bar height + 2px gap)
+        local maxOffset = GetXpBarHeight() + 2
+        if math.abs(savedY - (known.posY + maxOffset)) <= 1 then return true end
+        return false
     end
 
     -- Export offset function so external modules (stance, petbar) can query it
@@ -1638,11 +1656,18 @@ end
 
     -- Create action bar container frames (RetailUI pattern)
     -- Uses BarContainerSize() for consistent column-based sizing.
+    -- Overlay sizes are multiplied by the bar's scale so they match the
+    -- visible (scaled) bar rather than the unscaled logical size.
     local function CreateActionBarFrames()
-        -- Main bar - create a NEW container frame instead of using pUiMainBar directly
-        addon.ActionBarFrames.mainbar = addon.CreateUIFrame(pUiMainBar:GetWidth(), pUiMainBar:GetHeight(), "MainBar")
-
         local db = addon.db and addon.db.profile and addon.db.profile.mainbars
+
+        -- Main bar - create a NEW container frame scaled to match the visible bar
+        local mainScale = db and db.scale_actionbar or 0.9
+        addon.ActionBarFrames.mainbar = addon.CreateUIFrame(
+            pUiMainBar:GetWidth()  * mainScale,
+            pUiMainBar:GetHeight() * mainScale,
+            "MainBar")
+
         local rightCfg = db and db.right or {}
         local leftCfg  = db and db.left or {}
         local blCfg    = db and db.bottom_left or {}
@@ -1653,10 +1678,15 @@ end
         local blW, blH = BarContainerSize(blCfg.columns or 12,   blCfg.buttons_shown or 12)
         local brW, brH = BarContainerSize(brCfg.columns or 12,   brCfg.buttons_shown or 12)
 
-        addon.ActionBarFrames.rightbar       = addon.CreateUIFrame(rW, rH, "RightBar")
-        addon.ActionBarFrames.leftbar        = addon.CreateUIFrame(lW, lH, "LeftBar")
-        addon.ActionBarFrames.bottombarleft  = addon.CreateUIFrame(blW, blH, "BottomBarLeft")
-        addon.ActionBarFrames.bottombarright = addon.CreateUIFrame(brW, brH, "BottomBarRight")
+        local rScale  = db and db.scale_rightbar     or 0.9
+        local lScale  = db and db.scale_leftbar      or 0.9
+        local blScale = db and db.scale_bottomleft   or 0.9
+        local brScale = db and db.scale_bottomright   or 0.9
+
+        addon.ActionBarFrames.rightbar       = addon.CreateUIFrame(rW * rScale,  rH * rScale,  "RightBar")
+        addon.ActionBarFrames.leftbar        = addon.CreateUIFrame(lW * lScale,  lH * lScale,  "LeftBar")
+        addon.ActionBarFrames.bottombarleft  = addon.CreateUIFrame(blW * blScale, blH * blScale, "BottomBarLeft")
+        addon.ActionBarFrames.bottombarright = addon.CreateUIFrame(brW * brScale, brH * brScale, "BottomBarRight")
 
         -- Separate XP and Rep bar editor frames (allows independent movement)
         local xpRepWidth = addon.ActionBarFrames.mainbar:GetWidth()
@@ -1797,7 +1827,11 @@ end
             mainbar = true,  -- already handled above, but listed for clarity
             bottombarleft = true,
             bottombarright = true,
+            petbar = true,   -- handled by petbar.lua via addon.UpdatePetbarPosition
+            vehicleExit = true, -- handled by vehicle.lua via addon.UpdateVehicleExitPosition
         }
+        -- Export so SaveUIFramePosition can strip offset before saving
+        addon._dualBarOffsetWidgets = dualBarOffsetFrames
 
         for _, barData in ipairs(barConfigs) do
             -- Skip secure frames during combat to avoid taint
@@ -1834,7 +1868,7 @@ end
         end
     end
 
-    -- Notify external modules (stance, multicast) that the dual-bar offset may have changed.
+    -- Notify external modules (stance, multicast, vehicle) that the dual-bar offset may have changed.
     -- Must be defined AFTER ApplyActionBarPositions (Lua local scoping).
     local function NotifyDualBarOffsetChanged()
         -- Re-apply action bar positions (mainbar, bottombarleft, bottombarright)
@@ -1842,6 +1876,14 @@ end
         -- Notify stance bar to update its position
         if addon.UpdateStanceBarPosition then
             addon.UpdateStanceBarPosition()
+        end
+        -- Notify vehicle exit button to update its position
+        if addon.UpdateVehicleExitPosition then
+            addon.UpdateVehicleExitPosition()
+        end
+        -- Notify petbar to update its position
+        if addon.UpdatePetbarPosition then
+            addon.UpdatePetbarPosition()
         end
     end
 

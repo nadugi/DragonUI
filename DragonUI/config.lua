@@ -1,4 +1,9 @@
 local addon = select(2,...);
+
+-- Initialize localization early (before core/ files load)
+-- AceLocale was registered in Locales/enUS.lua (default) with fallback chain
+addon.L = LibStub("AceLocale-3.0"):GetLocale("DragonUI")
+
 addon._dir = [[Interface\AddOns\DragonUI\assets\]];
 
 -- Static assets that don't need variables

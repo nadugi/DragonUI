@@ -14,6 +14,9 @@ Options are loaded on demand from DragonUI_Options addon (ElvUI pattern).
 -- Expose addon globally for DragonUI_Options to access
 _G.DragonUI = addon
 
+-- Localization (initialized early in config.lua so core/ files can use it)
+local L = addon.L
+
 -- Create addon object using AceAddon
 addon.core = LibStub("AceAddon-3.0"):NewAddon("DragonUI", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0");
 
@@ -64,7 +67,7 @@ end
 
 function addon:ToggleOptionsUI(msg)
     if InCombatLockdown() then
-        print("|cFFFF0000[DragonUI]|r Cannot open options in combat.")
+        print("|cFFFF0000[DragonUI]|r " .. L["Cannot open options in combat."])
         return
     end
 
@@ -86,7 +89,7 @@ function addon:ToggleOptionsUI(msg)
         end
 
         if noConfig then
-            print("|cFFFF0000[DragonUI]|r Error -- Addon 'DragonUI_Options' not found or is disabled.")
+            print("|cFFFF0000[DragonUI]|r " .. L["Error -- Addon 'DragonUI_Options' not found or is disabled."])
             return
         end
     end
@@ -200,7 +203,7 @@ function addon.core:SlashCommand(input)
             if addon.EditorMode then
                 addon.EditorMode:Toggle()
             else
-                print("|cFFFF0000[DragonUI]|r Editor mode not available.")
+                print("|cFFFF0000[DragonUI]|r " .. L["Editor mode not available."])
             end
         else
             print("|cFF00FF00[DragonUI]|r Commands: /dragonui config, /dragonui edit")

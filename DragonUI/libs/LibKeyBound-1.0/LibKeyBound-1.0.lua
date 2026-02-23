@@ -133,11 +133,11 @@ function LibKeyBound:Initialize()
 		local resetBindings = CreateFrame('CheckButton', 'KeyboundDialogReset', f, 'OptionsButtonTemplate')
 		-- Make button wider
 		resetBindings:SetWidth(120)
-		getglobal(resetBindings:GetName() .. 'Text'):SetText("Reset Keybinds")
+		getglobal(resetBindings:GetName() .. 'Text'):SetText(L.ResetKeybinds)
 
 		resetBindings:SetScript('OnClick', function(self)
 			if InCombatLockdown() then
-				UIErrorsFrame:AddMessage("Cannot reset keybinds while in combat.", 1, 0.3, 0.3, 1, UIERRORS_HOLD_TIME)
+				UIErrorsFrame:AddMessage(L.CannotResetInCombat, 1, 0.3, 0.3, 1, UIERRORS_HOLD_TIME)
 			else
 				-- Show confirmation dialog
 				StaticPopup_Show("LIBKEYBOUND_RESET_KEYBINDS")
@@ -174,12 +174,12 @@ function LibKeyBound:Initialize()
 
 	-- DragonUI: Create confirmation popup for reset functionality
 	StaticPopupDialogs["LIBKEYBOUND_RESET_KEYBINDS"] = {
-		text = "Reset all key bindings to default?",
-		button1 = "Okay",
-		button2 = "Cancel", 
+		text = L.ResetKeybindsConfirm,
+		button1 = OKAY,
+		button2 = CANCEL, 
 		OnAccept = function()
 			if InCombatLockdown() then
-				UIErrorsFrame:AddMessage("Cannot reset keybinds while in combat.", 1, 0.3, 0.3, 1, UIERRORS_HOLD_TIME)
+				UIErrorsFrame:AddMessage(L.CannotResetInCombat, 1, 0.3, 0.3, 1, UIERRORS_HOLD_TIME)
 			else
 				-- Use Blizzard's exact reset method: LoadBindings(0)
 				LoadBindings(0)
@@ -189,7 +189,7 @@ function LibKeyBound:Initialize()
 					KeyBindingFrame_Update()
 				end
 				
-				UIErrorsFrame:AddMessage("All keybinds reset to default.", 0, 1, 0, 1, UIERRORS_HOLD_TIME)
+				UIErrorsFrame:AddMessage(L.AllKeybindsReset, 0, 1, 0, 1, UIERRORS_HOLD_TIME)
 			end
 		end,
 		OnCancel = function()

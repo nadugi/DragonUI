@@ -249,11 +249,12 @@ function addon.CreateUIFrame(width, height, frameName)
     -- Legacy editorTexture reference (for backwards compatibility)
     frame.editorTexture = frame.NineSlice.Center
 
-    -- Text label for editor mode
+    -- Text label for editor mode (auto-translate via locale)
     do
+        local L = addon.L
         local fontString = frame:CreateFontString(nil, "OVERLAY", 'GameFontNormal')
         fontString:SetPoint("CENTER", frame, "CENTER", 0, 0)
-        fontString:SetText(frameName)
+        fontString:SetText((L and L[frameName]) or frameName)
         fontString:Hide()
         frame.editorText = fontString
     end
@@ -343,6 +344,23 @@ function addon.SaveUIFramePosition(frame, configPath1, configPath2)
     end
 
     local anchor, _, relativePoint, posX, posY = frame:GetPoint(1)
+
+    -- Strip dual-bar offset from positions of affected widgets so the
+    -- database always stores the *base* position.  Without this, closing
+    -- editor mode while both XP+Rep bars are visible would bake the
+    -- offset into the saved Y, breaking IsWidgetAtDefaultPosition.
+    -- IMPORTANT: Only strip when the widget is still at its default spot
+    -- (i.e.the offset was actually added).  For user-moved frames the
+    -- offset was never applied, so subtracting it would cause drift.
+    if configPath1 == "widgets" and configPath2
+       and addon._dualBarOffsetWidgets and addon._dualBarOffsetWidgets[configPath2]
+       and addon.GetDualBarVerticalOffset and addon.IsWidgetAtDefaultPosition
+       and addon.IsWidgetAtDefaultPosition(configPath2) then
+        local offset = addon.GetDualBarVerticalOffset()
+        if offset > 0 and posY then
+            posY = posY - offset
+        end
+    end
 
     -- Handle nested paths (widgets.player)
     if configPath2 then
@@ -479,7 +497,8 @@ function addon:ShowAllEditableFrames()
             end
         end
     end
-    print("|cFF00FF00[DragonUI]|r All editable frames shown for editing")
+    local L = addon.L
+    print("|cFF00FF00[DragonUI]|r " .. (L and L["All editable frames shown for editing"] or "All editable frames shown for editing"))
 end
 
 -- Hide all frames and save positions
@@ -509,7 +528,8 @@ function addon:HideAllEditableFrames(refresh)
             end
         end
     end
-    print("|cFF00FF00[DragonUI]|r All editable frames hidden, positions saved")
+    local L = addon.L
+    print("|cFF00FF00[DragonUI]|r " .. (L and L["All editable frames hidden, positions saved"] or "All editable frames hidden, positions saved"))
 end
 
 -- Check if a frame should be visible

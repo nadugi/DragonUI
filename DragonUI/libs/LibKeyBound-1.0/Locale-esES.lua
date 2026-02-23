@@ -14,6 +14,7 @@ end
 
 LibKeyBoundLocale10 = {
 	REVISION = REVISION;
+	BindingMode = 'Modo de Atajos';
 	Enabled = 'Modo Atajos activado';
 	Disabled = 'Modo Atajos desactivado';
 	ClearTip = format('Pulsa %s para limpiar todos los atajos', GetBindingText('ESCAPE', 'KEY_'));
@@ -25,6 +26,10 @@ LibKeyBoundLocale10 = {
 	CombatBindingsEnabled = 'Saliendo de combate, modo de Atajos de Teclado activado';
 	CombatBindingsDisabled = 'Entrando en combate, modo de Atajos de Teclado desactivado';
 	BindingsHelp = "Sitúese en un botón, entonces pulse una tecla para establecer su atajo.  Para limpiar el Atajo del botón actual, pulse %s.";
+	ResetKeybinds = 'Restablecer Atajos';
+	ResetKeybindsConfirm = '¿Restablecer todos los atajos de teclado a los valores predeterminados?';
+	CannotResetInCombat = 'No se pueden restablecer los atajos durante el combate.';
+	AllKeybindsReset = 'Todos los atajos restablecidos a los valores predeterminados.';
 
 	-- This is the short display version you see on the Button
 	["Alt"] = "A",

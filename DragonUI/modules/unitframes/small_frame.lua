@@ -754,7 +754,8 @@ function UF.SmallFrame.Create(opts)
     -- Create anchor frame immediately (addon.CreateUIFrame is available)
     Module.anchorFrame = addon.CreateUIFrame(120, 47, opts.configKey)
     if Module.anchorFrame.editorText then
-        Module.anchorFrame.editorText:SetText(opts.namePrefix)
+        local L = addon.L
+        Module.anchorFrame.editorText:SetText((L and L[opts.namePrefix]) or opts.namePrefix)
     end
     -- Temporary position until ADDON_LOADED restores from DB
     Module.anchorFrame:ClearAllPoints()

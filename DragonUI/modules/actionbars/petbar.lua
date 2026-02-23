@@ -82,6 +82,19 @@ local function GetDynamicConfig()
 end
 
 -- ============================================================================
+-- DUAL-BAR OFFSET HELPER
+-- ============================================================================
+
+-- Get dual-bar vertical offset for petbar (only when at default position)
+local function GetPetbarDualBarOffset()
+    if addon.GetDualBarVerticalOffset and addon.IsWidgetAtDefaultPosition
+       and addon.IsWidgetAtDefaultPosition("petbar") then
+        return addon.GetDualBarVerticalOffset()
+    end
+    return 0
+end
+
+-- ============================================================================
 -- LEGACY PETBAR IMPLEMENTATION (working combat-safe approach)
 -- ============================================================================
 
@@ -104,16 +117,17 @@ local function CreateAnchorFrame()
     PetbarModule.anchor = anchor
     
     -- Apply position from widgets config or use defaults
+    local extraY = GetPetbarDualBarOffset()
     local widgetConfig = addon.db and addon.db.profile and addon.db.profile.widgets and addon.db.profile.widgets.petbar
     if widgetConfig then
         local anchorPoint = widgetConfig.anchor or "BOTTOM"
         local posX = widgetConfig.posX or config.x_position or -400
         local posY = widgetConfig.posY or config.y_position or 200
         anchor:ClearAllPoints()
-        anchor:SetPoint(anchorPoint, UIParent, anchorPoint, posX, posY)
+        anchor:SetPoint(anchorPoint, UIParent, anchorPoint, posX, posY + extraY)
     else
         -- Use default positioning from config
-        anchor:SetPoint('BOTTOM', UIParent, 'BOTTOM', config.x_position, config.y_position)
+        anchor:SetPoint('BOTTOM', UIParent, 'BOTTOM', config.x_position, config.y_position + extraY)
     end
     
     return anchor
@@ -131,10 +145,11 @@ local function UpdateAnchorPosition()
         local anchorPoint = widgetConfig.anchor or "BOTTOM"
         local posX = widgetConfig.posX or 0
         local posY = widgetConfig.posY or 200
+        local extraY = GetPetbarDualBarOffset()
         
         if not InCombatLockdown() then
             PetbarModule.anchor:ClearAllPoints()
-            PetbarModule.anchor:SetPoint(anchorPoint, UIParent, anchorPoint, posX, posY)
+            PetbarModule.anchor:SetPoint(anchorPoint, UIParent, anchorPoint, posX, posY + extraY)
         end
         return
     end
@@ -535,6 +550,9 @@ end
 -- ============================================================================
 -- DRAGONUI INTEGRATION AND INTERFACE
 -- ============================================================================
+
+-- Export petbar position update for dual-bar offset system
+addon.UpdatePetbarPosition = UpdateAnchorPosition
 
 -- Global functions for DragonUI system
 function addon.RefreshPetbarSystem()

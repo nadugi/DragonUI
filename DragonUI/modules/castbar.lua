@@ -37,27 +37,36 @@ local UV_COORDS = {
     textBorder = {0.001953125, 0.412109375, 0.00390625, 0.11328125}
 }
 
-local CHANNEL_TICKS = {
+-- Build CHANNEL_TICKS from spell IDs so the names are auto-localized
+-- GetSpellInfo(id) returns the spell name in the client's language
+local CHANNEL_TICKS_DATA = {
     -- Warlock
-    ["Drain Soul"] = 5,
-    ["Drain Life"] = 5,
-    ["Drain Mana"] = 5,
-    ["Rain of Fire"] = 4,
-    ["Hellfire"] = 15,
-    ["Ritual of Summoning"] = 5,
+    { id = 1120,  ticks = 5  },  -- Drain Soul
+    { id = 689,   ticks = 5  },  -- Drain Life
+    { id = 5138,  ticks = 5  },  -- Drain Mana
+    { id = 5740,  ticks = 4  },  -- Rain of Fire
+    { id = 1949,  ticks = 15 },  -- Hellfire
+    { id = 698,   ticks = 5  },  -- Ritual of Summoning
     -- Priest
-    ["Mind Flay"] = 3,
-    ["Mind Control"] = 8,
-    ["Penance"] = 2,
+    { id = 15407, ticks = 3  },  -- Mind Flay
+    { id = 605,   ticks = 8  },  -- Mind Control
+    { id = 47540, ticks = 2  },  -- Penance
     -- Mage
-    ["Blizzard"] = 8,
-    ["Evocation"] = 4,
-    ["Arcane Missiles"] = 5,
-    -- Druid/Others
-    ["Tranquility"] = 4,
-    ["Hurricane"] = 10,
-    ["First Aid"] = 8
+    { id = 10,    ticks = 8  },  -- Blizzard
+    { id = 12051, ticks = 4  },  -- Evocation
+    { id = 5143,  ticks = 5  },  -- Arcane Missiles
+    -- Druid
+    { id = 740,   ticks = 4  },  -- Tranquility
+    { id = 16914, ticks = 10 },  -- Hurricane
 }
+
+local CHANNEL_TICKS = {}
+for _, data in ipairs(CHANNEL_TICKS_DATA) do
+    local name = GetSpellInfo(data.id)
+    if name then
+        CHANNEL_TICKS[name] = data.ticks
+    end
+end
 
 local MAX_TICKS = 15
 
@@ -522,6 +531,28 @@ end
 -- TEXT MANAGEMENT
 -- ============================================================================
 
+-- Truncate text with "..." if it exceeds maxWidth pixels (UTF-8 safe)
+local function TruncateTextWithEllipsis(fontString, text, maxWidth)
+    if not fontString or not text then return end
+    fontString:SetText(text)
+    if not maxWidth or maxWidth <= 0 then return end
+    if fontString:GetStringWidth() <= maxWidth then return end
+    
+    local len = #text
+    for i = len - 1, 1, -1 do
+        -- Only cut at valid UTF-8 character boundaries:
+        -- skip positions where the next byte is a continuation byte (10xxxxxx = 0x80-0xBF)
+        local nextByte = strbyte(text, i + 1)
+        if not nextByte or nextByte < 0x80 or nextByte >= 0xC0 then
+            fontString:SetText(strsub(text, 1, i) .. "...")
+            if fontString:GetStringWidth() <= maxWidth then
+                return
+            end
+        end
+    end
+    fontString:SetText("...")
+end
+
 local function SetTextMode(unitType, mode)
     local frames = CastbarModule.frames[unitType]
     if not frames then
@@ -602,11 +633,24 @@ local function SetCastText(unitType, text)
             frames.castTextCentered:SetText(text)
         end
     else
-        if frames.castText then
-            frames.castText:SetText(text)
-        end
-        if frames.castTextCompact then
-            frames.castTextCompact:SetText(text)
+        -- In detailed mode, truncate spell name with "..." to avoid overlapping the time display
+        if unitType == "player" then
+            if frames.castText and frames.textBackground then
+                local bgWidth = frames.textBackground:GetWidth()
+                if not bgWidth or bgWidth < 1 then bgWidth = 200 end
+                local maxWidth = bgWidth - 60  -- 8 left pad + 50 right time area + 2 gap
+                TruncateTextWithEllipsis(frames.castText, text, maxWidth)
+            end
+        else
+            local bgWidth = frames.textBackground and frames.textBackground:GetWidth()
+            if not bgWidth or bgWidth < 1 then bgWidth = 150 end
+            local maxWidth = bgWidth - 62  -- 6 left pad + ~50 right time area + 6 right pad
+            if frames.castText then
+                TruncateTextWithEllipsis(frames.castText, text, maxWidth)
+            end
+            if frames.castTextCompact then
+                TruncateTextWithEllipsis(frames.castTextCompact, text, maxWidth)
+            end
         end
     end
 end
@@ -634,7 +678,13 @@ local function UpdateTimeText(unitType)
     
     local currentTime = GetTime()
     local elapsed = currentTime - (castbar.startTime or 0)
-    seconds = max(0, secondsMax - elapsed)
+    
+    -- Casts count UP (0 -> max), channels count DOWN (max -> 0)
+    if castbar.channelingEx then
+        seconds = max(0, secondsMax - elapsed)
+    else
+        seconds = min(elapsed, secondsMax)
+    end
     
     local timeText = format('%.' .. (cfg.precision_time or 1) .. 'f', seconds)
     local fullText
@@ -1429,10 +1479,6 @@ local function CreateCastbarAnchorFrame()
     end
     
     CastbarModule.anchor = addon.CreateUIFrame(256, 16, "PlayerCastbar")
-    
-    if CastbarModule.anchor.editorText then
-        CastbarModule.anchor.editorText:SetText("Player Castbar")
-    end
     
     return CastbarModule.anchor
 end

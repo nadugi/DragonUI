@@ -10,6 +10,8 @@ Based on ElvUI_OptionsUI pattern.
 -- Access the main DragonUI addon
 local addon = DragonUI
 if not addon then return end
+local L = addon.L
+local LO = addon.LO
 
 -- ============================================================================
 -- ADD GENERAL OPTIONS TO addon.Options.args
@@ -24,10 +26,10 @@ addon.Options.args.toggle_editor_mode = {
                 return addon.EditorMode:IsActive()
             end)
             if success and isActive then
-                return "|cffFF6347Exit Editor Mode|r"
+                return "|cffFF6347" .. LO["Exit Editor Mode"] .. "|r"
             end
         end
-        return "|cff00FF00Move UI Elements|r"
+        return "|cff00FF00" .. LO["Move UI Elements"] .. "|r"
     end,
     desc = "Unlock UI elements to move them with your mouse. A button will appear to exit this mode.",
     func = function()
@@ -46,12 +48,12 @@ addon.Options.args.toggle_keybind_mode = {
     type = 'execute',
     name = function()
         if LibStub and LibStub("LibKeyBound-1.0", true) and LibStub("LibKeyBound-1.0"):IsShown() then
-            return "|cffFF6347KeyBind Mode Active|r"
+            return "|cffFF6347" .. LO["KeyBind Mode Active"] .. "|r"
         else
-            return "|cff00FF00KeyBind Mode|r"
+            return "|cff00FF00" .. LO["KeyBind Mode"] .. "|r"
         end
     end,
-    desc = "Toggle keybinding mode. Hover over action buttons and press keys to bind them instantly. Press ESC to clear bindings.",
+    desc = LO["Toggle keybinding mode. Hover over action buttons and press keys to bind them instantly. Press ESC to clear bindings."],
     func = function()
         GameTooltip:Hide()
         LibStub("AceConfigDialog-3.0"):Close("DragonUI")

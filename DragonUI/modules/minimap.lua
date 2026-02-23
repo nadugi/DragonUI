@@ -232,7 +232,7 @@ local function ReplaceBlizzardFrame(frame)
     if durabilityFrame then
         durabilityFrame:ClearAllPoints()
         -- Position below the minimap with appropriate offset
-        durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+        durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", -15, -5)
         -- Adjust scale to match the minimap
         durabilityFrame:SetScale(3 / blipScale)
     end
@@ -262,11 +262,11 @@ local function ReplaceBlizzardFrame(frame)
             durabilityFrame.DragonUI_SettingPoint = true
             durabilityFrame:ClearAllPoints()
             if captureBarVisible then
-                -- Move down below the capture bar (same horizontal center)
-                durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -35)
+                -- Move down below the capture bar (shifted left to align)
+                durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", -15, -35)
             else
-                -- Default position: centered below the minimap
-                durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+                -- Default position: slightly left of center below the minimap
+                durabilityFrame:SetPoint("TOP", Minimap, "BOTTOM", -15, -5)
             end
             durabilityFrame.DragonUI_SettingPoint = nil
         end
@@ -279,9 +279,9 @@ local function ReplaceBlizzardFrame(frame)
                 self.DragonUI_SettingPoint = true
                 self:ClearAllPoints()
                 if durability_captureBarActive then
-                    self:SetPoint("TOP", Minimap, "BOTTOM", 0, -35)
+                    self:SetPoint("TOP", Minimap, "BOTTOM", -15, -35)
                 else
-                    self:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+                    self:SetPoint("TOP", Minimap, "BOTTOM", -15, -5)
                 end
                 self.DragonUI_SettingPoint = nil
             end

@@ -14,14 +14,20 @@ if not addon then
     return
 end
 
+-- Initialize Options localization
+-- Core L comes from main addon, Options L is for option-specific strings
+local L = LibStub("AceLocale-3.0"):GetLocale("DragonUI")
+local LO = LibStub("AceLocale-3.0"):GetLocale("DragonUI_Options")
+addon.LO = LO  -- Expose for other option files
+
 -- ============================================================================
 -- STATIC POPUP FOR RELOAD
 -- ============================================================================
 
 StaticPopupDialogs["DRAGONUI_RELOAD_UI"] = {
-    text = "Changing this setting requires a UI reload to apply correctly.",
-    button1 = "Reload UI",
-    button2 = "Not Now",
+    text = LO["Changing this setting requires a UI reload to apply correctly."],
+    button1 = LO["Reload UI"],
+    button2 = LO["Not Now"],
     OnAccept = function()
         ReloadUI()
     end,

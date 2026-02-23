@@ -10,6 +10,9 @@ Individual controls still use AceGUI widgets (skinned by controls.lua).
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 local AceGUI = LibStub("AceGUI-3.0")
 
 -- ============================================================================
@@ -123,7 +126,7 @@ local function CreatePanel()
     local titleText = titleBar:CreateFontString(nil, "OVERLAY")
     titleText:SetFont(T.font, 15, "OUTLINE")
     titleText:SetPoint("LEFT", 12, 0)
-    titleText:SetText("|cff1784d1DragonUI|r |cffff8800experimental|r")
+    titleText:SetText("|cff1784d1" .. LO["DragonUI"] .. "|r |cffff8800" .. LO["experimental"] .. "|r")
 
     -- Editor Mode button (in title bar) - styled pill button with neon green border
     local editorBtn = CreateFrame("Button", nil, titleBar)
@@ -140,7 +143,7 @@ local function CreatePanel()
     local editorText = editorBtn:CreateFontString(nil, "OVERLAY")
     editorText:SetFont(T.font, 11, "")
     editorText:SetPoint("CENTER", 0, 0)
-    editorText:SetText("|cff00dd00" .. "Editor Mode" .. "|r")
+    editorText:SetText("|cff00dd00" .. LO["Editor Mode"] .. "|r")
     editorBtn:SetScript("OnClick", function()
         Panel:Close()
         if addon.EditorMode then addon.EditorMode:Toggle() end
@@ -148,12 +151,12 @@ local function CreatePanel()
     editorBtn:SetScript("OnEnter", function()
         editorBtn:SetBackdropColor(0.0, 0.9, 0.0, 0.25)
         editorBtn:SetBackdropBorderColor(0.0, 1.0, 0.0, 1.0)
-        editorText:SetText("|cff00ff00" .. "Editor Mode" .. "|r")
+        editorText:SetText("|cff00ff00" .. LO["Editor Mode"] .. "|r")
     end)
     editorBtn:SetScript("OnLeave", function()
         editorBtn:SetBackdropColor(0.05, 0.12, 0.05, 1)
         editorBtn:SetBackdropBorderColor(0.0, 0.9, 0.0, 0.7)
-        editorText:SetText("|cff00dd00" .. "Editor Mode" .. "|r")
+        editorText:SetText("|cff00dd00" .. LO["Editor Mode"] .. "|r")
     end)
 
     -- KeyBind Mode button (in title bar) - styled pill button with neon green border
@@ -171,7 +174,7 @@ local function CreatePanel()
     local keybindText = keybindBtn:CreateFontString(nil, "OVERLAY")
     keybindText:SetFont(T.font, 11, "")
     keybindText:SetPoint("CENTER", 0, 0)
-    keybindText:SetText("|cff00dd00" .. "KeyBind Mode" .. "|r")
+    keybindText:SetText("|cff00dd00" .. LO["KeyBind Mode"] .. "|r")
     keybindBtn:SetScript("OnClick", function()
         Panel:Close()
         if addon.KeyBindingModule and LibStub and LibStub("LibKeyBound-1.0", true) then
@@ -181,12 +184,12 @@ local function CreatePanel()
     keybindBtn:SetScript("OnEnter", function()
         keybindBtn:SetBackdropColor(0.0, 0.9, 0.0, 0.25)
         keybindBtn:SetBackdropBorderColor(0.0, 1.0, 0.0, 1.0)
-        keybindText:SetText("|cff00ff00" .. "KeyBind Mode" .. "|r")
+        keybindText:SetText("|cff00ff00" .. LO["KeyBind Mode"] .. "|r")
     end)
     keybindBtn:SetScript("OnLeave", function()
         keybindBtn:SetBackdropColor(0.05, 0.12, 0.05, 1)
         keybindBtn:SetBackdropBorderColor(0.0, 0.9, 0.0, 0.7)
-        keybindText:SetText("|cff00dd00" .. "KeyBind Mode" .. "|r")
+        keybindText:SetText("|cff00dd00" .. LO["KeyBind Mode"] .. "|r")
     end)
 
     -- Close button
@@ -243,7 +246,7 @@ local function CreatePanel()
     statusText:SetFont(T.font, 11, "")
     statusText:SetPoint("BOTTOM", f, "BOTTOM", 0, 4)
     statusText:SetTextColor(0.4, 0.4, 0.4, 1)
-    statusText:SetText("/dragonui  |  /dragonui legacy for classic options")
+    statusText:SetText(LO["/dragonui  |  /dragonui legacy for classic options"])
 
     -- Resize grip (bottom-right corner)
     local resizeGrip = CreateFrame("Frame", nil, f)
@@ -462,7 +465,7 @@ end
 
 function Panel:Open(selectTab)
     if InCombatLockdown() then
-        print("|cFFFF0000[DragonUI]|r Cannot open options during combat.")
+        print("|cFFFF0000[DragonUI]|r " .. LO["Cannot open options during combat."])
         return
     end
 

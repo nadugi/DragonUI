@@ -11,6 +11,8 @@ if not addon then return end
 
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
+local L = addon.L
+local LO = addon.LO
 
 -- ============================================================================
 -- GENERAL TAB BUILDER
@@ -20,26 +22,26 @@ local function BuildGeneralTab(scroll)
     -- ====================================================================
     -- ABOUT
     -- ====================================================================
-    local about = C:AddSection(scroll, "About")
+    local about = C:AddSection(scroll, LO["About"])
 
-    C:AddLabel(about, "|cff1784d1DragonUI|r")
-    C:AddDescription(about, "Dragonflight-inspired UI for WotLK 3.3.5a.")
+    C:AddLabel(about, "|cff1784d1" .. LO["DragonUI"] .. "|r")
+    C:AddDescription(about, LO["Dragonflight-inspired UI for WotLK 3.3.5a."])
     C:AddSpacer(about)
-    C:AddDescription(about, "|cffff8800Experimental Branch|r — This options panel is in early beta.")
-    C:AddDescription(about, "Features may change or be incomplete. Report issues on GitHub.")
+    C:AddDescription(about, LO["Experimental Branch — This options panel is in early beta."])
+    C:AddDescription(about, LO["Features may change or be incomplete. Report issues on GitHub."])
     C:AddSpacer(about)
-    C:AddDescription(about, "Use |cff1784d1/dragonui|r or |cff1784d1/pi|r to toggle this panel.")
-    C:AddDescription(about, "Use |cff1784d1/dragonui legacy|r to open the classic AceConfig options.")
+    C:AddDescription(about, LO["Use /dragonui or /pi to toggle this panel."])
+    C:AddDescription(about, LO["Use /dragonui legacy to open the classic AceConfig options."])
 
     C:AddSpacer(scroll)
 
     -- ====================================================================
     -- QUICK ACTIONS
     -- ====================================================================
-    local actions = C:AddSection(scroll, "Quick Actions")
+    local actions = C:AddSection(scroll, LO["Quick Actions"])
 
     C:AddButton(actions, {
-        label = "Editor Mode",
+        label = LO["Editor Mode"],
         width = 200,
         callback = function()
             if addon.OptionsPanel then addon.OptionsPanel:Close() end
@@ -50,7 +52,7 @@ local function BuildGeneralTab(scroll)
     })
 
     C:AddButton(actions, {
-        label = "KeyBind Mode",
+        label = LO["KeyBind Mode"],
         width = 200,
         callback = function()
             if addon.OptionsPanel then addon.OptionsPanel:Close() end
@@ -62,4 +64,4 @@ local function BuildGeneralTab(scroll)
 end
 
 -- Register the tab
-Panel:RegisterTab("general", "General", BuildGeneralTab, 1)
+Panel:RegisterTab("general", LO["General"], BuildGeneralTab, 1)

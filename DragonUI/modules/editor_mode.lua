@@ -1,4 +1,5 @@
 local addon = select(2, ...);
+local L = addon.L
 
 local EditorMode = {};
 addon.EditorMode = EditorMode;
@@ -9,9 +10,9 @@ local resetAllButton = nil;
 
 -- StaticPopup to reload UI after exiting editor mode
 StaticPopupDialogs["DRAGONUI_RELOAD_UI"] = {
-    text = "UI elements have been repositioned. Reload UI to ensure all graphics display correctly?",
-    button1 = "Reload Now",
-    button2 = "Later",
+    text = L["UI elements have been repositioned. Reload UI to ensure all graphics display correctly?"],
+    button1 = L["Reload Now"],
+    button2 = L["Later"],
     OnAccept = function()
         ReloadUI()
     end,
@@ -79,7 +80,7 @@ local function createExitButton()
     if exitEditorButton then return; end
 
     exitEditorButton = CreateFrame("Button", "DragonUIExitEditorButton", UIParent, "UIPanelButtonTemplate");
-    exitEditorButton:SetText("Exit Edit Mode");
+    exitEditorButton:SetText(L["Exit Edit Mode"]);
     exitEditorButton:SetSize(140, 28);
     exitEditorButton:SetPoint("CENTER", UIParent, "CENTER", 0, 200);
     exitEditorButton:SetFrameStrata("DIALOG");
@@ -100,7 +101,7 @@ local function createResetAllButton()
     if resetAllButton then return; end
 
     resetAllButton = CreateFrame("Button", "DragonUIResetAllButton", UIParent, "UIPanelButtonTemplate");
-    resetAllButton:SetText("Reset All Positions");
+    resetAllButton:SetText(L["Reset All Positions"]);
     resetAllButton:SetSize(140, 28);
     resetAllButton:SetPoint("CENTER", UIParent, "CENTER", 0, 165);
     resetAllButton:SetFrameStrata("DIALOG");
@@ -369,12 +370,20 @@ function EditorMode:ResetAllPositions()
         end
     end
     
-    -- NEW: Also reset additional.totem for multicast
+    -- Also reset additional.totem (multicast) and additional.stance positions
     if addon.defaults and addon.defaults.profile and addon.defaults.profile.additional then
         if not addon.db.profile.additional then
             addon.db.profile.additional = {}
         end
         addon.db.profile.additional.totem = addon:CopyTable(addon.defaults.profile.additional.totem)
+        if addon.defaults.profile.additional.stance then
+            if not addon.db.profile.additional.stance then
+                addon.db.profile.additional.stance = {}
+            end
+            -- Reset only position fields, preserve button_size/spacing user preferences
+            addon.db.profile.additional.stance.x_position = addon.defaults.profile.additional.stance.x_position
+            addon.db.profile.additional.stance.y_offset = addon.defaults.profile.additional.stance.y_offset
+        end
     end
     
     -- Reset quest tracker position
@@ -411,9 +420,9 @@ end
 
 --  DEFINE THE CONFIRMATION POPUP
 StaticPopupDialogs["DRAGONUI_RESET_ALL_POSITIONS"] = {
-    text = "Are you sure you want to reset all interface elements to their default positions?",
-    button1 = "Yes",
-    button2 = "No",
+    text = L["Are you sure you want to reset all interface elements to their default positions?"],
+    button1 = L["Yes"],
+    button2 = L["No"],
     OnAccept = function()
         EditorMode:ResetAllPositions()
     end,

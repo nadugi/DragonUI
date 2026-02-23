@@ -5,11 +5,28 @@
 ## 📅 2026-02-23
 
 ### Added
+- **Localization system (Beta)** — Full AceLocale-3.0 integration. Base language: enUS. Spanish (esES) fully translated. Locale stubs included for deDE, frFR, koKR, ptBR, ruRU, zhCN, zhTW. All UI strings, options panels, slash commands, popups, and editor labels are now localized
 - Loot roll frames now moveable via editor mode
+- Castbar detailed mode: spell name auto-truncates with "..." when too long (UTF-8 safe)
+- Castbar channel ticks now use spell IDs via `GetSpellInfo()` — auto-localized for any client language
+- Castbar text_mode change now prompts for UI reload
+
+### Changed
+- Vehicle exit button repositioned independently with dual-bar offset support
+- Bags overlay dynamically resizes based on keyring visibility
+- DurabilityFrame shifted 6px left below minimap (PvP capture bar repositioning preserved)
+- Petbar and stance bar default positions synced with dual-bar offset system
+- Chat frame no longer moves when bar height changes (FCF_UpdateDockPosition override)
+- Editor mode no longer bakes dual-bar offset into saved positions
 
 ### Fixed
 - Quest tracker position now persists correctly after reload, even during combat
 - ToT/ToF health bar no longer flickers with class colors enabled
+- Castbar detailed mode: time now counts UP for casts (0→max) and DOWN for channels (max→0)
+- Castbar detailed mode: UTF-8 characters (accented letters) no longer corrupt when truncated
+- Editor mode: position drift on reload when dual-bar offset was active
+- Bags overlay anchor synced between setup and RefreshBagsPosition
+- Action bar overlay sizing now matches actual bar dimensions
 
 ## 📅 2026-02-22
 

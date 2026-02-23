@@ -10,6 +10,8 @@ Sub-tabs for each frame type.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
 
@@ -18,28 +20,28 @@ local Panel = addon.OptionsPanel
 -- ============================================================================
 
 local textFormatValues = {
-    numeric    = "Current Value",
-    percentage = "Percentage",
-    both       = "Numbers + %",
-    formatted  = "Current / Max",
+    numeric    = LO["Current Value"],
+    percentage = LO["Percentage"],
+    both       = LO["Numbers + %"],
+    formatted  = LO["Current / Max"],
 }
 
 local dragonValues = {
-    none      = "None",
-    elite     = "Elite (Golden)",
-    rareelite = "RareElite (Winged)",
+    none      = LO["None"],
+    elite     = LO["Elite (Golden)"],
+    rareelite = LO["RareElite (Winged)"],
 }
 
 local alternateManaFormatValues = {
-    numeric    = "Current Value",
-    formatted  = "Current / Max",
-    percentage = "Percentage",
-    both       = "Percentage + Current/Max",
+    numeric    = LO["Current Value"],
+    formatted  = LO["Current / Max"],
+    percentage = LO["Percentage"],
+    both       = LO["Percentage + Current/Max"],
 }
 
 local partyOrientationValues = {
-    vertical   = "Vertical",
-    horizontal = "Horizontal",
+    vertical   = LO["Vertical"],
+    horizontal = LO["Horizontal"],
 }
 
 -- ============================================================================
@@ -49,12 +51,12 @@ local partyOrientationValues = {
 local activeSubTab = "player"
 
 local subTabs = {
-    { key = "player",  label = "Player" },
-    { key = "target",  label = "Target" },
-    { key = "focus",   label = "Focus" },
-    { key = "pet",     label = "Pet" },
-    { key = "tot",     label = "ToT / ToF" },
-    { key = "party",   label = "Party" },
+    { key = "player",  label = LO["Player"] },
+    { key = "target",  label = LO["Target"] },
+    { key = "focus",   label = LO["Focus"] },
+    { key = "pet",     label = LO["Pet"] },
+    { key = "tot",     label = LO["ToT / ToF"] },
+    { key = "party",   label = LO["Party"] },
 }
 
 -- ============================================================================
@@ -65,7 +67,7 @@ local function AddCommonControls(parent, unitKey, refreshFunc, opts)
     opts = opts or {}
 
     C:AddSlider(parent, {
-        label = "Scale",
+        label = LO["Scale"],
         dbPath = "unitframe." .. unitKey .. ".scale",
         min = 0.5, max = 2.0, step = 0.1,
         width = 200,
@@ -73,48 +75,48 @@ local function AddCommonControls(parent, unitKey, refreshFunc, opts)
     })
 
     C:AddToggle(parent, {
-        label = "Class Color Health",
+        label = LO["Class Color Health"],
         dbPath = "unitframe." .. unitKey .. ".classcolor",
         callback = refreshFunc,
     })
 
     if opts.hasClassPortrait then
         C:AddToggle(parent, {
-            label = "Class Portrait",
-            desc = "Class icon instead of 3D model for players.",
+            label = LO["Class Portrait"],
+            desc = LO["Class icon instead of 3D model for players."],
             dbPath = "unitframe." .. unitKey .. ".classPortrait",
             callback = refreshFunc,
         })
     end
 
     C:AddToggle(parent, {
-        label = "Format Large Numbers",
+        label = LO["Format Large Numbers"],
         dbPath = "unitframe." .. unitKey .. ".breakUpLargeNumbers",
         callback = refreshFunc,
     })
 
     C:AddDropdown(parent, {
-        label = "Text Format",
+        label = LO["Text Format"],
         dbPath = "unitframe." .. unitKey .. ".textFormat",
         values = textFormatValues,
         callback = refreshFunc,
     })
 
     C:AddToggle(parent, {
-        label = "Always Show Health Text",
+        label = LO["Always Show Health Text"],
         dbPath = "unitframe." .. unitKey .. ".showHealthTextAlways",
         callback = refreshFunc,
     })
 
     C:AddToggle(parent, {
-        label = "Always Show Mana Text",
+        label = LO["Always Show Mana Text"],
         dbPath = "unitframe." .. unitKey .. ".showManaTextAlways",
         callback = refreshFunc,
     })
 
     if opts.hasThreatGlow then
         C:AddToggle(parent, {
-            label = "Threat Glow",
+            label = LO["Threat Glow"],
             dbPath = "unitframe." .. unitKey .. ".enableThreatGlow",
             callback = refreshFunc,
         })
@@ -132,51 +134,51 @@ local function BuildPlayerSection(scroll)
         end
     end
 
-    local s = C:AddSection(scroll, "Player Frame")
+    local s = C:AddSection(scroll, LO["Player Frame"])
     AddCommonControls(s, "player", refreshPlayer, {
         hasClassPortrait = true,
     })
 
     C:AddDropdown(s, {
-        label = "Dragon Decoration",
+        label = LO["Dragon Decoration"],
         dbPath = "unitframe.player.dragon_decoration",
         values = dragonValues,
         callback = refreshPlayer,
     })
 
     -- Glow Effects
-    C:AddHeading(s, "Glow Effects")
+    C:AddHeading(s, LO["Glow Effects"])
 
     C:AddToggle(s, {
-        label = "Show Rest Glow",
-        desc = "Golden glow around the player frame when resting (inn or city). Works with all frame modes.",
+        label = LO["Show Rest Glow"],
+        desc = LO["Golden glow around the player frame when resting (inn or city). Works with all frame modes."],
         dbPath = "unitframe.player.show_rest_glow",
         callback = refreshPlayer,
     })
 
     -- Alternate mana (druid)
-    C:AddHeading(s, "Alternate Mana (Druid)")
+    C:AddHeading(s, LO["Alternate Mana (Druid)"])
 
     C:AddToggle(s, {
-        label = "Always Show",
-        desc = "Druid mana text visible at all times, not just on hover.",
+        label = LO["Always Show"],
+        desc = LO["Druid mana text visible at all times, not just on hover."],
         dbPath = "unitframe.player.alwaysShowAlternateManaText",
         callback = refreshPlayer,
     })
 
     C:AddDropdown(s, {
-        label = "Text Format",
+        label = LO["Text Format"],
         dbPath = "unitframe.player.alternateManaFormat",
         values = alternateManaFormatValues,
         callback = refreshPlayer,
     })
 
     -- Fat Health Bar
-    C:AddHeading(s, "Fat Health Bar")
+    C:AddHeading(s, LO["Fat Health Bar"])
 
     C:AddToggle(s, {
-        label = "Enable",
-        desc = "Full-width health bar. Auto-disabled in vehicles.",
+        label = LO["Enable"],
+        desc = LO["Full-width health bar. Auto-disabled in vehicles."],
         dbPath = "unitframe.player.fat_healthbar",
         callback = function(val)
             refreshPlayer()
@@ -186,8 +188,8 @@ local function BuildPlayerSection(scroll)
     })
 
     C:AddToggle(s, {
-        label = "Hide Mana Bar",
-        desc = "Completely hide the mana bar when Fat Health Bar is active.",
+        label = LO["Hide Mana Bar"],
+        desc = LO["Completely hide the mana bar when Fat Health Bar is active."],
         dbPath = "unitframe.player.fat_manabar_hidden",
         disabled = function()
             return not C:GetDBValue("unitframe.player.fat_healthbar")
@@ -199,7 +201,7 @@ local function BuildPlayerSection(scroll)
     })
 
     C:AddSlider(s, {
-        label = "Mana Bar Width",
+        label = LO["Mana Bar Width"],
         dbPath = "unitframe.player.fat_manabar_width",
         min = 50, max = 300, step = 1,
         width = 200,
@@ -210,7 +212,7 @@ local function BuildPlayerSection(scroll)
     })
 
     C:AddSlider(s, {
-        label = "Mana Bar Height",
+        label = LO["Mana Bar Height"],
         dbPath = "unitframe.player.fat_manabar_height",
         min = 4, max = 30, step = 1,
         width = 200,
@@ -221,16 +223,16 @@ local function BuildPlayerSection(scroll)
     })
 
     C:AddDropdown(s, {
-        label = "Mana Bar Texture",
-        desc = "Choose the texture style for the power/mana bar. Only applies in Fat Health Bar mode.",
+        label = LO["Mana Bar Texture"],
+        desc = LO["Choose the texture style for the power/mana bar. Only applies in Fat Health Bar mode."],
         dbPath = "unitframe.player.manabar_texture",
         values = {
-            dragonui       = "DragonUI (Default)",
-            blizzard       = "Blizzard Classic",
-            blizzard_flat  = "Flat Solid",
-            smooth         = "Smooth",
-            aluminium      = "Aluminium",
-            litestep       = "LiteStep",
+            dragonui       = LO["DragonUI (Default)"],
+            blizzard       = LO["Blizzard Classic"],
+            blizzard_flat  = LO["Flat Solid"],
+            smooth         = LO["Smooth"],
+            aluminium      = LO["Aluminium"],
+            litestep       = LO["LiteStep"],
         },
         disabled = function()
             return not C:GetDBValue("unitframe.player.fat_healthbar")
@@ -247,16 +249,16 @@ local function BuildPlayerSection(scroll)
     local showColors = isFat and texSetting ~= "dragonui"
 
     if showColors then
-        C:AddHeading(s, "Power Bar Colors")
+        C:AddHeading(s, LO["Power Bar Colors"])
 
         local powerColorEntries = {
-            { key = "MANA",        label = "Mana" },
-            { key = "RAGE",        label = "Rage" },
-            { key = "ENERGY",      label = "Energy" },
-            { key = "FOCUS",       label = "Focus" },
-            { key = "RUNIC_POWER", label = "Runic Power" },
-            { key = "HAPPINESS",   label = "Happiness" },
-            { key = "RUNES",       label = "Runes" },
+            { key = "MANA",        label = LO["Mana"] },
+            { key = "RAGE",        label = LO["Rage"] },
+            { key = "ENERGY",      label = LO["Energy"] },
+            { key = "FOCUS",       label = LO["Focus"] },
+            { key = "RUNIC_POWER", label = LO["Runic Power"] },
+            { key = "HAPPINESS",   label = LO["Happiness"] },
+            { key = "RUNES",       label = LO["Runes"] },
         }
 
         for _, entry in ipairs(powerColorEntries) do
@@ -269,7 +271,7 @@ local function BuildPlayerSection(scroll)
         end
 
         C:AddButton(s, {
-            label = "Reset Colors to Default",
+            label = LO["Reset Colors to Default"],
             width = 200,
             callback = function()
                 local defaults = {
@@ -296,7 +298,7 @@ local function BuildTargetSection(scroll)
         end
     end
 
-    local s = C:AddSection(scroll, "Target Frame")
+    local s = C:AddSection(scroll, LO["Target Frame"])
     AddCommonControls(s, "target", refreshTarget, {
         hasClassPortrait = true,
     })
@@ -307,13 +309,13 @@ local function BuildFocusSection(scroll)
         if addon.RefreshFocusFrame then addon.RefreshFocusFrame() end
     end
 
-    local s = C:AddSection(scroll, "Focus Frame")
+    local s = C:AddSection(scroll, LO["Focus Frame"])
     AddCommonControls(s, "focus", refreshFocus, {
         hasClassPortrait = true,
     })
 
     C:AddToggle(s, {
-        label = "Override Position",
+        label = LO["Override Position"],
         dbPath = "unitframe.focus.override",
         callback = refreshFocus,
     })
@@ -324,10 +326,10 @@ local function BuildPetSection(scroll)
         if addon.RefreshPetFrame then addon.RefreshPetFrame() end
     end
 
-    local s = C:AddSection(scroll, "Pet Frame")
+    local s = C:AddSection(scroll, LO["Pet Frame"])
 
     C:AddSlider(s, {
-        label = "Scale",
+        label = LO["Scale"],
         dbPath = "unitframe.pet.scale",
         min = 0.5, max = 2.0, step = 0.1,
         width = 200,
@@ -335,47 +337,47 @@ local function BuildPetSection(scroll)
     })
 
     C:AddDropdown(s, {
-        label = "Text Format",
+        label = LO["Text Format"],
         dbPath = "unitframe.pet.textFormat",
         values = textFormatValues,
         callback = refreshPet,
     })
 
     C:AddToggle(s, {
-        label = "Format Large Numbers",
+        label = LO["Format Large Numbers"],
         dbPath = "unitframe.pet.breakUpLargeNumbers",
         callback = refreshPet,
     })
 
     C:AddToggle(s, {
-        label = "Always Show Health Text",
+        label = LO["Always Show Health Text"],
         dbPath = "unitframe.pet.showHealthTextAlways",
         callback = refreshPet,
     })
 
     C:AddToggle(s, {
-        label = "Always Show Mana Text",
+        label = LO["Always Show Mana Text"],
         dbPath = "unitframe.pet.showManaTextAlways",
         callback = refreshPet,
     })
 
     C:AddToggle(s, {
-        label = "Threat Glow",
+        label = LO["Threat Glow"],
         dbPath = "unitframe.pet.enableThreatGlow",
         callback = refreshPet,
     })
 
-    C:AddHeading(s, "Position")
+    C:AddHeading(s, LO["Position"])
 
     C:AddToggle(s, {
-        label = "Override Position",
-        desc = "Move the pet frame independently from the player frame.",
+        label = LO["Override Position"],
+        desc = LO["Move the pet frame independently from the player frame."],
         dbPath = "unitframe.pet.override",
         callback = refreshPet,
     })
 
     C:AddSlider(s, {
-        label = "X Position",
+        label = LO["X Position"],
         dbPath = "unitframe.pet.x",
         min = -2500, max = 2500, step = 1,
         width = 200,
@@ -404,12 +406,12 @@ local function BuildToTSection(scroll)
         end
     end
 
-    local tot = C:AddSection(scroll, "Target of Target")
+    local tot = C:AddSection(scroll, LO["Target of Target"])
     C:AddDescription(tot,
         "Follows the Target frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely.")
 
     C:AddSlider(tot, {
-        label = "Scale",
+        label = LO["Scale"],
         dbPath = "unitframe.tot.scale",
         min = 0.5, max = 2.0, step = 0.1,
         width = 200,
@@ -417,7 +419,7 @@ local function BuildToTSection(scroll)
     })
 
     C:AddToggle(tot, {
-        label = "Class Color Health",
+        label = LO["Class Color Health"],
         dbPath = "unitframe.tot.classcolor",
         callback = refreshToT,
     })
@@ -432,7 +434,7 @@ local function BuildToTSection(scroll)
 
     -- Re-attach button (only useful when detached)
     C:AddButton(tot, {
-        label = "Re-attach to Target",
+        label = LO["Re-attach to Target"],
         width = 200,
         disabled = function() return not C:GetDBValue("unitframe.tot.override") end,
         callback = function()
@@ -452,12 +454,12 @@ local function BuildToTSection(scroll)
         end
     end
 
-    local fot = C:AddSection(scroll, "Target of Focus")
+    local fot = C:AddSection(scroll, LO["Target of Focus"])
     C:AddDescription(fot,
         "Follows the Focus frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely.")
 
     C:AddSlider(fot, {
-        label = "Scale",
+        label = LO["Scale"],
         dbPath = "unitframe.fot.scale",
         min = 0.5, max = 2.0, step = 0.1,
         width = 200,
@@ -465,7 +467,7 @@ local function BuildToTSection(scroll)
     })
 
     C:AddToggle(fot, {
-        label = "Class Color Health",
+        label = LO["Class Color Health"],
         dbPath = "unitframe.fot.classcolor",
         callback = refreshToF,
     })
@@ -480,7 +482,7 @@ local function BuildToTSection(scroll)
 
     -- Re-attach button (only useful when detached)
     C:AddButton(fot, {
-        label = "Re-attach to Focus",
+        label = LO["Re-attach to Focus"],
         width = 200,
         disabled = function() return not C:GetDBValue("unitframe.fot.override") end,
         callback = function()
@@ -497,10 +499,10 @@ local function BuildPartySection(scroll)
         if addon.RefreshPartyFrames then addon.RefreshPartyFrames() end
     end
 
-    local s = C:AddSection(scroll, "Party Frames")
+    local s = C:AddSection(scroll, LO["Party Frames"])
 
     C:AddSlider(s, {
-        label = "Scale",
+        label = LO["Scale"],
         dbPath = "unitframe.party.scale",
         min = 0.5, max = 2.0, step = 0.1,
         width = 200,
@@ -508,46 +510,46 @@ local function BuildPartySection(scroll)
     })
 
     C:AddToggle(s, {
-        label = "Class Color Health",
+        label = LO["Class Color Health"],
         dbPath = "unitframe.party.classcolor",
         callback = refreshParty,
     })
 
     C:AddToggle(s, {
-        label = "Format Large Numbers",
+        label = LO["Format Large Numbers"],
         dbPath = "unitframe.party.breakUpLargeNumbers",
         callback = refreshParty,
     })
 
     C:AddToggle(s, {
-        label = "Always Show Health Text",
+        label = LO["Always Show Health Text"],
         dbPath = "unitframe.party.showHealthTextAlways",
         callback = refreshParty,
     })
 
     C:AddToggle(s, {
-        label = "Always Show Mana Text",
+        label = LO["Always Show Mana Text"],
         dbPath = "unitframe.party.showManaTextAlways",
         callback = refreshParty,
     })
 
     C:AddDropdown(s, {
-        label = "Text Format",
+        label = LO["Text Format"],
         dbPath = "unitframe.party.textFormat",
         values = textFormatValues,
         callback = refreshParty,
     })
 
     C:AddDropdown(s, {
-        label = "Orientation",
+        label = LO["Orientation"],
         dbPath = "unitframe.party.orientation",
         values = partyOrientationValues,
         callback = refreshParty,
     })
 
     C:AddSlider(s, {
-        label = "Vertical Padding",
-        desc = "Space between party frames in vertical mode.",
+        label = LO["Vertical Padding"],
+        desc = LO["Space between party frames in vertical mode."],
         dbPath = "unitframe.party.padding_vertical",
         min = 10, max = 150, step = 1,
         width = 200,
@@ -555,8 +557,8 @@ local function BuildPartySection(scroll)
     })
 
     C:AddSlider(s, {
-        label = "Horizontal Padding",
-        desc = "Space between party frames in horizontal mode.",
+        label = LO["Horizontal Padding"],
+        desc = LO["Space between party frames in horizontal mode."],
         dbPath = "unitframe.party.padding_horizontal",
         min = 10, max = 150, step = 1,
         width = 200,
@@ -594,4 +596,4 @@ local function BuildUnitframesTab(scroll)
 end
 
 -- Register the tab
-Panel:RegisterTab("unitframes", "Unit Frames", BuildUnitframesTab, 6)
+Panel:RegisterTab("unitframes", LO["Unit Frames"], BuildUnitframesTab, 6)

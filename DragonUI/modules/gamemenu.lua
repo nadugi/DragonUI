@@ -1,4 +1,5 @@
 local addon = select(2,...);
+local L = addon.L
 
 -- =================================================================
 -- DRAGONUI GAME MENU BUTTON MODULE (WOW 3.3.5A)
@@ -99,7 +100,7 @@ local function OpenDragonUIConfig()
         return
     end
     
-    print("|cFFFF0000[DragonUI]|r Unable to open configuration")
+    print("|cFFFF0000[DragonUI]|r " .. L["Unable to open configuration"])
 end
 
 -- Main function to create the DragonUI button
@@ -118,7 +119,7 @@ local function CreateDragonUIButton()
     dragonUIButton = CreateFrame("Button", "DragonUIGameMenuButton", GameMenuFrame, "GameMenuButtonTemplate")
     
     -- Set the button text
-    dragonUIButton:SetText("DragonUI")
+    dragonUIButton:SetText(L["DragonUI"])
     
     -- Set the width to match other buttons
     dragonUIButton:SetWidth(144) -- Standard width for game menu buttons in 3.3.5a

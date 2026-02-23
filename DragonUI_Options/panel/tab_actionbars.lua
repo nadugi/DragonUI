@@ -9,6 +9,8 @@ Scales, positions, button appearance, bar size for action bars.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
 
@@ -19,9 +21,9 @@ local Panel = addon.OptionsPanel
 local activeSubTab = "general"
 
 local subTabs = {
-    { key = "general", label = "General" },
-    { key = "layout",  label = "Layout" },
-    { key = "visibility", label = "Visibility" },
+    { key = "general", label = LO["General"] },
+    { key = "layout",  label = LO["Layout"] },
+    { key = "visibility", label = LO["Visibility"] },
 }
 
 -- ============================================================================
@@ -48,14 +50,14 @@ local function BuildGeneralTab(scroll)
     -- ====================================================================
     -- SCALES
     -- ====================================================================
-    local scales = C:AddSection(scroll, "Action Bar Scales")
+    local scales = C:AddSection(scroll, LO["Action Bar Scales"])
 
     local barScales = {
-        { path = "mainbars.scale_actionbar",    label = "Main Bar Scale" },
-        { path = "mainbars.scale_rightbar",     label = "Right Bar Scale" },
-        { path = "mainbars.scale_leftbar",      label = "Left Bar Scale" },
-        { path = "mainbars.scale_bottomleft",   label = "Bottom Left Bar Scale" },
-        { path = "mainbars.scale_bottomright",  label = "Bottom Right Bar Scale" },
+        { path = "mainbars.scale_actionbar",    label = LO["Main Bar Scale"] },
+        { path = "mainbars.scale_rightbar",     label = LO["Right Bar Scale"] },
+        { path = "mainbars.scale_leftbar",      label = LO["Left Bar Scale"] },
+        { path = "mainbars.scale_bottomleft",   label = LO["Bottom Left Bar Scale"] },
+        { path = "mainbars.scale_bottomright",  label = LO["Bottom Right Bar Scale"] },
     }
 
     for _, bar in ipairs(barScales) do
@@ -69,7 +71,7 @@ local function BuildGeneralTab(scroll)
     end
 
     C:AddButton(scales, {
-        label = "Reset All Scales",
+        label = LO["Reset All Scales"],
         width = 180,
         callback = function()
             for _, bar in ipairs(barScales) do
@@ -77,18 +79,18 @@ local function BuildGeneralTab(scroll)
             end
             RefreshBars()
             Panel:SelectTab("actionbars")
-            print("|cFF00FF00[DragonUI]|r All action bar scales reset to 0.9")
+            print("|cFF00FF00[DragonUI]|r " .. LO["All action bar scales reset to 0.9"])
         end,
     })
 
     -- ====================================================================
     -- POSITIONS
     -- ====================================================================
-    local positions = C:AddSection(scroll, "Action Bar Positions")
+    local positions = C:AddSection(scroll, LO["Action Bar Positions"])
 
     C:AddToggle(positions, {
-        label = "Left Bar Horizontal",
-        desc = "Make the left secondary bar horizontal instead of vertical.",
+        label = LO["Left Bar Horizontal"],
+        desc = LO["Make the left secondary bar horizontal instead of vertical."],
         dbPath = "mainbars.left.horizontal",
         callback = function(value)
             addon.db.profile.mainbars.left.columns = value and 12 or 1
@@ -97,8 +99,8 @@ local function BuildGeneralTab(scroll)
     })
 
     C:AddToggle(positions, {
-        label = "Right Bar Horizontal",
-        desc = "Make the right secondary bar horizontal instead of vertical.",
+        label = LO["Right Bar Horizontal"],
+        desc = LO["Make the right secondary bar horizontal instead of vertical."],
         dbPath = "mainbars.right.horizontal",
         callback = function(value)
             addon.db.profile.mainbars.right.columns = value and 12 or 1
@@ -109,63 +111,63 @@ local function BuildGeneralTab(scroll)
     -- ====================================================================
     -- BUTTON APPEARANCE
     -- ====================================================================
-    local buttons = C:AddSection(scroll, "Button Appearance")
+    local buttons = C:AddSection(scroll, LO["Button Appearance"])
 
     C:AddToggle(buttons, {
-        label = "Main Bar Only Background",
-        desc = "Only the main action bar buttons will have a background.",
+        label = LO["Main Bar Only Background"],
+        desc = LO["Only the main action bar buttons will have a background."],
         dbPath = "buttons.only_actionbackground",
         callback = RefreshButtons,
     })
 
     C:AddToggle(buttons, {
-        label = "Hide Main Bar Background",
-        desc = "Hide the background texture of the main action bar.",
+        label = LO["Hide Main Bar Background"],
+        desc = LO["Hide the background texture of the main action bar."],
         dbPath = "buttons.hide_main_bar_background",
         requiresReload = true,
         callback = RefreshBars,
     })
 
     -- Text visibility sub-section
-    local textVis = C:AddSection(scroll, "Text Visibility")
+    local textVis = C:AddSection(scroll, LO["Text Visibility"])
 
     C:AddToggle(textVis, {
-        label = "Show Count Text",
+        label = LO["Show Count Text"],
         dbPath = "buttons.count.show",
         callback = RefreshButtons,
     })
 
     C:AddToggle(textVis, {
-        label = "Show Hotkey Text",
+        label = LO["Show Hotkey Text"],
         dbPath = "buttons.hotkey.show",
         callback = RefreshButtons,
     })
 
     C:AddToggle(textVis, {
-        label = "Range Indicator",
-        desc = "Show range indicator dot on buttons.",
+        label = LO["Range Indicator"],
+        desc = LO["Show range indicator dot on buttons."],
         dbPath = "buttons.hotkey.range",
         callback = RefreshButtons,
     })
 
     C:AddToggle(textVis, {
-        label = "Show Macro Names",
+        label = LO["Show Macro Names"],
         dbPath = "buttons.macros.show",
         callback = RefreshButtons,
     })
 
     C:AddToggle(textVis, {
-        label = "Show Page Numbers",
+        label = LO["Show Page Numbers"],
         dbPath = "buttons.pages.show",
         requiresReload = true,
     })
 
     -- Cooldown text
-    local cdSection = C:AddSection(scroll, "Cooldown Text")
+    local cdSection = C:AddSection(scroll, LO["Cooldown Text"])
 
     C:AddSlider(cdSection, {
-        label = "Min Duration",
-        desc = "Minimum duration for cooldown text to appear.",
+        label = LO["Min Duration"],
+        desc = LO["Minimum duration for cooldown text to appear."],
         dbPath = "buttons.cooldown.min_duration",
         min = 1, max = 10, step = 1,
         width = 200,
@@ -173,8 +175,8 @@ local function BuildGeneralTab(scroll)
     })
 
     C:AddSlider(cdSection, {
-        label = "Font Size",
-        desc = "Size of cooldown text.",
+        label = LO["Font Size"],
+        desc = LO["Size of cooldown text."],
         dbPath = "buttons.cooldown.font_size",
         min = 8, max = 24, step = 1,
         width = 200,
@@ -182,7 +184,7 @@ local function BuildGeneralTab(scroll)
     })
 
     C:AddColorPicker(cdSection, {
-        label = "Cooldown Text Color",
+        label = LO["Cooldown Text Color"],
         getFunc = function()
             local c = addon.db.profile.buttons.cooldown.color
             if c then return c[1], c[2], c[3], c[4] end
@@ -196,10 +198,10 @@ local function BuildGeneralTab(scroll)
     })
 
     -- Colors
-    local colorSection = C:AddSection(scroll, "Colors")
+    local colorSection = C:AddSection(scroll, LO["Colors"])
 
     C:AddColorPicker(colorSection, {
-        label = "Macro Text Color",
+        label = LO["Macro Text Color"],
         getFunc = function()
             local c = addon.db.profile.buttons.macros.color
             if c then return c[1], c[2], c[3], c[4] end
@@ -213,7 +215,7 @@ local function BuildGeneralTab(scroll)
     })
 
     C:AddColorPicker(colorSection, {
-        label = "Hotkey Shadow Color",
+        label = LO["Hotkey Shadow Color"],
         getFunc = function()
             local c = addon.db.profile.buttons.hotkey.shadow
             if c then return c[1], c[2], c[3], c[4] end
@@ -227,7 +229,7 @@ local function BuildGeneralTab(scroll)
     })
 
     C:AddColorPicker(colorSection, {
-        label = "Border Color",
+        label = LO["Border Color"],
         getFunc = function()
             local c = addon.db.profile.buttons.border_color
             if c then return c[1], c[2], c[3], c[4] end
@@ -243,18 +245,18 @@ local function BuildGeneralTab(scroll)
     -- ====================================================================
     -- GRYPHONS
     -- ====================================================================
-    local gryphons = C:AddSection(scroll, "Gryphons")
+    local gryphons = C:AddSection(scroll, LO["Gryphons"])
 
-    C:AddDescription(gryphons, "End-cap ornaments flanking the main action bar.")
+    C:AddDescription(gryphons, LO["End-cap ornaments flanking the main action bar."])
 
     C:AddDropdown(gryphons, {
-        label = "Style",
+        label = LO["Style"],
         dbPath = "style.gryphons",
         values = {
-            old    = "Classic",
-            new    = "Dragonflight",
-            flying = "Flying",
-            none   = "Hidden",
+            old    = LO["Classic"],
+            new    = LO["Dragonflight"],
+            flying = LO["Flying"],
+            none   = LO["Hidden"],
         },
         width = 200,
         callback = function()
@@ -269,7 +271,7 @@ local function BuildGeneralTab(scroll)
 
     -- Classic gryphon preview
     C:AddTexturePreview(previewRow, {
-        label = "Classic",
+        label = LO["Classic"],
         texture = assets .. "uiactionbar2x_",
         texCoord = { 1/512, 357/512, 209/2048, 543/2048 },
         width = 80,
@@ -284,7 +286,7 @@ local function BuildGeneralTab(scroll)
         dfTexCoord = { 1/512, 357/512, 209/2048, 543/2048 }  -- gryphon-thick-left
     end
     C:AddTexturePreview(previewRow, {
-        label = faction == "Horde" and "Dragonflight (Wyvern)" or "Dragonflight (Gryphon)",
+        label = faction == "Horde" and LO["Dragonflight (Wyvern)"] or LO["Dragonflight (Gryphon)"],
         texture = assets .. "uiactionbar2x_new",
         texCoord = dfTexCoord,
         width = 80,
@@ -293,7 +295,7 @@ local function BuildGeneralTab(scroll)
 
     -- Flying gryphon preview
     C:AddTexturePreview(previewRow, {
-        label = "Flying",
+        label = LO["Flying"],
         texture = assets .. "uiactionbar2x_flying",
         texCoord = { 1/256, 158/256, 149/2048, 342/2048 },
         width = 70,
@@ -307,15 +309,14 @@ end
 
 local function BuildLayoutTab(scroll)
     -- ---- Main Bar ----
-    local mainSection = C:AddSection(scroll, "Main Bar Layout")
+    local mainSection = C:AddSection(scroll, LO["Main Bar Layout"])
 
     C:AddDescription(mainSection,
-        "Configure the main action bar grid layout. " ..
-        "Rows are determined automatically from columns and buttons shown.")
+        LO["Configure the main action bar grid layout. Rows are determined automatically from columns and buttons shown."])
 
     C:AddSlider(mainSection, {
         dbPath = "mainbars.player.columns",
-        label = "Columns",
+        label = LO["Columns"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
@@ -323,7 +324,7 @@ local function BuildLayoutTab(scroll)
 
     C:AddSlider(mainSection, {
         dbPath = "mainbars.player.buttons_shown",
-        label = "Buttons Shown",
+        label = LO["Buttons Shown"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
@@ -376,11 +377,11 @@ local function BuildLayoutTab(scroll)
     })
 
     -- ---- Bottom Left Bar ----
-    local blSection = C:AddSection(scroll, "Bottom Left Bar Layout")
+    local blSection = C:AddSection(scroll, LO["Bottom Left Bar Layout"])
 
     C:AddSlider(blSection, {
         dbPath = "mainbars.bottom_left.columns",
-        label = "Columns",
+        label = LO["Columns"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
@@ -388,18 +389,18 @@ local function BuildLayoutTab(scroll)
 
     C:AddSlider(blSection, {
         dbPath = "mainbars.bottom_left.buttons_shown",
-        label = "Buttons Shown",
+        label = LO["Buttons Shown"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
     })
 
     -- ---- Bottom Right Bar ----
-    local brSection = C:AddSection(scroll, "Bottom Right Bar Layout")
+    local brSection = C:AddSection(scroll, LO["Bottom Right Bar Layout"])
 
     C:AddSlider(brSection, {
         dbPath = "mainbars.bottom_right.columns",
-        label = "Columns",
+        label = LO["Columns"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
@@ -407,18 +408,18 @@ local function BuildLayoutTab(scroll)
 
     C:AddSlider(brSection, {
         dbPath = "mainbars.bottom_right.buttons_shown",
-        label = "Buttons Shown",
+        label = LO["Buttons Shown"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
     })
 
     -- ---- Right Bar ----
-    local rightSection = C:AddSection(scroll, "Right Bar Layout")
+    local rightSection = C:AddSection(scroll, LO["Right Bar Layout"])
 
     C:AddSlider(rightSection, {
         dbPath = "mainbars.right.columns",
-        label = "Columns",
+        label = LO["Columns"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
@@ -426,18 +427,18 @@ local function BuildLayoutTab(scroll)
 
     C:AddSlider(rightSection, {
         dbPath = "mainbars.right.buttons_shown",
-        label = "Buttons Shown",
+        label = LO["Buttons Shown"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
     })
 
     -- ---- Left Bar (Blizzard: MultiBarLeft = "Right 2") ----
-    local leftSection = C:AddSection(scroll, "Left Bar Layout")
+    local leftSection = C:AddSection(scroll, LO["Left Bar Layout"])
 
     C:AddSlider(leftSection, {
         dbPath = "mainbars.left.columns",
-        label = "Columns",
+        label = LO["Columns"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
@@ -445,21 +446,21 @@ local function BuildLayoutTab(scroll)
 
     C:AddSlider(leftSection, {
         dbPath = "mainbars.left.buttons_shown",
-        label = "Buttons Shown",
+        label = LO["Buttons Shown"],
         min = 1, max = 12, step = 1,
         width = 200,
         callback = RefreshBars,
     })
 
     -- ---- Quick Presets ----
-    local presetSection = C:AddSection(scroll, "Quick Presets")
+    local presetSection = C:AddSection(scroll, LO["Quick Presets"])
 
-    C:AddDescription(presetSection, "Apply layout presets to multiple bars at once.")
+    C:AddDescription(presetSection, LO["Apply layout presets to multiple bars at once."])
 
     local presetRow = C:AddRow(presetSection)
 
     C:AddButton(presetRow, {
-        label = "Both 1x12",
+        label = LO["Both 1x12"],
         width = 90,
         callback = function()
             for _, key in ipairs({"bottom_left", "bottom_right"}) do
@@ -472,7 +473,7 @@ local function BuildLayoutTab(scroll)
     })
 
     C:AddButton(presetRow, {
-        label = "Both 2x6",
+        label = LO["Both 2x6"],
         width = 90,
         callback = function()
             for _, key in ipairs({"bottom_left", "bottom_right"}) do
@@ -485,7 +486,7 @@ local function BuildLayoutTab(scroll)
     })
 
     C:AddButton(presetRow, {
-        label = "Reset All",
+        label = LO["Reset All"],
         width = 90,
         callback = function()
             C:SetDBValue("mainbars.player.columns", 12)
@@ -500,7 +501,7 @@ local function BuildLayoutTab(scroll)
             C:SetDBValue("mainbars.left.buttons_shown", 12)
             RefreshBars()
             Panel:SelectTab("actionbars")
-            print("|cFF00FF00[DragonUI]|r All bar layouts reset to defaults.")
+            print("|cFF00FF00[DragonUI]|r " .. LO["All bar layouts reset to defaults."])
         end,
     })
 end
@@ -516,112 +517,110 @@ local function RefreshVisibility()
 end
 
 local function BuildVisibilityTab(scroll)
-    local desc = C:AddSection(scroll, "Bar Visibility")
+    local desc = C:AddSection(scroll, LO["Bar Visibility"])
     C:AddDescription(desc,
-        "Control when action bars are visible. " ..
-        "Bars can show only on hover, only in combat, or both. " ..
-        "When no option is checked the bar is always visible.")
+        LO["Control when action bars are visible. Bars can show only on hover, only in combat, or both. When no option is checked the bar is always visible."])
 
     -- Enable/disable secondary bars
-    local enableSection = C:AddSection(scroll, "Enable / Disable Bars")
+    local enableSection = C:AddSection(scroll, LO["Enable / Disable Bars"])
 
     C:AddToggle(enableSection, {
-        label = "Bottom Left Bar",
+        label = LO["Bottom Left Bar"],
         dbPath = "actionbars.bottom_left_enabled",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(enableSection, {
-        label = "Bottom Right Bar",
+        label = LO["Bottom Right Bar"],
         dbPath = "actionbars.bottom_right_enabled",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(enableSection, {
-        label = "Right Bar",
+        label = LO["Right Bar"],
         dbPath = "actionbars.right_enabled",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(enableSection, {
-        label = "Left Bar",
+        label = LO["Left Bar"],
         dbPath = "actionbars.left_enabled",
         callback = RefreshVisibility,
     })
 
     -- Main bar hover/combat
-    local mainVis = C:AddSection(scroll, "Main Bar")
+    local mainVis = C:AddSection(scroll, LO["Main Bar"])
 
     C:AddToggle(mainVis, {
-        label = "Show on Hover Only",
-        desc = "Hide the main bar until you hover over it.",
+        label = LO["Show on Hover Only"],
+        desc = LO["Hide the main bar until you hover over it."],
         dbPath = "actionbars.main_show_on_hover",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(mainVis, {
-        label = "Show in Combat Only",
-        desc = "Hide the main bar until you enter combat.",
+        label = LO["Show in Combat Only"],
+        desc = LO["Hide the main bar until you enter combat."],
         dbPath = "actionbars.main_show_in_combat",
         callback = RefreshVisibility,
     })
 
     -- Bottom left hover/combat
-    local blVis = C:AddSection(scroll, "Bottom Left Bar")
+    local blVis = C:AddSection(scroll, LO["Bottom Left Bar"])
 
     C:AddToggle(blVis, {
-        label = "Show on Hover Only",
+        label = LO["Show on Hover Only"],
         dbPath = "actionbars.bottom_left_show_on_hover",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(blVis, {
-        label = "Show in Combat Only",
+        label = LO["Show in Combat Only"],
         dbPath = "actionbars.bottom_left_show_in_combat",
         callback = RefreshVisibility,
     })
 
     -- Bottom right hover/combat
-    local brVis = C:AddSection(scroll, "Bottom Right Bar")
+    local brVis = C:AddSection(scroll, LO["Bottom Right Bar"])
 
     C:AddToggle(brVis, {
-        label = "Show on Hover Only",
+        label = LO["Show on Hover Only"],
         dbPath = "actionbars.bottom_right_show_on_hover",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(brVis, {
-        label = "Show in Combat Only",
+        label = LO["Show in Combat Only"],
         dbPath = "actionbars.bottom_right_show_in_combat",
         callback = RefreshVisibility,
     })
 
     -- Right bar hover/combat
-    local rightVis = C:AddSection(scroll, "Right Bar")
+    local rightVis = C:AddSection(scroll, LO["Right Bar"])
 
     C:AddToggle(rightVis, {
-        label = "Show on Hover Only",
+        label = LO["Show on Hover Only"],
         dbPath = "actionbars.right_show_on_hover",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(rightVis, {
-        label = "Show in Combat Only",
+        label = LO["Show in Combat Only"],
         dbPath = "actionbars.right_show_in_combat",
         callback = RefreshVisibility,
     })
 
     -- Left bar hover/combat
-    local leftVis = C:AddSection(scroll, "Left Bar")
+    local leftVis = C:AddSection(scroll, LO["Left Bar"])
 
     C:AddToggle(leftVis, {
-        label = "Show on Hover Only",
+        label = LO["Show on Hover Only"],
         dbPath = "actionbars.left_show_on_hover",
         callback = RefreshVisibility,
     })
 
     C:AddToggle(leftVis, {
-        label = "Show in Combat Only",
+        label = LO["Show in Combat Only"],
         dbPath = "actionbars.left_show_in_combat",
         callback = RefreshVisibility,
     })
@@ -654,4 +653,4 @@ local function BuildActionbarsTab(scroll)
 end
 
 -- Register the tab
-Panel:RegisterTab("actionbars", "Action Bars", BuildActionbarsTab, 3)
+Panel:RegisterTab("actionbars", LO["Action Bars"], BuildActionbarsTab, 3)

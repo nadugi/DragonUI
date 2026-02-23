@@ -40,10 +40,11 @@ local function IsModuleEnabled()
 end
 
 -- Nil-safe accessor for stance-specific config (addon.db.profile.additional.stance)
+-- IMPORTANT: Keep in sync with database.lua → additional.stance
 local STANCE_DEFAULTS = {
-    x_position = -230,
-    y_offset = 0,
-    button_size = 36,
+    x_position = -211,
+    y_offset = -60,
+    button_size = 31,
     button_spacing = 6,
 }
 local function GetStanceConfig()
@@ -104,8 +105,9 @@ local function stancebar_update()
     
     -- Apply dual-bar offset when both XP and Rep bars are visible
     -- Only if stance bar is at its default position (not moved by user)
-    local defaultYOffset = -50  -- database default for additional.stance.y_offset
-    local defaultXPosition = -215  -- database default for additional.stance.x_position
+    -- IMPORTANT: Keep in sync with database.lua → additional.stance
+    local defaultYOffset = -60   -- database default for additional.stance.y_offset
+    local defaultXPosition = -211  -- database default for additional.stance.x_position
     if addon.GetDualBarVerticalOffset
         and math.abs(x_position - defaultXPosition) <= 1
         and math.abs(y_offset - defaultYOffset) <= 1 then
@@ -156,16 +158,12 @@ local function CreateStanceFrames()
     _G.pUiStanceBar = stancebar
     
     -- Create editor overlay using centralized CreateUIFrame (with nineslice support)
-    local editorOverlay = addon.CreateUIFrame(200, 37, 'StanceOverlay')
+    -- Initial size is a placeholder; real size is set in showTest based on active forms
+    local editorOverlay = addon.CreateUIFrame(100, 31, 'StanceOverlay')
     editorOverlay:SetFrameStrata('FULLSCREEN')
     editorOverlay:SetFrameLevel(100)
     editorOverlay:Hide()
     StanceModule.frames.editorOverlay = editorOverlay
-    
-    -- Update the editor text
-    if editorOverlay.editorText then
-        editorOverlay.editorText:SetText('Stance Bar')
-    end
     
     -- Variables to track drag movement (custom drag like multicast)
     local dragStartX, dragStartY = 0, 0
@@ -217,17 +215,9 @@ local function CreateStanceFrames()
             -- Update anchor position in real-time (move the actual stance bar)
             stancebar_update()
             
-            -- Calculate width for overlay offset (read from database)
-            local stanceConfig = addon.db.profile.additional.stance
-            local numForms = GetNumShapeshiftForms() or 0
-            local buttonWidth = stanceConfig.button_size or 36
-            local spacing = stanceConfig.button_spacing or 6
-            local totalWidth = math.max(numForms * buttonWidth + (numForms - 1) * spacing, 100)
-            local offsetX = (totalWidth / 2) - (buttonWidth / 2)
-            
-            -- Keep overlay centered on anchor
+            -- Keep overlay aligned to BOTTOMLEFT of anchor (buttons start there)
             self:ClearAllPoints()
-            self:SetPoint('CENTER', anchor, 'CENTER', offsetX, 0)
+            self:SetPoint('BOTTOMLEFT', anchor, 'BOTTOMLEFT', 0, 0)
         end
     end)
     
@@ -483,28 +473,31 @@ local function ApplyStanceSystem()
             configPath = {"additional", "stance"},
             
             showTest = function()
-                -- Position overlay at anchor location
-                if anchor then
-                    -- Calculate width based on config and stance buttons
-                    local stanceConfig = GetStanceConfig()
-                    local numForms = GetNumShapeshiftForms() or 0
-                    local buttonWidth = stanceConfig.button_size or 36
-                    local spacing = stanceConfig.button_spacing or 6
-                    local totalWidth = math.max(numForms * buttonWidth + (numForms - 1) * spacing, 100)
-                    editorOverlay:SetSize(totalWidth, buttonWidth)
-                    
-                    editorOverlay:ClearAllPoints()
-                    editorOverlay:SetPoint('CENTER', anchor, 'CENTER', (totalWidth / 2) - (buttonWidth / 2), 0)
-                    editorOverlay:Show()
-                    
-                    -- Show nineslice overlay
-                    if addon.ShowNineslice then
-                        addon.SetNinesliceState(editorOverlay, false)
-                        addon.ShowNineslice(editorOverlay)
-                    end
-                    if editorOverlay.editorText then
-                        editorOverlay.editorText:Show()
-                    end
+                -- Only show overlay if the player actually has stance/shapeshift forms
+                local numForms = GetNumShapeshiftForms() or 0
+                if numForms < 1 or not anchor then return end
+                
+                -- Position overlay at anchor location, matching the visual button area
+                local stanceConfig = GetStanceConfig()
+                local btnSize = stanceConfig.button_size or 31
+                local spacing = stanceConfig.button_spacing or 6
+                -- Buttons use SetScale(btnSize/36) so visual size = btnSize
+                local totalWidth = numForms * btnSize + (numForms - 1) * spacing
+                totalWidth = math.max(totalWidth, btnSize)
+                editorOverlay:SetSize(totalWidth, btnSize)
+                
+                -- Buttons start at BOTTOMLEFT of anchor, so align overlay there
+                editorOverlay:ClearAllPoints()
+                editorOverlay:SetPoint('BOTTOMLEFT', anchor, 'BOTTOMLEFT', 0, 0)
+                editorOverlay:Show()
+                
+                -- Show nineslice overlay
+                if addon.ShowNineslice then
+                    addon.SetNinesliceState(editorOverlay, false)
+                    addon.ShowNineslice(editorOverlay)
+                end
+                if editorOverlay.editorText then
+                    editorOverlay.editorText:Show()
                 end
             end,
             

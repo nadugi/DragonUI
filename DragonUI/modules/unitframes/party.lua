@@ -61,11 +61,6 @@ local function CreatePartyAnchorFrame()
     -- Initial size - will be updated dynamically based on orientation
     PartyFrames.anchor = addon.CreateUIFrame(130, 300, "PartyFrames")
 
-    -- Customize text for party frames
-    if PartyFrames.anchor.editorText then
-        PartyFrames.anchor.editorText:SetText("Party Frames")
-    end
-
     return PartyFrames.anchor
 end
 

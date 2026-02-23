@@ -11,13 +11,16 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- UNIT FRAMES OPTIONS GROUP
 -- ============================================================================
 
 local unitframeOptions = {
     type = 'group',
-    name = "Unit Frames",
+    name = LO["Unit Frames"],
     order = 5,
     args = {
         -- ====================================================================
@@ -25,14 +28,14 @@ local unitframeOptions = {
         -- ====================================================================
         general = {
             type = 'group',
-            name = "General",
+            name = LO["General"],
             inline = true,
             order = 1,
             args = {
                 scale = {
                     type = 'range',
-                    name = "Global Scale",
-                    desc = "Global scale for all unit frames",
+                    name = LO["Global Scale"],
+                    desc = LO["Global scale for all unit frames"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -55,13 +58,13 @@ local unitframeOptions = {
         -- ====================================================================
         player = {
             type = 'group',
-            name = "Player Frame",
+            name = LO["Player Frame"],
             order = 2,
             args = {
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the player frame",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the player frame"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -78,8 +81,8 @@ local unitframeOptions = {
                 },
                 classcolor = {
                     type = 'toggle',
-                    name = "Class Color",
-                    desc = "Use class color for health bar",
+                    name = LO["Class Color"],
+                    desc = LO["Use class color for health bar"],
                     get = function()
                         return addon.db.profile.unitframe.player.classcolor
                     end,
@@ -93,8 +96,8 @@ local unitframeOptions = {
                 },
                 classPortrait = {
                     type = 'toggle',
-                    name = "Class Portrait",
-                    desc = "Show class icon instead of 3D portrait",
+                    name = LO["Class Portrait"],
+                    desc = LO["Show class icon instead of 3D portrait"],
                     get = function()
                         return addon.db.profile.unitframe.player.classPortrait
                     end,
@@ -108,8 +111,8 @@ local unitframeOptions = {
                 },
                 breakUpLargeNumbers = {
                     type = 'toggle',
-                    name = "Large Numbers",
-                    desc = "Format large numbers (1k, 1m)",
+                    name = LO["Large Numbers"],
+                    desc = LO["Format large numbers (1k, 1m)"],
                     get = function()
                         return addon.db.profile.unitframe.player.breakUpLargeNumbers
                     end,
@@ -123,13 +126,13 @@ local unitframeOptions = {
                 },
                 textFormat = {
                     type = 'select',
-                    name = "Text Format",
-                    desc = "How to display health and mana values",
+                    name = LO["Text Format"],
+                    desc = LO["How to display health and mana values"],
                     values = {
-                        numeric = "Current Value Only",
-                        percentage = "Percentage Only",
-                        both = "Both (Numbers + Percentage)",
-                        formatted = "Current/Max Values"
+                        numeric = LO["Current Value Only"],
+                        percentage = LO["Percentage Only"],
+                        both = LO["Both (Numbers + Percentage)"],
+                        formatted = LO["Current/Max Values"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.player.textFormat
@@ -144,8 +147,8 @@ local unitframeOptions = {
                 },
                 showHealthTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Health Text",
-                    desc = "Show health text always (true) or only on hover (false)",
+                    name = LO["Always Show Health Text"],
+                    desc = LO["Show health text always (true) or only on hover (false)"],
                     get = function()
                         return addon.db.profile.unitframe.player.showHealthTextAlways
                     end,
@@ -159,8 +162,8 @@ local unitframeOptions = {
                 },
                 showManaTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Mana Text",
-                    desc = "Show mana/power text always (true) or only on hover (false)",
+                    name = LO["Always Show Mana Text"],
+                    desc = LO["Show mana/power text always (true) or only on hover (false)"],
                     get = function()
                         return addon.db.profile.unitframe.player.showManaTextAlways
                     end,
@@ -174,12 +177,12 @@ local unitframeOptions = {
                 },
                 dragon_decoration = {
                     type = 'select',
-                    name = "Dragon Decoration",
-                    desc = "Add decorative dragon to your player frame for a premium look",
+                    name = LO["Dragon Decoration"],
+                    desc = LO["Add decorative dragon to your player frame for a premium look"],
                     values = {
-                        none = "None",
-                        elite = "Elite Dragon (Golden)",
-                        rareelite = "RareElite Dragon (Winged)"
+                        none = LO["None"],
+                        elite = LO["Elite Dragon (Golden)"],
+                        rareelite = LO["RareElite Dragon (Winged)"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.player.dragon_decoration or "none"
@@ -194,13 +197,13 @@ local unitframeOptions = {
                 },
                 player_header_glow = {
                     type = 'header',
-                    name = "Glow Effects",
+                    name = LO["Glow Effects"],
                     order = 10.1
                 },
                 show_rest_glow = {
                     type = 'toggle',
-                    name = "Show Rest Glow",
-                    desc = "Show a golden glow around the player frame when resting (in an inn or city). Works with all frame modes: normal, elite, fat health bar, and vehicle.",
+                    name = LO["Show Rest Glow"],
+                    desc = LO["Show a golden glow around the player frame when resting (in an inn or city). Works with all frame modes: normal, elite, fat health bar, and vehicle."],
                     get = function()
                         return addon.db.profile.unitframe.player.show_rest_glow ~= false
                     end,
@@ -214,8 +217,8 @@ local unitframeOptions = {
                 },
                 alwaysShowAlternateManaText = {
                     type = 'toggle',
-                    name = "Always Show Alternate Mana Text",
-                    desc = "Show mana text always visible (default: hover only)",
+                    name = LO["Always Show Alternate Mana Text"],
+                    desc = LO["Show mana text always visible (default: hover only)"],
                     get = function()
                         return addon.db.profile.unitframe.player.alwaysShowAlternateManaText
                     end,
@@ -229,13 +232,13 @@ local unitframeOptions = {
                 },
                 alternateManaFormat = {
                     type = 'select',
-                    name = "Alternate Mana Text Format",
-                    desc = "Choose text format for alternate mana display",
+                    name = LO["Alternate Mana Text Format"],
+                    desc = LO["Choose text format for alternate mana display"],
                     values = {
-                        numeric = "Current Value Only",
-                        formatted = "Current / Max",
-                        percentage = "Percentage Only",
-                        both = "Percentage + Current/Max"
+                        numeric = LO["Current Value Only"],
+                        formatted = LO["Current / Max"],
+                        percentage = LO["Percentage Only"],
+                        both = LO["Percentage + Current/Max"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.player.alternateManaFormat or "both"
@@ -250,13 +253,13 @@ local unitframeOptions = {
                 },
                 player_header_healthbar = {
                     type = 'header',
-                    name = "Health Bar Style",
+                    name = LO["Health Bar Style"],
                     order = 20
                 },
                 fat_healthbar = {
                     type = 'toggle',
-                    name = "Fat Health Bar",
-                    desc = "Full-width health bar that fills the entire frame area. Uses modified border texture that removes the inner divider line. Compatible with Dragon Decoration (requires fat variant textures). |cffFF6600Note:|r Automatically disabled during vehicle UI.",
+                    name = LO["Fat Health Bar"],
+                    desc = LO["Full-width health bar that fills the entire frame area. Uses modified border texture that removes the inner divider line. Compatible with Dragon Decoration (requires fat variant textures). Note: Automatically disabled during vehicle UI."],
                     get = function()
                         return addon.db.profile.unitframe.player.fat_healthbar
                     end,
@@ -270,8 +273,8 @@ local unitframeOptions = {
                 },
                 fat_manabar_hidden = {
                     type = 'toggle',
-                    name = "Hide Mana Bar (Fat Mode)",
-                    desc = "Completely hide the mana bar when Fat Health Bar is active.",
+                    name = LO["Hide Mana Bar (Fat Mode)"],
+                    desc = LO["Completely hide the mana bar when Fat Health Bar is active."],
                     get = function()
                         return addon.db.profile.unitframe.player.fat_manabar_hidden
                     end,
@@ -288,8 +291,8 @@ local unitframeOptions = {
                 },
                 fat_manabar_width = {
                     type = 'range',
-                    name = "Mana Bar Width (Fat Mode)",
-                    desc = "Width of the mana bar when Fat Health Bar is active. Movable via Editor Mode.",
+                    name = LO["Mana Bar Width (Fat Mode)"],
+                    desc = LO["Width of the mana bar when Fat Health Bar is active. Movable via Editor Mode."],
                     min = 50,
                     max = 300,
                     step = 1,
@@ -309,8 +312,8 @@ local unitframeOptions = {
                 },
                 fat_manabar_height = {
                     type = 'range',
-                    name = "Mana Bar Height (Fat Mode)",
-                    desc = "Height of the mana bar when Fat Health Bar is active.",
+                    name = LO["Mana Bar Height (Fat Mode)"],
+                    desc = LO["Height of the mana bar when Fat Health Bar is active."],
                     min = 4,
                     max = 30,
                     step = 1,
@@ -336,13 +339,13 @@ local unitframeOptions = {
         -- ====================================================================
         target = {
             type = 'group',
-            name = "Target Frame",
+            name = LO["Target Frame"],
             order = 3,
             args = {
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the target frame",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the target frame"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -359,8 +362,8 @@ local unitframeOptions = {
                 },
                 classcolor = {
                     type = 'toggle',
-                    name = "Class Color",
-                    desc = "Use class color for health bar",
+                    name = LO["Class Color"],
+                    desc = LO["Use class color for health bar"],
                     get = function()
                         return addon.db.profile.unitframe.target.classcolor
                     end,
@@ -374,8 +377,8 @@ local unitframeOptions = {
                 },
                 classPortrait = {
                     type = 'toggle',
-                    name = "Class Portrait",
-                    desc = "Show class icon instead of 3D portrait (only for players)",
+                    name = LO["Class Portrait"],
+                    desc = LO["Show class icon instead of 3D portrait (only for players)"],
                     get = function()
                         return addon.db.profile.unitframe.target.classPortrait
                     end,
@@ -389,8 +392,8 @@ local unitframeOptions = {
                 },
                 breakUpLargeNumbers = {
                     type = 'toggle',
-                    name = "Large Numbers",
-                    desc = "Format large numbers (1k, 1m)",
+                    name = LO["Large Numbers"],
+                    desc = LO["Format large numbers (1k, 1m)"],
                     get = function()
                         return addon.db.profile.unitframe.target.breakUpLargeNumbers
                     end,
@@ -404,13 +407,13 @@ local unitframeOptions = {
                 },
                 textFormat = {
                     type = 'select',
-                    name = "Text Format",
-                    desc = "How to display health and mana values",
+                    name = LO["Text Format"],
+                    desc = LO["How to display health and mana values"],
                     values = {
-                        numeric = "Current Value Only",
-                        percentage = "Percentage Only",
-                        both = "Both (Numbers + Percentage)",
-                        formatted = "Current/Max Values"
+                        numeric = LO["Current Value Only"],
+                        percentage = LO["Percentage Only"],
+                        both = LO["Both (Numbers + Percentage)"],
+                        formatted = LO["Current/Max Values"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.target.textFormat
@@ -425,8 +428,8 @@ local unitframeOptions = {
                 },
                 showHealthTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Health Text",
-                    desc = "Show health text always (true) or only on hover (false)",
+                    name = LO["Always Show Health Text"],
+                    desc = LO["Show health text always (true) or only on hover (false)"],
                     get = function()
                         return addon.db.profile.unitframe.target.showHealthTextAlways
                     end,
@@ -440,8 +443,8 @@ local unitframeOptions = {
                 },
                 showManaTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Mana Text",
-                    desc = "Show mana/power text always (true) or only on hover (false)",
+                    name = LO["Always Show Mana Text"],
+                    desc = LO["Show mana/power text always (true) or only on hover (false)"],
                     get = function()
                         return addon.db.profile.unitframe.target.showManaTextAlways
                     end,
@@ -455,8 +458,8 @@ local unitframeOptions = {
                 },
                 enableThreatGlow = {
                     type = 'toggle',
-                    name = "Threat Glow",
-                    desc = "Show threat glow effect",
+                    name = LO["Threat Glow"],
+                    desc = LO["Show threat glow effect"],
                     get = function()
                         return addon.db.profile.unitframe.target.enableThreatGlow
                     end,
@@ -476,7 +479,7 @@ local unitframeOptions = {
         -- ====================================================================
         tot = {
             type = 'group',
-            name = "Target of Target",
+            name = LO["Target of Target"],
             order = 4,
             args = {
                 info = {
@@ -490,8 +493,8 @@ local unitframeOptions = {
                 },
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the target of target frame",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the target of target frame"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -508,8 +511,8 @@ local unitframeOptions = {
                 },
                 classcolor = {
                     type = 'toggle',
-                    name = "Class Color",
-                    desc = "Use class color for health bar",
+                    name = LO["Class Color"],
+                    desc = LO["Use class color for health bar"],
                     get = function()
                         return addon.db.profile.unitframe.tot.classcolor
                     end,
@@ -523,8 +526,8 @@ local unitframeOptions = {
                 },
                 x = {
                     type = 'range',
-                    name = "X Position",
-                    desc = "Horizontal position offset",
+                    name = LO["X Position"],
+                    desc = LO["Horizontal position offset"],
                     min = -200,
                     max = 200,
                     step = 1,
@@ -542,7 +545,7 @@ local unitframeOptions = {
                 y = {
                     type = 'range',
                     name = "Y Position",
-                    desc = "Vertical position offset",
+                    desc = LO["Vertical position offset"],
                     min = -200,
                     max = 200,
                     step = 1,
@@ -565,13 +568,13 @@ local unitframeOptions = {
         -- ====================================================================
         fot = {
             type = 'group',
-            name = "Target of Focus",
+            name = LO["Target of Focus"],
             order = 4.5,
             args = {
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the focus of target frame",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the focus of target frame"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -588,8 +591,8 @@ local unitframeOptions = {
                 },
                 classcolor = {
                     type = 'toggle',
-                    name = "Class Color",
-                    desc = "Use class color for health bar",
+                    name = LO["Class Color"],
+                    desc = LO["Use class color for health bar"],
                     get = function()
                         return addon.db.profile.unitframe.fot.classcolor
                     end,
@@ -603,8 +606,8 @@ local unitframeOptions = {
                 },
                 x = {
                     type = 'range',
-                    name = "X Position",
-                    desc = "Horizontal position offset",
+                    name = LO["X Position"],
+                    desc = LO["Horizontal position offset"],
                     min = -200,
                     max = 200,
                     step = 1,
@@ -622,7 +625,7 @@ local unitframeOptions = {
                 y = {
                     type = 'range',
                     name = "Y Position",
-                    desc = "Vertical position offset",
+                    desc = LO["Vertical position offset"],
                     min = -200,
                     max = 200,
                     step = 1,
@@ -645,13 +648,13 @@ local unitframeOptions = {
         -- ====================================================================
         focus = {
             type = 'group',
-            name = "Focus Frame",
+            name = LO["Focus Frame"],
             order = 5,
             args = {
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the focus frame",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the focus frame"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -668,8 +671,8 @@ local unitframeOptions = {
                 },
                 classcolor = {
                     type = 'toggle',
-                    name = "Class Color",
-                    desc = "Use class color for health bar",
+                    name = LO["Class Color"],
+                    desc = LO["Use class color for health bar"],
                     get = function()
                         return addon.db.profile.unitframe.focus.classcolor
                     end,
@@ -683,8 +686,8 @@ local unitframeOptions = {
                 },
                 classPortrait = {
                     type = 'toggle',
-                    name = "Class Portrait",
-                    desc = "Show class icon instead of 3D portrait (only for players)",
+                    name = LO["Class Portrait"],
+                    desc = LO["Show class icon instead of 3D portrait (only for players)"],
                     get = function()
                         return addon.db.profile.unitframe.focus.classPortrait
                     end,
@@ -698,8 +701,8 @@ local unitframeOptions = {
                 },
                 breakUpLargeNumbers = {
                     type = 'toggle',
-                    name = "Large Numbers",
-                    desc = "Format large numbers (1k, 1m)",
+                    name = LO["Large Numbers"],
+                    desc = LO["Format large numbers (1k, 1m)"],
                     get = function()
                         return addon.db.profile.unitframe.focus.breakUpLargeNumbers
                     end,
@@ -713,13 +716,13 @@ local unitframeOptions = {
                 },
                 textFormat = {
                     type = 'select',
-                    name = "Text Format",
-                    desc = "How to display health and mana values",
+                    name = LO["Text Format"],
+                    desc = LO["How to display health and mana values"],
                     values = {
-                        numeric = "Current Value Only",
-                        percentage = "Percentage Only",
-                        both = "Both (Numbers + Percentage)",
-                        formatted = "Current/Max Values"
+                        numeric = LO["Current Value Only"],
+                        percentage = LO["Percentage Only"],
+                        both = LO["Both (Numbers + Percentage)"],
+                        formatted = LO["Current/Max Values"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.focus.textFormat
@@ -734,8 +737,8 @@ local unitframeOptions = {
                 },
                 showHealthTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Health Text",
-                    desc = "Show health text always (true) or only on hover (false)",
+                    name = LO["Always Show Health Text"],
+                    desc = LO["Show health text always (true) or only on hover (false)"],
                     get = function()
                         return addon.db.profile.unitframe.focus.showHealthTextAlways
                     end,
@@ -749,8 +752,8 @@ local unitframeOptions = {
                 },
                 showManaTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Mana Text",
-                    desc = "Show mana/power text always (true) or only on hover (false)",
+                    name = LO["Always Show Mana Text"],
+                    desc = LO["Show mana/power text always (true) or only on hover (false)"],
                     get = function()
                         return addon.db.profile.unitframe.focus.showManaTextAlways
                     end,
@@ -764,8 +767,8 @@ local unitframeOptions = {
                 },
                 override = {
                     type = 'toggle',
-                    name = "Override Position",
-                    desc = "Override default positioning",
+                    name = LO["Override Position"],
+                    desc = LO["Override default positioning"],
                     get = function()
                         return addon.db.profile.unitframe.focus.override
                     end,
@@ -785,13 +788,13 @@ local unitframeOptions = {
         -- ====================================================================
         pet = {
             type = 'group',
-            name = "Pet Frame",
+            name = LO["Pet Frame"],
             order = 6,
             args = {
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the pet frame",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the pet frame"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -808,13 +811,13 @@ local unitframeOptions = {
                 },
                 textFormat = {
                     type = 'select',
-                    name = "Text Format",
-                    desc = "How to display health and mana values",
+                    name = LO["Text Format"],
+                    desc = LO["How to display health and mana values"],
                     values = {
-                        numeric = "Current Value Only",
-                        percentage = "Percentage Only",
-                        both = "Both (Numbers + Percentage)",
-                        formatted = "Current/Max Values"
+                        numeric = LO["Current Value Only"],
+                        percentage = LO["Percentage Only"],
+                        both = LO["Both (Numbers + Percentage)"],
+                        formatted = LO["Current/Max Values"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.pet.textFormat
@@ -829,8 +832,8 @@ local unitframeOptions = {
                 },
                 breakUpLargeNumbers = {
                     type = 'toggle',
-                    name = "Large Numbers",
-                    desc = "Format large numbers (1k, 1m)",
+                    name = LO["Large Numbers"],
+                    desc = LO["Format large numbers (1k, 1m)"],
                     get = function()
                         return addon.db.profile.unitframe.pet.breakUpLargeNumbers
                     end,
@@ -844,8 +847,8 @@ local unitframeOptions = {
                 },
                 showHealthTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Health Text",
-                    desc = "Always display health text (otherwise only on mouseover)",
+                    name = LO["Always Show Health Text"],
+                    desc = LO["Always display health text (otherwise only on mouseover)"],
                     get = function()
                         return addon.db.profile.unitframe.pet.showHealthTextAlways
                     end,
@@ -859,8 +862,8 @@ local unitframeOptions = {
                 },
                 showManaTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Mana Text",
-                    desc = "Always display mana/energy/rage text (otherwise only on mouseover)",
+                    name = LO["Always Show Mana Text"],
+                    desc = LO["Always display mana/energy/rage text (otherwise only on mouseover)"],
                     get = function()
                         return addon.db.profile.unitframe.pet.showManaTextAlways
                     end,
@@ -874,8 +877,8 @@ local unitframeOptions = {
                 },
                 enableThreatGlow = {
                     type = 'toggle',
-                    name = "Threat Glow",
-                    desc = "Show threat glow effect",
+                    name = LO["Threat Glow"],
+                    desc = LO["Show threat glow effect"],
                     get = function()
                         return addon.db.profile.unitframe.pet.enableThreatGlow
                     end,
@@ -889,8 +892,8 @@ local unitframeOptions = {
                 },
                 override = {
                     type = 'toggle',
-                    name = "Override Position",
-                    desc = "Allows the pet frame to be moved freely. When unchecked, it will be positioned relative to the player frame.",
+                    name = LO["Override Position"],
+                    desc = LO["Allows the pet frame to be moved freely. When unchecked, it will be positioned relative to the player frame."],
                     get = function()
                         return addon.db.profile.unitframe.pet.override
                     end,
@@ -904,8 +907,8 @@ local unitframeOptions = {
                 },
                 x = {
                     type = 'range',
-                    name = "X Position",
-                    desc = "Horizontal position (only active if Override is checked)",
+                    name = LO["X Position"],
+                    desc = LO["Horizontal position (only active if Override is checked)"],
                     min = -2500,
                     max = 2500,
                     step = 1,
@@ -926,7 +929,7 @@ local unitframeOptions = {
                 y = {
                     type = 'range',
                     name = "Y Position",
-                    desc = "Vertical position (only active if Override is checked)",
+                    desc = LO["Vertical position (only active if Override is checked)"],
                     min = -2500,
                     max = 2500,
                     step = 1,
@@ -952,7 +955,7 @@ local unitframeOptions = {
         -- ====================================================================
         party = {
             type = 'group',
-            name = "Party Frames",
+            name = LO["Party Frames"],
             order = 7,
             args = {
                 info_text = {
@@ -962,8 +965,8 @@ local unitframeOptions = {
                 },
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of party frames",
+                    name = LO["Scale"],
+                    desc = LO["Scale of party frames"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -980,8 +983,8 @@ local unitframeOptions = {
                 },
                 classcolor = {
                     type = 'toggle',
-                    name = "Class Color",
-                    desc = "Use class color for health bars in party frames",
+                    name = LO["Class Color"],
+                    desc = LO["Use class color for health bars in party frames"],
                     get = function()
                         return addon.db.profile.unitframe.party.classcolor
                     end,
@@ -995,8 +998,8 @@ local unitframeOptions = {
                 },
                 breakUpLargeNumbers = {
                     type = 'toggle',
-                    name = "Large Numbers",
-                    desc = "Format large numbers (1k, 1m)",
+                    name = LO["Large Numbers"],
+                    desc = LO["Format large numbers (1k, 1m)"],
                     get = function()
                         return addon.db.profile.unitframe.party.breakUpLargeNumbers
                     end,
@@ -1010,8 +1013,8 @@ local unitframeOptions = {
                 },
                 showHealthTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Health Text",
-                    desc = "Always show health text on party frames (instead of only on hover)",
+                    name = LO["Always Show Health Text"],
+                    desc = LO["Always show health text on party frames (instead of only on hover)"],
                     get = function()
                         return addon.db.profile.unitframe.party.showHealthTextAlways
                     end,
@@ -1025,8 +1028,8 @@ local unitframeOptions = {
                 },
                 showManaTextAlways = {
                     type = 'toggle',
-                    name = "Always Show Mana Text",
-                    desc = "Always show mana text on party frames (instead of only on hover)",
+                    name = LO["Always Show Mana Text"],
+                    desc = LO["Always show mana text on party frames (instead of only on hover)"],
                     get = function()
                         return addon.db.profile.unitframe.party.showManaTextAlways
                     end,
@@ -1040,13 +1043,13 @@ local unitframeOptions = {
                 },
                 textFormat = {
                     type = 'select',
-                    name = "Text Format",
-                    desc = "Choose how to display health and mana text",
+                    name = LO["Text Format"],
+                    desc = LO["Choose how to display health and mana text"],
                     values = {
-                        ['numeric'] = 'Current Value Only (2345)',
-                        ['formatted'] = 'Formatted Current (2.3k)', 
-                        ['percentage'] = 'Percentage Only (75%)',
-                        ['both'] = 'Percentage + Current (75% | 2.3k)'
+                        ['numeric'] = LO["Current Value Only (2345)"],
+                        ['formatted'] = LO["Formatted Current (2.3k)"], 
+                        ['percentage'] = LO["Percentage Only (75%)"],
+                        ['both'] = LO["Percentage + Current (75% | 2.3k)"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.party.textFormat or 'both'
@@ -1061,11 +1064,11 @@ local unitframeOptions = {
                 },
                 orientation = {
                     type = 'select',
-                    name = "Orientation",
-                    desc = "Party frame orientation",
+                    name = LO["Orientation"],
+                    desc = LO["Party frame orientation"],
                     values = {
-                        ['vertical'] = 'Vertical',
-                        ['horizontal'] = 'Horizontal'
+                        ['vertical'] = LO["Vertical"],
+                        ['horizontal'] = LO["Horizontal"]
                     },
                     get = function()
                         return addon.db.profile.unitframe.party.orientation
@@ -1080,8 +1083,8 @@ local unitframeOptions = {
                 },
                 padding_vertical = {
                     type = 'range',
-                    name = "Vertical Padding",
-                    desc = "Space between party frames in vertical mode",
+                    name = LO["Vertical Padding"],
+                    desc = LO["Space between party frames in vertical mode"],
                     min = 10,
                     max = 150,
                     step = 1,
@@ -1098,8 +1101,8 @@ local unitframeOptions = {
                 },
                 padding_horizontal = {
                     type = 'range',
-                    name = "Horizontal Padding",
-                    desc = "Space between party frames in horizontal mode",
+                    name = LO["Horizontal Padding"],
+                    desc = LO["Space between party frames in horizontal mode"],
                     min = 10,
                     max = 150,
                     step = 1,

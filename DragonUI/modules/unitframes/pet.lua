@@ -526,11 +526,6 @@ local function CreatePetAnchorFrame()
     --  USE CENTRALIZED FUNCTION FROM CORE.LUA
     PetFrameModule.anchor = addon.CreateUIFrame(130, 44, "PetFrame")
     
-    --  CUSTOMIZE TEXT FOR PET FRAME
-    if PetFrameModule.anchor.editorText then
-        PetFrameModule.anchor.editorText:SetText("Pet Frame")
-    end
-    
     return PetFrameModule.anchor
 end
 

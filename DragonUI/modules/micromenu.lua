@@ -1088,40 +1088,51 @@ local function ApplyMicromenuSystem()
         end
 
         if not pUiBagsBar.registeredInEditor then
+            -- Calculate overlay size to exactly match the visible bag elements.
+            -- Layout (right to left from backpack right edge):
+            --   Backpack(50) + gap(14) + 4×Bag(28)+3×gap(4) = 188
+            --   + KeyRing? → gap(4) + KeyRing(34) = 226
+            -- Height matches backpack (50) plus a small vertical margin.
+            local hasKeyRing = KeyRingButton and HasKey and HasKey()
+            local bagsOverlayWidth = hasKeyRing and 226 or 188
+            local bagsOverlayHeight = 54
+
             -- Create container frame using the standard system
-            local bagsFrame = addon.CreateUIFrame(210, 50, "BagsBar")
+            local bagsFrame = addon.CreateUIFrame(bagsOverlayWidth, bagsOverlayHeight, "BagsBar")
 
             -- Apply position from database or use default
             local bagsConfig = addon.db and addon.db.profile.widgets and addon.db.profile.widgets.bagsbar
             if bagsConfig and bagsConfig.anchor then
                 bagsFrame:SetPoint(bagsConfig.anchor or "BOTTOMRIGHT", UIParent, bagsConfig.anchor or "BOTTOMRIGHT",
-                    bagsConfig.posX or 1, bagsConfig.posY or 41)
+                    bagsConfig.posX or -3, bagsConfig.posY or 45)
             else
-                bagsFrame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 1, 41)
-
+                bagsFrame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -3, 45)
             end
 
-            -- Ensure the real bags frame follows the container frame
+            -- Anchor backpack to the RIGHT edge of the overlay.
+            -- The backpack is 50px wide; anchoring its RIGHT to the frame's
+            -- RIGHT edge aligns it flush.  All other bags chain LEFT of the
+            -- backpack, so the whole row fits perfectly inside the frame.
             MainMenuBarBackpackButton:SetParent(UIParent)
             MainMenuBarBackpackButton:ClearAllPoints()
-            MainMenuBarBackpackButton:SetPoint("CENTER", bagsFrame, "CENTER", 80, 0) -- Centered in the overlay
+            MainMenuBarBackpackButton:SetPoint("RIGHT", bagsFrame, "RIGHT", 0, 0)
 
             -- Hook so bags follow the container when it moves
             bagsFrame:HookScript("OnDragStop", function(self)
                 MainMenuBarBackpackButton:ClearAllPoints()
-                MainMenuBarBackpackButton:SetPoint("CENTER", self, "CENTER", 80, 0)
+                MainMenuBarBackpackButton:SetPoint("RIGHT", self, "RIGHT", 0, 0)
             end)
 
             bagsFrame:HookScript("OnShow", function(self)
                 MainMenuBarBackpackButton:ClearAllPoints()
-                MainMenuBarBackpackButton:SetPoint("CENTER", self, "CENTER", 80, 0)
+                MainMenuBarBackpackButton:SetPoint("RIGHT", self, "RIGHT", 0, 0)
             end)
 
             -- Continuous hook to maintain position
             bagsFrame:HookScript("OnUpdate", function(self)
                 if not MainMenuBarBackpackButton:GetPoint() then
                     MainMenuBarBackpackButton:ClearAllPoints()
-                    MainMenuBarBackpackButton:SetPoint("CENTER", self, "CENTER", 80, 0)
+                    MainMenuBarBackpackButton:SetPoint("RIGHT", self, "RIGHT", 0, 0)
                 end
             end)
 
@@ -1674,15 +1685,16 @@ end
             if bagsConfig and bagsConfig.anchor then
                 frameInfo.frame:ClearAllPoints()
                 frameInfo.frame:SetPoint(bagsConfig.anchor or "BOTTOMRIGHT", UIParent,
-                    bagsConfig.anchor or "BOTTOMRIGHT", bagsConfig.posX or 1, bagsConfig.posY or 41)
+                    bagsConfig.anchor or "BOTTOMRIGHT", bagsConfig.posX or -3, bagsConfig.posY or 45)
             else
                 frameInfo.frame:ClearAllPoints()
-                frameInfo.frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 1, 41)
+                frameInfo.frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -3, 45)
             end
 
-            -- Ensure bags follow the container with corrected positioning
+            -- Ensure bags follow the container — backpack flush to the
+            -- RIGHT edge, all other bags chain leftward from it.
             MainMenuBarBackpackButton:ClearAllPoints()
-            MainMenuBarBackpackButton:SetPoint("CENTER", frameInfo.frame, "CENTER", 80, 0)
+            MainMenuBarBackpackButton:SetPoint("RIGHT", frameInfo.frame, "RIGHT", 0, 0)
         else
             -- Fallback to previous method if no container
             if not addon.db or not addon.db.profile or not addon.db.profile.bags then

@@ -23,6 +23,10 @@ LibKeyBoundBaseLocale10 = {
 	CombatBindingsEnabled = 'Exiting combat, keybinding mode enabled';
 	CombatBindingsDisabled = 'Entering combat, keybinding mode disabled';
 	BindingsHelp = "Hover over a button, then press a key to set its binding.  To clear a button's current keybinding, press %s.";
+	ResetKeybinds = 'Reset Keybinds';
+	ResetKeybindsConfirm = 'Reset all key bindings to default?';
+	CannotResetInCombat = 'Cannot reset keybinds while in combat.';
+	AllKeybindsReset = 'All keybinds reset to default.';
 
 	-- This is the short display version you see on the Button
 	["Alt"] = "A",

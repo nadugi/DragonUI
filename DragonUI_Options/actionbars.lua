@@ -11,13 +11,16 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- ACTION BARS OPTIONS GROUP
 -- ============================================================================
 
 local actionbarsOptions = {
     type = 'group',
-    name = "Action Bars",
+    name = LO["Action Bars"],
     order = 1,
     args = {
         -- ====================================================================
@@ -25,14 +28,14 @@ local actionbarsOptions = {
         -- ====================================================================
         scales = {
             type = 'group',
-            name = "Action Bar Scales",
+            name = LO["Action Bar Scales"],
             inline = true,
             order = 1,
             args = {
                 scale_actionbar = {
                     type = 'range',
-                    name = "Main Bar Scale",
-                    desc = "Scale for main action bar",
+                    name = LO["Main Bar Scale"],
+                    desc = LO["Scale for main action bar"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -49,8 +52,8 @@ local actionbarsOptions = {
                 },
                 scale_rightbar = {
                     type = 'range',
-                    name = "Right Bar Scale",
-                    desc = "Scale for right action bar (MultiBarRight)",
+                    name = LO["Right Bar Scale"],
+                    desc = LO["Scale for right action bar (MultiBarRight)"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -67,8 +70,8 @@ local actionbarsOptions = {
                 },
                 scale_leftbar = {
                     type = 'range',
-                    name = "Left Bar Scale",
-                    desc = "Scale for left action bar (MultiBarLeft)",
+                    name = LO["Left Bar Scale"],
+                    desc = LO["Scale for left action bar (MultiBarLeft)"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -85,8 +88,8 @@ local actionbarsOptions = {
                 },
                 scale_bottomleft = {
                     type = 'range',
-                    name = "Bottom Left Bar Scale",
-                    desc = "Scale for bottom left action bar (MultiBarBottomLeft)",
+                    name = LO["Bottom Left Bar Scale"],
+                    desc = LO["Scale for bottom left action bar (MultiBarBottomLeft)"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -103,8 +106,8 @@ local actionbarsOptions = {
                 },
                 scale_bottomright = {
                     type = 'range',
-                    name = "Bottom Right Bar Scale",
-                    desc = "Scale for bottom right action bar (MultiBarBottomRight)",
+                    name = LO["Bottom Right Bar Scale"],
+                    desc = LO["Scale for bottom right action bar (MultiBarBottomRight)"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -121,8 +124,8 @@ local actionbarsOptions = {
                 },
                 reset_scales = {
                     type = 'execute',
-                    name = "Reset All Scales",
-                    desc = "Reset all action bar scales to their default values (0.9)",
+                    name = LO["Reset All Scales"],
+                    desc = LO["Reset all action bar scales to their default values (0.9)"],
                     func = function()
                         addon.db.profile.mainbars.scale_actionbar = 0.9
                         addon.db.profile.mainbars.scale_rightbar = 0.9
@@ -134,7 +137,7 @@ local actionbarsOptions = {
                             addon.RefreshMainbars()
                         end
                         
-                        print("|cFF00FF00[DragonUI]|r All action bar scales reset to default values (0.9)")
+                        print("|cFF00FF00[DragonUI]|r " .. LO["All action bar scales reset to default values (0.9)"])
                         StaticPopup_Show("DRAGONUI_RELOAD_UI")
                     end,
                     order = 6
@@ -147,7 +150,7 @@ local actionbarsOptions = {
         -- ====================================================================
         positions = {
             type = 'group',
-            name = "Action Bar Positions",
+            name = LO["Action Bar Positions"],
             inline = true,
             order = 2,
             args = {
@@ -158,8 +161,8 @@ local actionbarsOptions = {
                 },
                 left_horizontal = {
                     type = 'toggle',
-                    name = "Left Bar Horizontal",
-                    desc = "Make the left secondary bar horizontal instead of vertical",
+                    name = LO["Left Bar Horizontal"],
+                    desc = LO["Make the left secondary bar horizontal instead of vertical"],
                     get = function()
                         return addon.db.profile.mainbars.left.horizontal
                     end,
@@ -174,8 +177,8 @@ local actionbarsOptions = {
                 },
                 right_horizontal = {
                     type = 'toggle',
-                    name = "Right Bar Horizontal",
-                    desc = "Make the right secondary bar horizontal instead of vertical",
+                    name = LO["Right Bar Horizontal"],
+                    desc = LO["Make the right secondary bar horizontal instead of vertical"],
                     get = function()
                         return addon.db.profile.mainbars.right.horizontal
                     end,
@@ -196,14 +199,14 @@ local actionbarsOptions = {
         -- ====================================================================
         buttons = {
             type = 'group',
-            name = "Button Appearance",
+            name = LO["Button Appearance"],
             inline = true,
             order = 3,
             args = {
                 only_actionbackground = {
                     type = 'toggle',
-                    name = "Main Bar Only Background",
-                    desc = "If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background.",
+                    name = LO["Main Bar Only Background"],
+                    desc = LO["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."],
                     get = function()
                         return addon.db.profile.buttons.only_actionbackground
                     end,
@@ -217,8 +220,8 @@ local actionbarsOptions = {
                 },
                 hide_main_bar_background = {
                     type = 'toggle',
-                    name = "Hide Main Bar Background",
-                    desc = "Hide the background texture of the main action bar (makes it completely transparent)|cFFFF0000Requires UI reload|r",
+                    name = LO["Hide Main Bar Background"],
+                    desc = LO["Hide the background texture of the main action bar (makes it completely transparent)"] .. "|cFFFF0000Requires UI reload|r",
                     get = function()
                         return addon.db.profile.buttons.hide_main_bar_background
                     end,
@@ -233,13 +236,13 @@ local actionbarsOptions = {
                 },
                 count = {
                     type = 'group',
-                    name = "Count Text",
+                    name = LO["Count Text"],
                     inline = true,
                     order = 2,
                     args = {
                         show = {
                             type = 'toggle',
-                            name = "Show Count",
+                            name = LO["Show Count"],
                             get = function()
                                 return addon.db.profile.buttons.count.show
                             end,
@@ -255,13 +258,13 @@ local actionbarsOptions = {
                 },
                 hotkey = {
                     type = 'group',
-                    name = "Hotkey Text",
+                    name = LO["Hotkey Text"],
                     inline = true,
                     order = 4,
                     args = {
                         show = {
                             type = 'toggle',
-                            name = "Show Hotkey",
+                            name = LO["Show Hotkey"],
                             get = function()
                                 return addon.db.profile.buttons.hotkey.show
                             end,
@@ -275,8 +278,8 @@ local actionbarsOptions = {
                         },
                         range = {
                             type = 'toggle',
-                            name = "Range Indicator",
-                            desc = "Show small range indicator point on buttons",
+                            name = LO["Range Indicator"],
+                            desc = LO["Show small range indicator point on buttons"],
                             get = function()
                                 return addon.db.profile.buttons.hotkey.range
                             end,
@@ -292,13 +295,13 @@ local actionbarsOptions = {
                 },
                 macros = {
                     type = 'group',
-                    name = "Macro Text",
+                    name = LO["Macro Text"],
                     inline = true,
                     order = 5,
                     args = {
                         show = {
                             type = 'toggle',
-                            name = "Show Macro Names",
+                            name = LO["Show Macro Names"],
                             get = function()
                                 return addon.db.profile.buttons.macros.show
                             end,
@@ -314,13 +317,13 @@ local actionbarsOptions = {
                 },
                 pages = {
                     type = 'group',
-                    name = "Page Numbers",
+                    name = LO["Page Numbers"],
                     inline = true,
                     order = 6,
                     args = {
                         show = {
                             type = 'toggle',
-                            name = "Show Pages",
+                            name = LO["Show Pages"],
                             get = function()
                                 return addon.db.profile.buttons.pages.show
                             end,
@@ -334,14 +337,14 @@ local actionbarsOptions = {
                 },
                 cooldown = {
                     type = 'group',
-                    name = "Cooldown Text",
+                    name = LO["Cooldown Text"],
                     inline = true,
                     order = 7,
                     args = {
                         min_duration = {
                             type = 'range',
-                            name = "Min Duration",
-                            desc = "Minimum duration for text triggering",
+                            name = LO["Min Duration"],
+                            desc = LO["Minimum duration for text triggering"],
                             min = 1,
                             max = 10,
                             step = 1,
@@ -358,8 +361,8 @@ local actionbarsOptions = {
                         },
                         color = {
                             type = 'color',
-                            name = "Text Color",
-                            desc = "Cooldown text color",
+                            name = LO["Text Color"],
+                            desc = LO["Cooldown text color"],
                             get = function()
                                 local c = addon.db.profile.buttons.cooldown.color
                                 return c[1], c[2], c[3], c[4]
@@ -375,8 +378,8 @@ local actionbarsOptions = {
                         },
                         font_size = {
                             type = 'range',
-                            name = "Font Size",
-                            desc = "Size of cooldown text",
+                            name = LO["Font Size"],
+                            desc = LO["Size of cooldown text"],
                             min = 8,
                             max = 24,
                             step = 1,
@@ -395,8 +398,8 @@ local actionbarsOptions = {
                 },
                 macros_color = {
                     type = 'color',
-                    name = "Macro Text Color",
-                    desc = "Color for macro text",
+                    name = LO["Macro Text Color"],
+                    desc = LO["Color for macro text"],
                     get = function()
                         local c = addon.db.profile.buttons.macros.color
                         return c[1], c[2], c[3], c[4]
@@ -412,8 +415,8 @@ local actionbarsOptions = {
                 },
                 hotkey_shadow = {
                     type = 'color',
-                    name = "Hotkey Shadow Color",
-                    desc = "Shadow color for hotkey text",
+                    name = LO["Hotkey Shadow Color"],
+                    desc = LO["Shadow color for hotkey text"],
                     get = function()
                         local c = addon.db.profile.buttons.hotkey.shadow
                         return c[1], c[2], c[3], c[4]
@@ -429,8 +432,8 @@ local actionbarsOptions = {
                 },
                 border_color = {
                     type = 'color',
-                    name = "Border Color",
-                    desc = "Border color for buttons",
+                    name = LO["Border Color"],
+                    desc = LO["Border color for buttons"],
                     get = function()
                         local c = addon.db.profile.buttons.border_color
                         return c[1], c[2], c[3], c[4]

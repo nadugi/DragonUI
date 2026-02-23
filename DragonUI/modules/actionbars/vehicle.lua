@@ -92,7 +92,33 @@ end
 
 -- ============================================================================
 -- VEHICLE EXIT BUTTON (always created — standalone leave vehicle button)
+-- Independent positioning via widgets.vehicleExit (BOTTOM anchor).
+-- Supports dual-bar offset when XP+Rep are both visible.
 -- ============================================================================
+
+-- Helper: read vehicle exit widget position from DB
+local function GetVehicleExitWidgetConfig()
+    return addon.db and addon.db.profile and addon.db.profile.widgets
+           and addon.db.profile.widgets.vehicleExit
+end
+
+-- Helper: position vehicle exit button using widgets.vehicleExit config
+local function PositionVehicleExitButton()
+    if not vehicleExitButton then return end
+    local cfg = GetVehicleExitWidgetConfig()
+    if not cfg or not cfg.anchor then return end
+
+    -- Dual-bar offset (only when at default position)
+    local extraY = 0
+    if addon.IsWidgetAtDefaultPosition and addon.GetDualBarVerticalOffset then
+        if addon.IsWidgetAtDefaultPosition("vehicleExit") then
+            extraY = addon.GetDualBarVerticalOffset()
+        end
+    end
+
+    vehicleExitButton:ClearAllPoints()
+    vehicleExitButton:SetPoint(cfg.anchor, UIParent, cfg.anchor, cfg.posX, cfg.posY + extraY)
+end
 
 local function CreateVehicleExitButton()
     if vehicleExitButton then return end
@@ -107,16 +133,8 @@ local function CreateVehicleExitButton()
     local btnsize = config.additional.size or 30
     vehicleExitButton:SetSize(btnsize, btnsize)
 
-    -- Keep UIParent as parent (so button stays visible even if stance/main bar hides)
-    -- Anchor relative to stance bar or main bar for positioning only
-    local anchor = addon.pUiStanceBar or _G.pUiStanceBar or pUiMainBar
-    local x_pos = config.additional.vehicle and config.additional.vehicle.x_position or -40
-    local y_pos = config.additional.vehicle and config.additional.vehicle.y_offset or -5
-    if anchor then
-        vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', x_pos, y_pos)
-    else
-        vehicleExitButton:SetPoint('BOTTOM', UIParent, 'BOTTOM', x_pos, 115)
-    end
+    -- Position from widgets DB (independent, BOTTOM-anchored)
+    PositionVehicleExitButton()
 
     -- Textures
     vehicleExitButton:SetNormalTexture('Interface\\Vehicles\\UI-Vehicles-Button-Exit-Up')
@@ -168,7 +186,7 @@ local function CreateVehicleExitButton()
 
     VehicleModule.frames.vehicleExitButton = vehicleExitButton
 
-    -- Create editor overlay for positioning
+    -- Create editor overlay for positioning (standard widget system)
     if addon.CreateUIFrame then
         local editorOverlay = addon.CreateUIFrame(btnsize + 10, btnsize + 10, 'VehicleExitOverlay')
         editorOverlay:SetFrameStrata('FULLSCREEN')
@@ -176,89 +194,24 @@ local function CreateVehicleExitButton()
         editorOverlay:Hide()
         VehicleModule.frames.editorOverlay = editorOverlay
 
-        if editorOverlay.editorText then
-            editorOverlay.editorText:SetText('Vehicle Exit')
-        end
-
-        -- Drag tracking variables
-        local dragStartX, dragStartY = 0, 0
-        local configStartX, configStartY = 0, 0
-        local isDragging = false
-
-        editorOverlay:SetMovable(false)
-        editorOverlay:EnableMouse(true)
-        editorOverlay:RegisterForDrag('LeftButton')
-
-        editorOverlay:SetScript('OnDragStart', function(self)
-            isDragging = true
-            if self.NineSlice and addon.SetNinesliceState then
-                addon.SetNinesliceState(self, true)
-            end
-            local scale = self:GetEffectiveScale()
-            dragStartX = GetCursorPosition() / scale
-            dragStartY = select(2, GetCursorPosition()) / scale
-            local vCfg = addon.db and addon.db.profile.additional.vehicle
-            if vCfg then
-                configStartX = vCfg.x_position or -40
-                configStartY = vCfg.y_offset or -5
-            end
-        end)
-
-        editorOverlay:SetScript('OnUpdate', function(self, elapsed)
-            if not isDragging then return end
-            local scale = self:GetEffectiveScale()
-            local currentX = GetCursorPosition() / scale
-            local currentY = select(2, GetCursorPosition()) / scale
-            local deltaX = currentX - dragStartX
-            local deltaY = currentY - dragStartY
-            local vCfg = addon.db and addon.db.profile.additional.vehicle
-            if vCfg then
-                vCfg.x_position = math.floor(configStartX + deltaX + 0.5)
-                vCfg.y_offset = math.floor(configStartY + deltaY + 0.5)
-                -- Update exit button position in real-time
-                if vehicleExitButton and anchor then
-                    vehicleExitButton:ClearAllPoints()
-                    vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', vCfg.x_position, vCfg.y_offset)
-                end
-                -- Keep overlay aligned
-                self:ClearAllPoints()
-                if anchor then
-                    self:SetPoint('CENTER', anchor, 'TOPLEFT', vCfg.x_position + (btnsize / 2), vCfg.y_offset - (btnsize / 2))
-                end
-            end
-        end)
-
-        editorOverlay:SetScript('OnDragStop', function(self)
-            isDragging = false
-            if self.NineSlice and addon.SetNinesliceState then
-                addon.SetNinesliceState(self, false)
-            end
-        end)
-
-        -- Register with editor mode system
+        -- Register with editor mode system (standard widget-based drag)
         if addon.RegisterEditableFrame then
             addon:RegisterEditableFrame({
-                name = 'vehicle_exit',
+                name = 'vehicleExit',
                 frame = editorOverlay,
-                configPath = {'additional', 'vehicle'},
+                configPath = {'widgets', 'vehicleExit'},
 
                 showTest = function()
-                    local currentAnchor = addon.pUiStanceBar or _G.pUiStanceBar or pUiMainBar
-                    if currentAnchor then
-                        local vCfg = addon.db and addon.db.profile.additional.vehicle
-                        local xp = vCfg and vCfg.x_position or -40
-                        local yp = vCfg and vCfg.y_offset or -5
-                        editorOverlay:SetSize(btnsize + 10, btnsize + 10)
-                        editorOverlay:ClearAllPoints()
-                        editorOverlay:SetPoint('CENTER', currentAnchor, 'TOPLEFT', xp + (btnsize / 2), yp - (btnsize / 2))
-                        editorOverlay:Show()
-                        if addon.ShowNineslice then
-                            addon.SetNinesliceState(editorOverlay, false)
-                            addon.ShowNineslice(editorOverlay)
-                        end
-                        if editorOverlay.editorText then
-                            editorOverlay.editorText:Show()
-                        end
+                    editorOverlay:SetSize(btnsize + 10, btnsize + 10)
+                    editorOverlay:ClearAllPoints()
+                    editorOverlay:SetPoint('CENTER', vehicleExitButton, 'CENTER', 0, 0)
+                    editorOverlay:Show()
+                    if addon.ShowNineslice then
+                        addon.SetNinesliceState(editorOverlay, false)
+                        addon.ShowNineslice(editorOverlay)
+                    end
+                    if editorOverlay.editorText then
+                        editorOverlay.editorText:Show()
                     end
                 end,
 
@@ -270,6 +223,8 @@ local function CreateVehicleExitButton()
                     if editorOverlay.editorText then
                         editorOverlay.editorText:Hide()
                     end
+                    -- Re-apply position (may have been dragged)
+                    PositionVehicleExitButton()
                 end,
 
                 module = VehicleModule
@@ -1049,6 +1004,9 @@ end
 -- PUBLIC API
 -- ============================================================================
 
+-- Export for dual-bar offset notifications (called by mainbars.lua)
+addon.UpdateVehicleExitPosition = PositionVehicleExitButton
+
 function addon.RefreshVehicleSystem()
     if IsModuleEnabled() then
         if not VehicleModule.applied then
@@ -1068,19 +1026,10 @@ function addon.RefreshVehicle()
     if InCombatLockdown() then return end
 
     local btnsize = config.additional.size
-    local x_position = config.additional.vehicle.x_position
-
-    local y_offset = config.additional.vehicle.y_offset or -5
 
     if vehicleExitButton then
         vehicleExitButton:SetSize(btnsize, btnsize)
-        vehicleExitButton:ClearAllPoints()
-        local anchor = addon.pUiStanceBar or _G.pUiStanceBar or pUiMainBar
-        if anchor then
-            vehicleExitButton:SetPoint('TOPLEFT', anchor, 'TOPLEFT', x_position, y_offset)
-        else
-            vehicleExitButton:SetPoint('BOTTOM', UIParent, 'BOTTOM', x_position, 115)
-        end
+        PositionVehicleExitButton()
     end
 
     if vehicleBarBackground then

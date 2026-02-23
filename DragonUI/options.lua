@@ -1,10 +1,11 @@
 local addon = select(2, ...);
+local L = addon.L
 
--- Define the reload dialog
+-- Define the reload dialog (localized)
 StaticPopupDialogs["DRAGONUI_RELOAD_UI"] = {
-    text = "Changing this setting requires a UI reload to apply correctly.",
-    button1 = "Reload UI",
-    button2 = "Not Now",
+    text = L and L["Changing this setting requires a UI reload to apply correctly."] or "Changing this setting requires a UI reload to apply correctly.",
+    button1 = L and L["Reload UI"] or "Reload UI",
+    button2 = L and L["Not Now"] or "Not Now",
     OnAccept = function()
         ReloadUI()
     end,

@@ -8,6 +8,7 @@ Based on ElvUI's Commands.lua pattern.
 ]]
 
 local addon = select(2, ...)
+local L = addon.L
 
 -- ============================================================================
 -- COMMAND HANDLERS
@@ -21,7 +22,7 @@ end
 -- Toggle editor/move mode
 local function ToggleEditorMode()
     if InCombatLockdown() then
-        addon:Print("Cannot toggle editor mode during combat!")
+        addon:Print(L["Cannot toggle editor mode during combat!"])
         return
     end
     
@@ -31,14 +32,14 @@ local function ToggleEditorMode()
         local isActive = addon.MoversSystem.configMode
         addon.MoversSystem:ToggleConfigMode(not isActive)
     else
-        addon:Print("Editor mode not available.")
+        addon:Print(L["Editor mode not available."])
     end
 end
 
 -- Reset all mover positions
 local function ResetPositions(arg)
     if InCombatLockdown() then
-        addon:Print("Cannot reset positions during combat!")
+        addon:Print(L["Cannot reset positions during combat!"])
         return
     end
     
@@ -53,21 +54,21 @@ local function ResetPositions(arg)
             addon.MoversSystem:ResetAllPositions()
         elseif addon.HideAllEditableFrames then
             -- Legacy system - just inform user
-            addon:Print("Use /dragonui edit to enter edit mode, then right-click frames to reset.")
+            addon:Print(L["Use /dragonui edit to enter edit mode, then right-click frames to reset."])
         end
     end
 end
 
 -- Show module status
 local function ShowStatus()
-    addon:Print("=== DragonUI Status ===")
+    addon:Print(L["=== DragonUI Status ==="])
     
     -- Show registered modules from ModuleRegistry (if available)
     if addon.ModuleRegistry and addon.ModuleRegistry.Count and addon.ModuleRegistry:Count() > 0 then
         addon.ModuleRegistry:PrintStatus()
     else
         -- Fallback: Show manually detected modules
-        print("  |cFF00FF00Detected Modules:|r")
+        print("  |cFF00FF00" .. L["Detected Modules:"] .. "|r")
         local modules = {
             { name = "Mainbars", check = function() return addon.RefreshMainbars end },
             { name = "Buttons", check = function() return addon.RefreshButtons end },
@@ -86,7 +87,7 @@ local function ShowStatus()
         }
         
         for _, module in ipairs(modules) do
-            local status = module.check() and "|cFF00FF00Loaded|r" or "|cFFFF0000Not Loaded|r"
+            local status = module.check() and "|cFF00FF00" .. L["Loaded"] .. "|r" or "|cFFFF0000" .. L["Not Loaded"] .. "|r"
             print(string.format("    %s: %s", module.name, status))
         end
     end
@@ -97,7 +98,7 @@ local function ShowStatus()
         for _ in pairs(addon.MoversSystem.created) do
             count = count + 1
         end
-        print(string.format("  Registered Movers: |cFF00FF00%d|r", count))
+        print(string.format("  " .. L["Registered Movers: "] .. "|cFF00FF00%d|r", count))
     end
     
     -- Show editable frames count (legacy)
@@ -106,21 +107,21 @@ local function ShowStatus()
         for _ in pairs(addon.EditableFrames) do
             count = count + 1
         end
-        print(string.format("  Editable Frames: |cFF00FF00%d|r", count))
+        print(string.format("  " .. L["Editable Frames: "] .. "|cFF00FF00%d|r", count))
     end
 end
 
 -- Toggle keybind mode
 local function ToggleKeybindMode()
     if InCombatLockdown() then
-        addon:Print("Cannot toggle keybind mode during combat!")
+        addon:Print(L["Cannot toggle keybind mode during combat!"])
         return
     end
     
     if addon.KeybindModule and addon.KeybindModule.Toggle then
         addon.KeybindModule:Toggle()
     else
-        addon:Print("Keybind mode not available.")
+        addon:Print(L["Keybind mode not available."])
     end
 end
 
@@ -132,23 +133,23 @@ end
 -- Print version info
 local function ShowVersion()
     local version = GetAddOnMetadata("DragonUI", "Version") or "Unknown"
-    addon:Print("DragonUI Version: " .. version)
+    addon:Print(L["DragonUI Version: "] .. version)
 end
 
 -- Show help
 local function ShowHelp()
-    addon:Print("=== DragonUI Commands ===")
-    print("  |cFF00FF00/dragonui|r or |cFF00FF00/dui|r - Open configuration")
-    print("  |cFF00FF00/dragonui config|r - Open configuration")
-    print("  |cFF00FF00/dragonui legacy|r - Open legacy AceConfig options")
-    print("  |cFF00FF00/dragonui edit|r - Toggle editor mode (move UI elements)")
-    print("  |cFF00FF00/dragonui reset|r - Reset all positions to defaults")
-    print("  |cFF00FF00/dragonui reset <name>|r - Reset specific mover")
-    print("  |cFF00FF00/dragonui status|r - Show module status")
-    print("  |cFF00FF00/dragonui kb|r - Toggle keybind mode")
-    print("  |cFF00FF00/dragonui version|r - Show version info")
-    print("  |cFF00FF00/dragonui help|r - Show this help")
-    print("  |cFF00FF00/rl|r - Reload UI")
+    addon:Print(L["=== DragonUI Commands ==="])
+    print("  " .. L["/dragonui or /dui - Open configuration"])
+    print("  " .. L["/dragonui config - Open configuration"])
+    print("  " .. L["/dragonui legacy - Open legacy AceConfig options"])
+    print("  " .. L["/dragonui edit - Toggle editor mode (move UI elements)"])
+    print("  " .. L["/dragonui reset - Reset all positions to defaults"])
+    print("  " .. L["/dragonui reset <name> - Reset specific mover"])
+    print("  " .. L["/dragonui status - Show module status"])
+    print("  " .. L["/dragonui kb - Toggle keybind mode"])
+    print("  " .. L["/dragonui version - Show version info"])
+    print("  " .. L["/dragonui help - Show this help"])
+    print("  " .. L["/rl - Reload UI"])
 end
 
 -- ============================================================================
@@ -179,7 +180,7 @@ local function SlashCommandHandler(input)
     elseif cmd == "version" or cmd == "ver" then
         ShowVersion()
     elseif cmd == "debugvehicle" then
-        if addon.DebugVehicle then addon.DebugVehicle() else addon:Print("Vehicle debug not available") end
+        if addon.DebugVehicle then addon.DebugVehicle() else addon:Print(L["Vehicle debug not available"]) end
     elseif cmd == "debugshadow" then
         -- Enumerate ALL visible children/textures of TargetFrame to find the shadow source
         local function InspectFrame(frame, prefix, depth)
@@ -331,7 +332,7 @@ local function SlashCommandHandler(input)
 
     else
         -- Unknown command
-        addon:Print("Unknown command: " .. cmd)
+        addon:Print(L["Unknown command: "] .. cmd)
         ShowHelp()
     end
 end

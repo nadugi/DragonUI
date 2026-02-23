@@ -111,8 +111,8 @@ PositionTotemButtons = function()
     
     -- READ VALUES FROM DATABASE
     local totemConfig = GetTotemConfig()
-    local btnsize = totemConfig.button_size or 36
-    local spacing = totemConfig.button_spacing or 6
+    local btnsize = totemConfig.button_size or 34
+    local spacing = totemConfig.button_spacing or 4
     
     -- Use SCALE on the PARENT frame - all children inherit automatically
     local nativeSize = 30  -- Native Blizzard totem button size
@@ -271,8 +271,8 @@ local function CreateMulticastFrames()
             
             -- Calculate width for overlay offset
             local totemConfig = GetTotemConfig()
-            local buttonWidth = totemConfig.button_size or 36
-            local spacing = totemConfig.button_spacing or 6
+            local buttonWidth = totemConfig.button_size or 34
+            local spacing = totemConfig.button_spacing or 4
             local totalWidth = math.max(6 * buttonWidth + 5 * spacing, 100)
             local offsetX = (totalWidth / 2) - (buttonWidth / 2)
             
@@ -462,8 +462,8 @@ local function ApplyMulticastSystem()
                 if anchor then
                     -- Calculate width based on config
                     local totemConfig = GetTotemConfig()
-                    local buttonWidth = totemConfig.button_size or 36
-                    local spacing = totemConfig.button_spacing or 6
+                    local buttonWidth = totemConfig.button_size or 34
+                    local spacing = totemConfig.button_spacing or 4
                     local totalWidth = math.max(6 * buttonWidth + 5 * spacing, 100)
                     editorOverlay:SetSize(totalWidth, buttonWidth)
                     

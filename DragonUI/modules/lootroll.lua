@@ -14,10 +14,9 @@ local LootRollModule = {
 }
 addon.LootRollModule = LootRollModule
 
--- Register with ModuleRegistry
-if addon.RegisterModule then
-    addon:RegisterModule("lootroll", LootRollModule, "Loot Roll", "Loot roll frame positioning")
-end
+-- NOTE: Loot Roll is NOT registered as a toggleable module.
+-- It always runs (repositions GroupLootContainer) and has no enable/disable toggle.
+-- Position is managed via Editor Mode only.
 
 -- =============================================================================
 -- DEFAULT POSITION
@@ -148,9 +147,10 @@ function LootRollModule:Initialize()
     end
 
     -- Create text label for editor mode
+    local L = addon.L
     local fontString = anchor:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     fontString:SetPoint("CENTER")
-    fontString:SetText("Loot Roll")
+    fontString:SetText(L and L["Loot Roll"] or "Loot Roll")
     fontString:Hide()
     anchor.editorText = fontString
 

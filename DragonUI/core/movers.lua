@@ -15,6 +15,7 @@ This system provides:
 ]]
 
 local addon = select(2, ...)
+local L = addon.L
 
 -- ============================================================================
 -- MOVERS REGISTRY
@@ -156,7 +157,7 @@ local function CreateMoverFrame(parent, name, text, configPath)
     
     mover:SetScript("OnDragStart", function(self)
         if InCombatLockdown() then
-            addon:Print("Cannot move frames during combat!")
+            addon:Print(L["Cannot move frames during combat!"])
             return
         end
         
@@ -166,7 +167,7 @@ local function CreateMoverFrame(parent, name, text, configPath)
     
     mover:SetScript("OnDragStop", function(self)
         if InCombatLockdown() then
-            addon:Print("Cannot move frames during combat!")
+            addon:Print(L["Cannot move frames during combat!"])
             return
         end
         
@@ -204,8 +205,8 @@ local function CreateMoverFrame(parent, name, text, configPath)
         -- Show tooltip with name
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine(self.textString or self.name, 1, 1, 1)
-        GameTooltip:AddLine("Drag to move", 0.7, 0.7, 0.7)
-        GameTooltip:AddLine("Right-click to reset", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["Drag to move"], 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["Right-click to reset"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     
@@ -355,7 +356,7 @@ end
 -- Reset mover to default position
 function Movers:ResetPosition(name)
     if InCombatLockdown() then
-        addon:Print("Cannot reset positions during combat!")
+        addon:Print(L["Cannot reset positions during combat!"])
         return
     end
     
@@ -390,7 +391,7 @@ end
 -- Reset all movers to default
 function Movers:ResetAllPositions()
     if InCombatLockdown() then
-        addon:Print("Cannot reset positions during combat!")
+        addon:Print(L["Cannot reset positions during combat!"])
         return
     end
     
@@ -404,7 +405,7 @@ end
 -- Toggle config/editor mode
 function Movers:ToggleConfigMode(show, moverType)
     if InCombatLockdown() then
-        addon:Print("Cannot toggle editor mode during combat!")
+        addon:Print(L["Cannot toggle editor mode during combat!"])
         return
     end
     

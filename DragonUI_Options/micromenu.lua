@@ -11,19 +11,22 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- MICRO MENU OPTIONS GROUP
 -- ============================================================================
 
 local micromenuOptions = {
     type = 'group',
-    name = "Micro Menu",
+    name = LO["Micro Menu"],
     order = 2,
     args = {
         grayscale_icons = {
             type = 'toggle',
-            name = "Gray Scale Icons",
-            desc = "Use grayscale icons instead of colored icons for the micro menu",
+            name = LO["Gray Scale Icons"],
+            desc = LO["Use grayscale icons instead of colored icons for the micro menu"],
             get = function()
                 return addon.db.profile.micromenu.grayscale_icons
             end,
@@ -41,13 +44,13 @@ local micromenuOptions = {
         current_mode_header = {
             type = 'header',
             name = function()
-                return addon.db.profile.micromenu.grayscale_icons and "Grayscale Icons Settings" or "Normal Icons Settings"
+                return addon.db.profile.micromenu.grayscale_icons and LO["Grayscale Icons Settings"] or LO["Normal Icons Settings"]
             end,
             order = 3
         },
         scale_menu = {
             type = 'range',
-            name = "Menu Scale",
+            name = LO["Menu Scale"],
             desc = function()
                 local mode = addon.db.profile.micromenu.grayscale_icons and "grayscale" or "normal"
                 return "Scale for micromenu (" .. mode .. " icons)"
@@ -70,7 +73,7 @@ local micromenuOptions = {
         },
         icon_spacing = {
             type = 'range',
-            name = "Icon Spacing",
+            name = LO["Icon Spacing"],
             desc = function()
                 local mode = addon.db.profile.micromenu.grayscale_icons and "grayscale" or "normal"
                 return "Gap between " .. mode .. " icons (pixels)"
@@ -98,8 +101,8 @@ local micromenuOptions = {
         },
         hide_on_vehicle = {
             type = 'toggle',
-            name = "Hide on Vehicle",
-            desc = "Hide micromenu and bags if you sit on vehicle",
+            name = LO["Hide on Vehicle"],
+            desc = LO["Hide micromenu and bags if you sit on vehicle"],
             get = function()
                 return addon.db.profile.micromenu.hide_on_vehicle
             end,
@@ -116,8 +119,8 @@ local micromenuOptions = {
         },
         show_latency_indicator = {
             type = 'toggle',
-            name = "Show Latency Indicator",
-            desc = "Show a colored bar below the Help button indicating connection quality (green/yellow/red). Requires UI reload.",
+            name = LO["Show Latency Indicator"],
+            desc = LO["Show a colored bar below the Help button indicating connection quality (green/yellow/red). Requires UI reload."],
             get = function()
                 return addon.db.profile.micromenu.show_latency_indicator
             end,
@@ -136,17 +139,17 @@ local micromenuOptions = {
 
 local bagsOptions = {
     type = 'group',
-    name = "Bags",
+    name = LO["Bags"],
     order = 3,
     args = {
         description = {
             type = 'description',
-            name = "Configure the position and scale of the bag bar independently from the micro menu.",
+            name = LO["Configure the position and scale of the bag bar independently from the micro menu."],
             order = 1
         },
         scale = {
             type = 'range',
-            name = "Scale",
+            name = LO["Scale"],
             desc = "Scale for the bag bar",
             min = 0.5,
             max = 2.0,
@@ -171,18 +174,18 @@ local bagsOptions = {
 
 local xprepbarOptions = {
     type = 'group',
-    name = "XP & Rep Bars (Legacy Offsets)",
+    name = LO["XP & Rep Bars (Legacy Offsets)"],
     order = 6,
     args = {
         note = {
             type = 'description',
-            name = "Main XP & Rep bar options have moved to the XP & Rep Bars tab.\nThese offset options are for advanced positioning adjustments.",
+            name = LO["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] .. "\n" .. LO["These offset options are for advanced positioning adjustments."],
             order = 0
         },
         bothbar_offset = {
             type = 'range',
-            name = "Both Bars Offset",
-            desc = "Y offset when XP & reputation bar are shown",
+            name = LO["Both Bars Offset"],
+            desc = LO["Y offset when XP & reputation bar are shown"],
             min = 0,
             max = 100,
             step = 1,
@@ -199,8 +202,8 @@ local xprepbarOptions = {
         },
         singlebar_offset = {
             type = 'range',
-            name = "Single Bar Offset",
-            desc = "Y offset when XP or reputation bar is shown",
+            name = LO["Single Bar Offset"],
+            desc = LO["Y offset when XP or reputation bar is shown"],
             min = 0,
             max = 100,
             step = 1,
@@ -217,8 +220,8 @@ local xprepbarOptions = {
         },
         nobar_offset = {
             type = 'range',
-            name = "No Bar Offset",
-            desc = "Y offset when no XP or reputation bar is shown",
+            name = LO["No Bar Offset"],
+            desc = LO["Y offset when no XP or reputation bar is shown"],
             min = 0,
             max = 100,
             step = 1,
@@ -235,8 +238,8 @@ local xprepbarOptions = {
         },
         repbar_abovexp_offset = {
             type = 'range',
-            name = "Rep Bar Above XP Offset",
-            desc = "Y offset for reputation bar when XP bar is shown",
+            name = LO["Rep Bar Above XP Offset"],
+            desc = LO["Y offset for reputation bar when XP bar is shown"],
             min = 0,
             max = 50,
             step = 1,
@@ -253,8 +256,8 @@ local xprepbarOptions = {
         },
         repbar_offset = {
             type = 'range',
-            name = "Rep Bar Offset",
-            desc = "Y offset when XP bar is not shown",
+            name = LO["Rep Bar Offset"],
+            desc = LO["Y offset when XP bar is not shown"],
             min = 0,
             max = 50,
             step = 1,
@@ -278,20 +281,20 @@ local xprepbarOptions = {
 
 local styleOptions = {
     type = 'group',
-    name = "Gryphons",
+    name = LO["Gryphons"],
     order = 7,
     args = {
         gryphons = {
             type = 'select',
-            name = "Gryphon Style",
-            desc = "Display style for the action bar end-cap gryphons.",
+            name = LO["Gryphon Style"],
+            desc = LO["Display style for the action bar end-cap gryphons."],
             values = function()
                 local order = {'old', 'new', 'flying', 'none'}
                 local labels = {
-                    old = "Old",
-                    new = "New",
-                    flying = "Flying",
-                    none = "Hide Gryphons"
+                    old = LO["Old"],
+                    new = LO["New"],
+                    flying = LO["Flying"],
+                    none = LO["Hide Gryphons"]
                 }
                 local t = {}
                 for _, k in ipairs(order) do
@@ -331,8 +334,8 @@ local styleOptions = {
 
 local additionalOptions = {
     type = 'group',
-    name = "Additional Bars",
-    desc = "Specialized bars that appear when needed (stance/pet/vehicle/totems)",
+    name = LO["Additional Bars"],
+    desc = LO["Specialized bars that appear when needed (stance/pet/vehicle/totems)"],
     order = 8,
     args = {
         info_header = {
@@ -345,14 +348,14 @@ local additionalOptions = {
         -- Common Settings
         common_group = {
             type = 'group',
-            name = "Common Settings",
+            name = LO["Common Settings"],
             inline = true,
             order = 1,
             args = {
                 size = {
                     type = 'range',
-                    name = "Button Size",
-                    desc = "Size of buttons for all additional bars",
+                    name = LO["Button Size"],
+                    desc = LO["Size of buttons for all additional bars"],
                     min = 15,
                     max = 50,
                     step = 1,
@@ -371,8 +374,8 @@ local additionalOptions = {
                 },
                 spacing = {
                     type = 'range',
-                    name = "Button Spacing",
-                    desc = "Space between buttons for all additional bars",
+                    name = LO["Button Spacing"],
+                    desc = LO["Space between buttons for all additional bars"],
                     min = 0,
                     max = 20,
                     step = 1,
@@ -403,15 +406,15 @@ local additionalOptions = {
                 -- Stance Bar
                 stance_group = {
                     type = 'group',
-                    name = "Stance Bar",
-                    desc = "Warriors, Druids, Death Knights",
+                    name = LO["Stance Bar"],
+                    desc = LO["Warriors, Druids, Death Knights"],
                     inline = true,
                     order = 1,
                     args = {
                         x_position = {
                             type = 'range',
-                            name = "X Position",
-                            desc = "Horizontal position of stance bar from screen center. Negative values move left, positive values move right.",
+                            name = LO["X Position"],
+                            desc = LO["Horizontal position of stance bar from screen center. Negative values move left, positive values move right."],
                             min = -1500,
                             max = 1500,
                             step = 1,
@@ -427,7 +430,7 @@ local additionalOptions = {
                         },
                         y_offset = {
                             type = 'range',
-                            name = "Y Offset",
+                            name = LO["Y Offset"],
                             desc = "|cff00FF00Static Positioning:|r The stance bar uses a fixed position from the bottom of the screen (base Y=200).\n" ..
                                 "|cffFFFF00Y Offset:|r Additional vertical adjustment added to the base position.\n" ..
                                 "|cffFFD700Note:|r Positive values move the bar up, negative values move it down.",
@@ -446,7 +449,7 @@ local additionalOptions = {
                         },
                         button_size = {
                             type = 'range',
-                            name = "Button Size",
+                            name = LO["Button Size"],
                             desc = "Size of individual stance buttons in pixels.",
                             min = 16,
                             max = 64,
@@ -463,7 +466,7 @@ local additionalOptions = {
                         },
                         button_spacing = {
                             type = 'range',
-                            name = "Button Spacing",
+                            name = LO["Button Spacing"],
                             desc = "Space between stance buttons in pixels.",
                             min = 0,
                             max = 20,
@@ -484,15 +487,15 @@ local additionalOptions = {
                 -- Pet Bar
                 pet_group = {
                     type = 'group',
-                    name = "Pet Bar",
-                    desc = "Hunters, Warlocks, Death Knights - Use editor mode to move",
+                    name = LO["Pet Bar"],
+                    desc = LO["Hunters, Warlocks, Death Knights - Use editor mode to move"],
                     inline = true,
                     order = 2,
                     args = {
                         grid = {
                             type = 'toggle',
-                            name = "Show Empty Slots",
-                            desc = "Display empty action slots on pet bar",
+                            name = LO["Show Empty Slots"],
+                            desc = LO["Display empty action slots on pet bar"],
                             get = function()
                                 return addon.db.profile.additional.pet.grid
                             end,
@@ -509,15 +512,15 @@ local additionalOptions = {
                 -- Vehicle Bar
                 vehicle_group = {
                     type = 'group',
-                    name = "Vehicle Bar",
-                    desc = "All classes (vehicles/special mounts)",
+                    name = LO["Vehicle Bar"],
+                    desc = LO["All classes (vehicles/special mounts)"],
                     inline = true,
                     order = 3,
                     args = {
                         artstyle = {
                             type = 'toggle',
-                            name = "Custom Art Style",
-                            desc = "Use custom vehicle bar art style with health/power bars and themed skin. Requires UI reload to apply.",
+                            name = LO["Custom Art Style"],
+                            desc = LO["Use custom vehicle bar art style with health/power bars and themed skin. Requires UI reload to apply."],
                             get = function()
                                 return addon.db.profile.additional.vehicle.artstyle
                             end,
@@ -534,8 +537,8 @@ local additionalOptions = {
                 -- Totem Bar (Shaman only)
                 totem_group = {
                     type = 'group',
-                    name = "Totem Bar",
-                    desc = "Shamans only - Totem multicast bar. Position is controlled via Editor Mode.",
+                    name = LO["Totem Bar"],
+                    desc = LO["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."],
                     inline = true,
                     order = 4,
                     args = {
@@ -547,7 +550,7 @@ local additionalOptions = {
                         },
                         button_size = {
                             type = 'range',
-                            name = "Button Size",
+                            name = LO["Button Size"],
                             desc = "Size of individual totem buttons in pixels.",
                             min = 16,
                             max = 64,
@@ -571,7 +574,7 @@ local additionalOptions = {
                         },
                         button_spacing = {
                             type = 'range',
-                            name = "Button Spacing",
+                            name = LO["Button Spacing"],
                             desc = "Space between totem buttons in pixels.",
                             min = 0,
                             max = 20,

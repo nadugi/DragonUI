@@ -9,6 +9,8 @@ Dark Mode, Range Indicator, Item Quality Borders, Enhanced Tooltips.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
 
@@ -36,20 +38,20 @@ end
 -- ============================================================================
 
 local function BuildEnhancementsTab(scroll)
-    C:AddLabel(scroll, "|cffFFD700Enhancements|r", { color = C.Theme.textGold })
-    C:AddDescription(scroll, "Visual enhancements that add Dragonflight-style polish to the UI. These are optional — disable any you don't want.")
+    C:AddLabel(scroll, "|cffFFD700" .. LO["Enhancements"] .. "|r", { color = C.Theme.textGold })
+    C:AddDescription(scroll, LO["Visual enhancements that add Dragonflight-style polish to the UI. These are optional \226\128\148 disable any you don't want."])
     C:AddSpacer(scroll)
 
     -- ====================================================================
     -- DARK MODE
     -- ====================================================================
-    local darkSection = C:AddSection(scroll, "Dark Mode")
+    local darkSection = C:AddSection(scroll, LO["Dark Mode"])
 
-    C:AddDescription(darkSection, "Darkens UI borders and chrome only: action bar borders, unit frame borders, minimap border, bag slot borders, micro menu, castbar borders, and decorative elements. Icons, portraits, and abilities are never affected.")
+    C:AddDescription(darkSection, LO["Darkens UI borders and chrome only: action bar borders, unit frame borders, minimap border, bag slot borders, micro menu, castbar borders, and decorative elements. Icons, portraits, and abilities are never affected."])
 
     C:AddToggle(darkSection, {
-        label = "Enable Dark Mode",
-        desc = "Apply darker tinted textures to all UI elements.",
+        label = LO["Enable Dark Mode"],
+        desc = LO["Apply darker tinted textures to all UI elements."],
         getFunc = function() return IsEnabled("darkmode") end,
         setFunc = function(val)
             EnsureModuleTable("darkmode").enabled = val
@@ -65,11 +67,11 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddDropdown(darkSection, {
-        label = "Intensity",
+        label = LO["Intensity"],
         values = {
-            [1] = "Light (subtle)",
-            [2] = "Medium (balanced)",
-            [3] = "Dark (maximum)",
+            [1] = LO["Light (subtle)"],
+            [2] = LO["Medium (balanced)"],
+            [3] = LO["Dark (maximum)"],
         },
         getFunc = function()
             return GetModuleField("darkmode", "intensity_preset") or 3
@@ -85,8 +87,8 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddToggle(darkSection, {
-        label = "Custom Color",
-        desc = "Override presets with a custom tint color.",
+        label = LO["Custom Color"],
+        desc = LO["Override presets with a custom tint color."],
         getFunc = function() return GetModuleField("darkmode", "use_custom_color") == true end,
         setFunc = function(val)
             EnsureModuleTable("darkmode").use_custom_color = val
@@ -98,7 +100,7 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddColorPicker(darkSection, {
-        label = "Tint Color",
+        label = LO["Tint Color"],
         getFunc = function()
             local c = GetModuleField("darkmode", "custom_color")
             if c then return c.r or 0.15, c.g or 0.15, c.b or 0.15 end
@@ -117,13 +119,13 @@ local function BuildEnhancementsTab(scroll)
     -- RANGE INDICATOR
     -- ====================================================================
     C:AddSpacer(scroll)
-    local rangeSection = C:AddSection(scroll, "Range Indicator")
+    local rangeSection = C:AddSection(scroll, LO["Range Indicator"])
 
-    C:AddDescription(rangeSection, "Tints action button icons based on range and usability: red = out of range, blue = not enough mana, gray = unusable.")
+    C:AddDescription(rangeSection, LO["Tints action button icons based on range and usability: red = out of range, blue = not enough mana, gray = unusable."])
 
     C:AddToggle(rangeSection, {
-        label = "Enable Range Indicator",
-        desc = "Color action button icons when target is out of range or ability is unusable.",
+        label = LO["Enable Range Indicator"],
+        desc = LO["Color action button icons when target is out of range or ability is unusable."],
         getFunc = function()
             local b = addon.db.profile.buttons
             return b and b.range_indicator and b.range_indicator.enabled
@@ -140,13 +142,13 @@ local function BuildEnhancementsTab(scroll)
     -- ITEM QUALITY BORDERS
     -- ====================================================================
     C:AddSpacer(scroll)
-    local iqSection = C:AddSection(scroll, "Item Quality Borders")
+    local iqSection = C:AddSection(scroll, LO["Item Quality Borders"])
 
     C:AddDescription(iqSection, "Adds quality-colored glow borders to items in your bags, character panel, bank, merchant, and inspect frames: |cff1eff00green|r = uncommon, |cff0070ddblue|r = rare, |cffa335eepurple|r = epic, |cffff8000orange|r = legendary.")
 
     C:AddToggle(iqSection, {
-        label = "Enable Item Quality Borders",
-        desc = "Show quality-colored borders on items in bags, character panel, bank, merchant, and inspect frames.",
+        label = LO["Enable Item Quality Borders"],
+        desc = LO["Show quality-colored borders on items in bags, character panel, bank, merchant, and inspect frames."],
         getFunc = function() return IsEnabled("itemquality") end,
         setFunc = function(val)
             EnsureModuleTable("itemquality").enabled = val
@@ -162,7 +164,7 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddDropdown(iqSection, {
-        label = "Minimum Quality",
+        label = LO["Minimum Quality"],
         values = {
             [0] = "|cff9d9d9dPoor|r",
             [1] = "|cffffffffCommon|r",
@@ -188,13 +190,13 @@ local function BuildEnhancementsTab(scroll)
     -- ENHANCED TOOLTIPS
     -- ====================================================================
     C:AddSpacer(scroll)
-    local ttSection = C:AddSection(scroll, "Enhanced Tooltips")
+    local ttSection = C:AddSection(scroll, LO["Enhanced Tooltips"])
 
-    C:AddDescription(ttSection, "Improves GameTooltip with class-colored borders, class-colored names, target-of-target info, and styled health bars.")
+    C:AddDescription(ttSection, LO["Improves GameTooltip with class-colored borders, class-colored names, target-of-target info, and styled health bars."])
 
     C:AddToggle(ttSection, {
-        label = "Enable Enhanced Tooltips",
-        desc = "Activate all tooltip improvements. Sub-options below control individual features.",
+        label = LO["Enable Enhanced Tooltips"],
+        desc = LO["Activate all tooltip improvements. Sub-options below control individual features."],
         getFunc = function() return IsEnabled("tooltip") end,
         setFunc = function(val)
             EnsureModuleTable("tooltip").enabled = val
@@ -210,8 +212,8 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddToggle(ttSection, {
-        label = "Class-Colored Border",
-        desc = "Color the tooltip border by the unit's class (players) or reaction (NPCs).",
+        label = LO["Class-Colored Border"],
+        desc = LO["Color the tooltip border by the unit's class (players) or reaction (NPCs)."],
         getFunc = function()
             return GetModuleField("tooltip", "class_colored_border") ~= false
         end,
@@ -223,8 +225,8 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddToggle(ttSection, {
-        label = "Class-Colored Name",
-        desc = "Color the unit name text in the tooltip by class color (players only).",
+        label = LO["Class-Colored Name"],
+        desc = LO["Color the unit name text in the tooltip by class color (players only)."],
         getFunc = function()
             return GetModuleField("tooltip", "class_colored_name") ~= false
         end,
@@ -236,8 +238,8 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddToggle(ttSection, {
-        label = "Target of Target",
-        desc = "Add a 'Targeting: <name>' line showing who the unit is targeting.",
+        label = LO["Target of Target"],
+        desc = LO["Add a 'Targeting: <name>' line showing who the unit is targeting."],
         getFunc = function()
             return GetModuleField("tooltip", "target_of_target") ~= false
         end,
@@ -249,8 +251,8 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddToggle(ttSection, {
-        label = "Styled Health Bar",
-        desc = "Restyle the tooltip health bar with class/reaction colors and slimmer look.",
+        label = LO["Styled Health Bar"],
+        desc = LO["Restyle the tooltip health bar with class/reaction colors and slimmer look."],
         getFunc = function()
             return GetModuleField("tooltip", "health_bar") ~= false
         end,
@@ -262,8 +264,8 @@ local function BuildEnhancementsTab(scroll)
     })
 
     C:AddToggle(ttSection, {
-        label = "Anchor to Cursor",
-        desc = "Make the tooltip follow the cursor position instead of the default anchor.",
+        label = LO["Anchor to Cursor"],
+        desc = LO["Make the tooltip follow the cursor position instead of the default anchor."],
         getFunc = function()
             return GetModuleField("tooltip", "anchor_cursor") == true
         end,
@@ -276,4 +278,4 @@ local function BuildEnhancementsTab(scroll)
 end
 
 -- Register the tab (order 11 = after Quest Tracker, before Profiles)
-Panel:RegisterTab("enhancements", "Enhancements", BuildEnhancementsTab, 11)
+Panel:RegisterTab("enhancements", LO["Enhancements"], BuildEnhancementsTab, 11)

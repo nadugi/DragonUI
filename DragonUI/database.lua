@@ -44,7 +44,7 @@ local defaults = {
             petbar = {
                 anchor = "BOTTOM",
                 posX = 1,
-                posY = 148
+                posY = 141
             },
             playerCastbar = {
                 anchor = "BOTTOM",
@@ -75,7 +75,7 @@ local defaults = {
             bottombarright = {
                 anchor = "BOTTOM",
                 posX = 0,
-                posY = 105
+                posY = 102
             },
             micromenu = {
                 anchor = "BOTTOMRIGHT",
@@ -111,6 +111,11 @@ local defaults = {
                 anchor = "CENTER",
                 posX = 0,
                 posY = -100
+            },
+            vehicleExit = {
+                anchor = "BOTTOM",
+                posX = -251,
+                posY = 145
             }
         },
         -- Quest Tracker
@@ -287,8 +292,8 @@ local defaults = {
             size = 31,
             spacing = 6,
             stance = {
-                x_position = -215,
-                y_offset = -50, -- Additional Y offset for fine-tuning position
+                x_position = -211,
+                y_offset = -60, -- Additional Y offset for fine-tuning position
                 button_size = 31, -- Size of stance buttons (native Blizzard size)
                 button_spacing = 6 -- Spacing between stance buttons
             },
@@ -304,8 +309,8 @@ local defaults = {
             totem = {
                 x_position = 0,
                 y_offset = 0, -- Additional Y offset for fine-tuning position
-                button_size = 35, -- Size of totem buttons (native Blizzard size)
-                button_spacing = 5, -- Spacing between totem buttons
+                button_size = 34, -- Size of totem buttons (native Blizzard size)
+                button_spacing = 4, -- Spacing between totem buttons
                 manual_position = false -- When true, uses x_position/y_offset; when false, auto-anchors to action bars
             }
         },

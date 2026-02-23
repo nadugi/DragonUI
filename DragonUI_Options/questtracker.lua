@@ -11,24 +11,27 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- QUEST TRACKER OPTIONS GROUP
 -- ============================================================================
 
 local questtrackerOptions = {
-    name = "Quest Tracker",
+    name = LO["Quest Tracker"],
     type = "group",
     order = 9,
     args = {
         description = {
             type = 'description',
-            name = "Configures the quest objective tracker position and behavior.",
+            name = LO["Configures the quest objective tracker position and behavior."],
             order = 1
         },
         show_header = {
             type = 'toggle',
-            name = "Show Header Background",
-            desc = "Show/hide the decorative header background texture",
+            name = LO["Show Header Background"],
+            desc = LO["Show/hide the decorative header background texture"],
             get = function()
                 return addon.db.profile.questtracker.show_header ~= false
             end,
@@ -42,8 +45,8 @@ local questtrackerOptions = {
         },
         x = {
             type = "range",
-            name = "X Position",
-            desc = "Horizontal position offset",
+            name = LO["X Position"],
+            desc = LO["Horizontal position offset"],
             min = -500,
             max = 500,
             step = 1,
@@ -61,7 +64,7 @@ local questtrackerOptions = {
         y = {
             type = "range",
             name = "Y Position",
-            desc = "Vertical position offset",
+            desc = LO["Vertical position offset"],
             min = -500,
             max = 500,
             step = 1,
@@ -78,14 +81,14 @@ local questtrackerOptions = {
         },
         anchor = {
             type = 'select',
-            name = "Anchor Point",
-            desc = "Screen anchor point for the quest tracker",
+            name = LO["Anchor Point"],
+            desc = LO["Screen anchor point for the quest tracker"],
             values = {
-                ["TOPRIGHT"] = "Top Right",
-                ["TOPLEFT"] = "Top Left",
-                ["BOTTOMRIGHT"] = "Bottom Right",
-                ["BOTTOMLEFT"] = "Bottom Left",
-                ["CENTER"] = "Center"
+                ["TOPRIGHT"] = LO["Top Right"],
+                ["TOPLEFT"] = LO["Top Left"],
+                ["BOTTOMRIGHT"] = LO["Bottom Right"],
+                ["BOTTOMLEFT"] = LO["Bottom Left"],
+                ["CENTER"] = LO["Center"]
             },
             get = function()
                 return addon.db.profile.questtracker.anchor
@@ -100,8 +103,8 @@ local questtrackerOptions = {
         },
         reset_position = {
             type = 'execute',
-            name = "Reset Position",
-            desc = "Reset quest tracker to default position",
+            name = LO["Reset Position"],
+            desc = LO["Reset quest tracker to default position"],
             func = function()
                 addon.db.profile.questtracker.anchor = "TOPRIGHT"
                 addon.db.profile.questtracker.x = -140

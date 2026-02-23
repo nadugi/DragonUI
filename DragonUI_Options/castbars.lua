@@ -11,13 +11,16 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- CAST BARS OPTIONS GROUP
 -- ============================================================================
 
 local castbarsOptions = {
     type = 'group',
-    name = "Cast Bars",
+    name = LO["Cast Bars"],
     order = 4,
     args = {
         -- ====================================================================
@@ -25,13 +28,13 @@ local castbarsOptions = {
         -- ====================================================================
         player_castbar = {
             type = 'group',
-            name = "Player Castbar",
+            name = LO["Player Castbar"],
             order = 1,
             args = {
                 sizeX = {
                     type = 'range',
-                    name = "Width",
-                    desc = "Width of the cast bar",
+                    name = LO["Width"],
+                    desc = LO["Width of the cast bar"],
                     min = 80,
                     max = 512,
                     step = 1,
@@ -46,8 +49,8 @@ local castbarsOptions = {
                 },
                 sizeY = {
                     type = 'range',
-                    name = "Height",
-                    desc = "Height of the cast bar",
+                    name = LO["Height"],
+                    desc = LO["Height of the cast bar"],
                     min = 10,
                     max = 64,
                     step = 1,
@@ -62,8 +65,8 @@ local castbarsOptions = {
                 },
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Size scale of the cast bar",
+                    name = LO["Scale"],
+                    desc = LO["Size scale of the cast bar"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -78,8 +81,8 @@ local castbarsOptions = {
                 },
                 showIcon = {
                     type = 'toggle',
-                    name = "Show Icon",
-                    desc = "Show the spell icon next to the cast bar",
+                    name = LO["Show Icon"],
+                    desc = LO["Show the spell icon next to the cast bar"],
                     get = function()
                         return addon.db.profile.castbar.showIcon
                     end,
@@ -91,8 +94,8 @@ local castbarsOptions = {
                 },
                 sizeIcon = {
                     type = 'range',
-                    name = "Icon Size",
-                    desc = "Size of the spell icon",
+                    name = LO["Icon Size"],
+                    desc = LO["Size of the spell icon"],
                     min = 1,
                     max = 64,
                     step = 1,
@@ -110,11 +113,11 @@ local castbarsOptions = {
                 },
                 text_mode = {
                     type = 'select',
-                    name = "Text Mode",
-                    desc = "Choose how to display spell text: Simple (centered spell name only) or Detailed (spell name + time)",
+                    name = LO["Text Mode"],
+                    desc = LO["Choose how to display spell text: Simple (centered spell name only) or Detailed (spell name + time)"],
                     values = {
-                        simple = "Simple (Centered Name Only)",
-                        detailed = "Detailed (Name + Time)"
+                        simple = LO["Simple (Centered Name Only)"],
+                        detailed = LO["Detailed (Name + Time)"]
                     },
                     get = function()
                         return addon.db.profile.castbar.text_mode or "simple"
@@ -122,13 +125,14 @@ local castbarsOptions = {
                     set = function(info, val)
                         addon.db.profile.castbar.text_mode = val
                         addon.RefreshCastbar()
+                        StaticPopup_Show("DRAGONUI_RELOAD_UI")
                     end,
                     order = 6
                 },
                 precision_time = {
                     type = 'range',
-                    name = "Time Precision",
-                    desc = "Decimal places for remaining time",
+                    name = LO["Time Precision"],
+                    desc = LO["Decimal places for remaining time"],
                     min = 0,
                     max = 3,
                     step = 1,
@@ -145,8 +149,8 @@ local castbarsOptions = {
                 },
                 precision_max = {
                     type = 'range',
-                    name = "Max Time Precision",
-                    desc = "Decimal places for total time",
+                    name = LO["Max Time Precision"],
+                    desc = LO["Decimal places for total time"],
                     min = 0,
                     max = 3,
                     step = 1,
@@ -163,8 +167,8 @@ local castbarsOptions = {
                 },
                 holdTime = {
                     type = 'range',
-                    name = "Hold Time (Success)",
-                    desc = "How long the bar stays visible after a successful cast.",
+                    name = LO["Hold Time (Success)"],
+                    desc = LO["How long the bar stays visible after a successful cast."],
                     min = 0,
                     max = 2,
                     step = 0.1,
@@ -179,8 +183,8 @@ local castbarsOptions = {
                 },
                 holdTimeInterrupt = {
                     type = 'range',
-                    name = "Hold Time (Interrupt)",
-                    desc = "How long the bar stays visible after being interrupted.",
+                    name = LO["Hold Time (Interrupt)"],
+                    desc = LO["How long the bar stays visible after being interrupted."],
                     min = 0,
                     max = 2,
                     step = 0.1,
@@ -195,8 +199,8 @@ local castbarsOptions = {
                 },
                 reset_position = {
                     type = 'execute',
-                    name = "Reset Position",
-                    desc = "Resets the X and Y position to default.",
+                    name = LO["Reset Position"],
+                    desc = LO["Resets the X and Y position to default."],
                     func = function()
                         addon.db.profile.castbar.x_position = addon.defaults.profile.castbar.x_position
                         addon.db.profile.castbar.y_position = addon.defaults.profile.castbar.y_position
@@ -212,13 +216,13 @@ local castbarsOptions = {
         -- ====================================================================
         target_castbar = {
             type = 'group',
-            name = "Target Castbar",
+            name = LO["Target Castbar"],
             order = 2,
             args = {
                 sizeX = {
                     type = 'range',
-                    name = "Width",
-                    desc = "Width of the target castbar",
+                    name = LO["Width"],
+                    desc = LO["Width of the target castbar"],
                     min = 50,
                     max = 400,
                     step = 1,
@@ -236,8 +240,8 @@ local castbarsOptions = {
                 },
                 sizeY = {
                     type = 'range',
-                    name = "Height",
-                    desc = "Height of the target castbar",
+                    name = LO["Height"],
+                    desc = LO["Height of the target castbar"],
                     min = 5,
                     max = 50,
                     step = 1,
@@ -255,8 +259,8 @@ local castbarsOptions = {
                 },
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the target castbar",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the target castbar"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -274,8 +278,8 @@ local castbarsOptions = {
                 },
                 showIcon = {
                     type = 'toggle',
-                    name = "Show Spell Icon",
-                    desc = "Show the spell icon next to the target castbar",
+                    name = LO["Show Spell Icon"],
+                    desc = LO["Show the spell icon next to the target castbar"],
                     get = function()
                         if not addon.db.profile.castbar.target then
                             return true
@@ -297,8 +301,8 @@ local castbarsOptions = {
                 },
                 sizeIcon = {
                     type = 'range',
-                    name = "Icon Size",
-                    desc = "Size of the spell icon",
+                    name = LO["Icon Size"],
+                    desc = LO["Size of the spell icon"],
                     min = 10,
                     max = 50,
                     step = 1,
@@ -319,11 +323,11 @@ local castbarsOptions = {
                 },
                 text_mode = {
                     type = 'select',
-                    name = "Text Mode",
-                    desc = "Choose how to display spell text: Simple (centered spell name only) or Detailed (spell name + time)",
+                    name = LO["Text Mode"],
+                    desc = LO["Choose how to display spell text: Simple (centered spell name only) or Detailed (spell name + time)"],
                     values = {
-                        simple = "Simple (Centered Name Only)",
-                        detailed = "Detailed (Name + Time)"
+                        simple = LO["Simple (Centered Name Only)"],
+                        detailed = LO["Detailed (Name + Time)"]
                     },
                     get = function()
                         return (addon.db.profile.castbar.target and addon.db.profile.castbar.target.text_mode) or "simple"
@@ -334,13 +338,14 @@ local castbarsOptions = {
                         end
                         addon.db.profile.castbar.target.text_mode = val
                         addon.RefreshTargetCastbar()
+                        StaticPopup_Show("DRAGONUI_RELOAD_UI")
                     end,
                     order = 6
                 },
                 precision_time = {
                     type = 'range',
-                    name = "Time Precision",
-                    desc = "Decimal places for remaining time",
+                    name = LO["Time Precision"],
+                    desc = LO["Decimal places for remaining time"],
                     min = 0,
                     max = 3,
                     step = 1,
@@ -360,8 +365,8 @@ local castbarsOptions = {
                 },
                 precision_max = {
                     type = 'range',
-                    name = "Max Time Precision",
-                    desc = "Decimal places for total time",
+                    name = LO["Max Time Precision"],
+                    desc = LO["Decimal places for total time"],
                     min = 0,
                     max = 3,
                     step = 1,
@@ -381,8 +386,8 @@ local castbarsOptions = {
                 },
                 autoAdjust = {
                     type = 'toggle',
-                    name = "Auto Adjust for Auras",
-                    desc = "Automatically adjust position based on target auras (CRITICAL FEATURE)",
+                    name = LO["Auto Adjust for Auras"],
+                    desc = LO["Automatically adjust position based on target auras (CRITICAL FEATURE)"],
                     get = function()
                         if not addon.db.profile.castbar.target then
                             return true
@@ -404,8 +409,8 @@ local castbarsOptions = {
                 },
                 holdTime = {
                     type = 'range',
-                    name = "Hold Time (Success)",
-                    desc = "How long to show the castbar after successful completion",
+                    name = LO["Hold Time (Success)"],
+                    desc = LO["How long to show the castbar after successful completion"],
                     min = 0,
                     max = 3,
                     step = 0.1,
@@ -423,8 +428,8 @@ local castbarsOptions = {
                 },
                 holdTimeInterrupt = {
                     type = 'range',
-                    name = "Hold Time (Interrupt)",
-                    desc = "How long to show the castbar after interruption/failure",
+                    name = LO["Hold Time (Interrupt)"],
+                    desc = LO["How long to show the castbar after interruption/failure"],
                     min = 0,
                     max = 3,
                     step = 0.1,
@@ -442,8 +447,8 @@ local castbarsOptions = {
                 },
                 reset_position = {
                     type = 'execute',
-                    name = "Reset Position",
-                    desc = "Reset target castbar position to default",
+                    name = LO["Reset Position"],
+                    desc = LO["Reset target castbar position to default"],
                     func = function()
                         if not addon.db.profile.castbar.target then
                             addon.db.profile.castbar.target = {}
@@ -462,13 +467,13 @@ local castbarsOptions = {
         -- ====================================================================
         focus_castbar = {
             type = 'group',
-            name = "Focus Castbar",
+            name = LO["Focus Castbar"],
             order = 3,
             args = {
                 sizeX = {
                     type = 'range',
-                    name = "Width",
-                    desc = "Width of the focus castbar",
+                    name = LO["Width"],
+                    desc = LO["Width of the focus castbar"],
                     min = 50,
                     max = 400,
                     step = 1,
@@ -485,8 +490,8 @@ local castbarsOptions = {
                 },
                 sizeY = {
                     type = 'range',
-                    name = "Height",
-                    desc = "Height of the focus castbar",
+                    name = LO["Height"],
+                    desc = LO["Height of the focus castbar"],
                     min = 5,
                     max = 50,
                     step = 1,
@@ -503,8 +508,8 @@ local castbarsOptions = {
                 },
                 scale = {
                     type = 'range',
-                    name = "Scale",
-                    desc = "Scale of the focus castbar",
+                    name = LO["Scale"],
+                    desc = LO["Scale of the focus castbar"],
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -521,8 +526,8 @@ local castbarsOptions = {
                 },
                 showIcon = {
                     type = 'toggle',
-                    name = "Show Icon",
-                    desc = "Show the spell icon next to the focus castbar",
+                    name = LO["Show Icon"],
+                    desc = LO["Show the spell icon next to the focus castbar"],
                     get = function()
                         return addon.db.profile.castbar.focus.showIcon
                     end,
@@ -536,8 +541,8 @@ local castbarsOptions = {
                 },
                 sizeIcon = {
                     type = 'range',
-                    name = "Icon Size",
-                    desc = "Size of the spell icon",
+                    name = LO["Icon Size"],
+                    desc = LO["Size of the spell icon"],
                     min = 10,
                     max = 50,
                     step = 1,
@@ -557,11 +562,11 @@ local castbarsOptions = {
                 },
                 text_mode = {
                     type = 'select',
-                    name = "Text Mode",
-                    desc = "Choose how to display spell text: Simple (centered spell name only) or Detailed (spell name + time)",
+                    name = LO["Text Mode"],
+                    desc = LO["Choose how to display spell text: Simple (centered spell name only) or Detailed (spell name + time)"],
                     values = {
-                        simple = "Simple",
-                        detailed = "Detailed"
+                        simple = LO["Simple"],
+                        detailed = LO["Detailed"]
                     },
                     get = function()
                         return addon.db.profile.castbar.focus.text_mode or "detailed"
@@ -576,8 +581,8 @@ local castbarsOptions = {
                 },
                 precision_time = {
                     type = 'range',
-                    name = "Time Precision",
-                    desc = "Decimal places for remaining time",
+                    name = LO["Time Precision"],
+                    desc = LO["Decimal places for remaining time"],
                     min = 0,
                     max = 3,
                     step = 1,
@@ -594,8 +599,8 @@ local castbarsOptions = {
                 },
                 precision_max = {
                     type = 'range',
-                    name = "Max Time Precision",
-                    desc = "Decimal places for total time",
+                    name = LO["Max Time Precision"],
+                    desc = LO["Decimal places for total time"],
                     min = 0,
                     max = 3,
                     step = 1,
@@ -612,8 +617,8 @@ local castbarsOptions = {
                 },
                 autoAdjust = {
                     type = 'toggle',
-                    name = "Auto Adjust for Auras",
-                    desc = "Automatically adjust position based on focus auras",
+                    name = LO["Auto Adjust for Auras"],
+                    desc = LO["Automatically adjust position based on focus auras"],
                     get = function()
                         return addon.db.profile.castbar.focus.autoAdjust
                     end,
@@ -627,8 +632,8 @@ local castbarsOptions = {
                 },
                 holdTime = {
                     type = 'range',
-                    name = "Hold Time (Success)",
-                    desc = "Time to show the castbar after successful cast completion",
+                    name = LO["Hold Time (Success)"],
+                    desc = LO["Time to show the castbar after successful cast completion"],
                     min = 0,
                     max = 3.0,
                     step = 0.1,
@@ -645,8 +650,8 @@ local castbarsOptions = {
                 },
                 holdTimeInterrupt = {
                     type = 'range',
-                    name = "Hold Time (Interrupt)",
-                    desc = "Time to show the castbar after cast interruption",
+                    name = LO["Hold Time (Interrupt)"],
+                    desc = LO["Time to show the castbar after cast interruption"],
                     min = 0,
                     max = 3.0,
                     step = 0.1,
@@ -663,8 +668,8 @@ local castbarsOptions = {
                 },
                 reset_position = {
                     type = 'execute',
-                    name = "Reset Position",
-                    desc = "Reset focus castbar position to default",
+                    name = LO["Reset Position"],
+                    desc = LO["Reset focus castbar position to default"],
                     func = function()
                         local defaults = addon.defaults.profile.castbar.focus
                         addon.db.profile.castbar.focus.x_position = defaults.x_position

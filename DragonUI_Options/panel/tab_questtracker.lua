@@ -9,6 +9,8 @@ Quest tracker position and behavior.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
 
@@ -17,11 +19,11 @@ local Panel = addon.OptionsPanel
 -- ============================================================================
 
 local anchorValues = {
-    TOPRIGHT    = "Top Right",
-    TOPLEFT     = "Top Left",
-    BOTTOMRIGHT = "Bottom Right",
-    BOTTOMLEFT  = "Bottom Left",
-    CENTER      = "Center",
+    TOPRIGHT    = LO["Top Right"],
+    TOPLEFT     = LO["Top Left"],
+    BOTTOMRIGHT = LO["Bottom Right"],
+    BOTTOMLEFT  = LO["Bottom Left"],
+    CENTER      = LO["Center"],
 }
 
 local function RefreshQT()
@@ -29,13 +31,13 @@ local function RefreshQT()
 end
 
 local function BuildQuesttrackerTab(scroll)
-    local section = C:AddSection(scroll, "Quest Tracker")
+    local section = C:AddSection(scroll, LO["Quest Tracker"])
 
-    C:AddDescription(section, "Position and display settings for the objective tracker.")
+    C:AddDescription(section, LO["Position and display settings for the objective tracker."])
 
     C:AddToggle(section, {
-        label = "Show Header Background",
-        desc = "Show/hide the decorative header background texture.",
+        label = LO["Show Header Background"],
+        desc = LO["Show/hide the decorative header background texture."],
         getFunc = function()
             return C:GetDBValue("questtracker.show_header") ~= false
         end,
@@ -46,15 +48,15 @@ local function BuildQuesttrackerTab(scroll)
     })
 
     C:AddDropdown(section, {
-        label = "Anchor Point",
-        desc = "Screen anchor point for the quest tracker.",
+        label = LO["Anchor Point"],
+        desc = LO["Screen anchor point for the quest tracker."],
         dbPath = "questtracker.anchor",
         values = anchorValues,
         callback = RefreshQT,
     })
 
     C:AddSlider(section, {
-        label = "X Position",
+        label = LO["X Position"],
         dbPath = "questtracker.x",
         min = -500, max = 500, step = 1,
         width = 200,
@@ -70,7 +72,7 @@ local function BuildQuesttrackerTab(scroll)
     })
 
     C:AddButton(section, {
-        label = "Reset Position",
+        label = LO["Reset Position"],
         width = 160,
         callback = function()
             C:SetDBValue("questtracker.anchor", "TOPRIGHT")
@@ -84,4 +86,4 @@ local function BuildQuesttrackerTab(scroll)
 end
 
 -- Register the tab
-Panel:RegisterTab("questtracker", "Quest Tracker", BuildQuesttrackerTab, 10)
+Panel:RegisterTab("questtracker", LO["Quest Tracker"], BuildQuesttrackerTab, 10)

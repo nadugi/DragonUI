@@ -13,6 +13,9 @@ libs\AceGUI-3.0\AceGUI-3.0.xml
 libs\AceConfig-3.0\AceConfig-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 
+# Localization for options (AceLocale-3.0 already loaded by main DragonUI addon)
+Locales\Load_Locales.xml
+
 # Core options system
 core.lua
 

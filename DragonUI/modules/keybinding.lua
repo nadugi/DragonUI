@@ -5,6 +5,7 @@
 ]]
 
 local addon = select(2, ...)
+local L = addon.L
 local LibKeyBound
 
 -- Safe loading of LibKeyBound
@@ -15,7 +16,7 @@ end)
 if success then
     LibKeyBound = result
 else
-    print("|cFFFF0000[DragonUI KeyBind]|r LibKeyBound-1.0 not found or failed to load:", result)
+    print("|cFFFF0000[DragonUI KeyBind]|r " .. L["LibKeyBound-1.0 not found or failed to load:"], result)
     return
 end
 
@@ -186,9 +187,9 @@ function KeyBindingModule:Enable()
     SlashCmdList["DRAGONUI_KEYBIND"] = function(msg)
         local command = msg:lower():trim()
         if command == "help" then
-            print("|cFF00FF00[DragonUI KeyBind]|r Commands:")
-            print("  /dukb - Toggle keybinding mode")
-            print("  /dukb help - Show this help")
+            print("|cFF00FF00[DragonUI KeyBind]|r " .. L["Commands:"])
+            print("  " .. L["/dukb - Toggle keybinding mode"])
+            print("  " .. L["/dukb help - Show this help"])
         else
             LibKeyBound:Toggle()
         end
@@ -216,7 +217,7 @@ function KeyBindingModule:Disable()
     SlashCmdList["DRAGONUI_KEYBIND"] = nil
     
     self.enabled = false
-    print("|cFF00FF00[DragonUI KeyBind]|r Module disabled.")
+    print("|cFF00FF00[DragonUI KeyBind]|r " .. L["Module disabled."])
 end
 
 -- ============================================================================
@@ -224,11 +225,11 @@ end
 -- ============================================================================
 
 function KeyBindingModule:LIBKEYBOUND_ENABLED()
-    print("|cFF00FF00[DragonUI KeyBind]|r Keybinding mode activated. Hover over buttons and press keys to bind them.")
+    print("|cFF00FF00[DragonUI KeyBind]|r " .. L["Keybinding mode activated. Hover over buttons and press keys to bind them."])
 end
 
 function KeyBindingModule:LIBKEYBOUND_DISABLED()
-    print("|cFF00FF00[DragonUI KeyBind]|r Keybinding mode deactivated.")
+    print("|cFF00FF00[DragonUI KeyBind]|r " .. L["Keybinding mode deactivated."])
 end
 
 

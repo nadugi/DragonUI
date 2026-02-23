@@ -11,6 +11,8 @@ if not addon then return end
 
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
+local L = addon.L
+local LO = addon.LO
 
 -- ============================================================================
 -- HELPER: Create a module toggle with standard pattern
@@ -54,26 +56,26 @@ end
 -- ============================================================================
 
 local function BuildModulesTab(scroll)
-    C:AddLabel(scroll, "|cffFFD700Modules|r", { color = C.Theme.textGold })
-    C:AddDescription(scroll, "Toggle individual modules on or off. Disabled modules revert to the default Blizzard UI.")
+    C:AddLabel(scroll, "|cffFFD700" .. LO["Modules"] .. "|r", { color = C.Theme.textGold })
+    C:AddDescription(scroll, LO["Toggle individual modules on or off. Disabled modules revert to the default Blizzard UI."])
 
     C:AddSpacer(scroll)
 
     -- ====================================================================
     -- CAST BARS
     -- ====================================================================
-    local castSection = C:AddSection(scroll, "Cast Bars")
+    local castSection = C:AddSection(scroll, LO["Cast Bars"])
 
     C:AddToggle(castSection, {
-        label = "Player Castbar",
-        desc = "Enable DragonUI player castbar styling.",
+        label = LO["Player Castbar"],
+        desc = LO["Enable DragonUI player castbar styling."],
         dbPath = "castbar.enabled",
         callback = function() if addon.RefreshCastbar then addon.RefreshCastbar() end end,
     })
 
     C:AddToggle(castSection, {
-        label = "Target Castbar",
-        desc = "Enable DragonUI target castbar styling.",
+        label = LO["Target Castbar"],
+        desc = LO["Enable DragonUI target castbar styling."],
         getFunc = function()
             local t = addon.db.profile.castbar and addon.db.profile.castbar.target
             if not t then return true end
@@ -89,8 +91,8 @@ local function BuildModulesTab(scroll)
     })
 
     C:AddToggle(castSection, {
-        label = "Focus Castbar",
-        desc = "Enable DragonUI focus castbar styling.",
+        label = LO["Focus Castbar"],
+        desc = LO["Enable DragonUI focus castbar styling."],
         dbPath = "castbar.focus.enabled",
         callback = function() if addon.RefreshFocusCastbar then addon.RefreshFocusCastbar() end end,
     })
@@ -98,36 +100,36 @@ local function BuildModulesTab(scroll)
     -- ====================================================================
     -- ACTION BARS SYSTEM (unified toggle)
     -- ====================================================================
-    local abSection = C:AddSection(scroll, "Action Bars System")
+    local abSection = C:AddSection(scroll, LO["Action Bars System"])
 
-    C:AddDescription(abSection, "Includes main bars, vehicle, stance, pet, totem bars, and button styling.")
+    C:AddDescription(abSection, LO["Includes main bars, vehicle, stance, pet, totem bars, and button styling."])
 
     ModuleToggle(abSection, {
-        label = "Enable All Action Bar Modules",
-        desc = "Master toggle for the complete action bars system.",
+        label = LO["Enable All Action Bar Modules"],
+        desc = LO["Master toggle for the complete action bars system."],
         moduleNames = { "mainbars", "vehicle", "stance", "petbar", "multicast", "buttons", "noop" },
     })
 
     -- ====================================================================
     -- UI SYSTEMS
     -- ====================================================================
-    local uiSection = C:AddSection(scroll, "UI Systems")
+    local uiSection = C:AddSection(scroll, LO["UI Systems"])
 
     ModuleToggle(uiSection, {
-        label = "Micro Menu & Bags",
-        desc = "Micro menu and bags styling.",
+        label = LO["Micro Menu & Bags"],
+        desc = LO["Micro menu and bags styling."],
         moduleName = "micromenu",
     })
 
     ModuleToggle(uiSection, {
-        label = "Minimap System",
-        desc = "Minimap styling, tracking icons, and calendar.",
+        label = LO["Minimap System"],
+        desc = LO["Minimap styling, tracking icons, and calendar."],
         moduleName = "minimap",
     })
 
     ModuleToggle(uiSection, {
-        label = "Buff Frame System",
-        desc = "Buff frame styling and toggle button.",
+        label = LO["Buff Frame System"],
+        desc = LO["Buff frame styling and toggle button."],
         moduleName = "buffs",
         callback = function(val)
             if addon.BuffFrameModule then
@@ -137,8 +139,8 @@ local function BuildModulesTab(scroll)
     })
 
     ModuleToggle(uiSection, {
-        label = "Cooldown Timers",
-        desc = "Show cooldown timers on action buttons.",
+        label = LO["Cooldown Timers"],
+        desc = LO["Show cooldown timers on action buttons."],
         moduleName = "cooldowns",
         requiresReload = false,
         callback = function()
@@ -147,14 +149,14 @@ local function BuildModulesTab(scroll)
     })
 
     ModuleToggle(uiSection, {
-        label = "Quest Tracker",
-        desc = "DragonUI quest tracker positioning and styling.",
+        label = LO["Quest Tracker"],
+        desc = LO["DragonUI quest tracker positioning and styling."],
         moduleName = "questtracker",
     })
 
     ModuleToggle(uiSection, {
-        label = "KeyBind Mode",
-        desc = "LibKeyBound integration for intuitive hover + key press binding.",
+        label = LO["KeyBind Mode"],
+        desc = LO["LibKeyBound integration for intuitive hover + key press binding."],
         moduleName = "keybinding",
     })
 
@@ -162,9 +164,9 @@ local function BuildModulesTab(scroll)
     -- ADVANCED: Individual Module Control
     -- ====================================================================
     C:AddSpacer(scroll)
-    local advSection = C:AddSection(scroll, "Advanced - Individual Modules")
+    local advSection = C:AddSection(scroll, LO["Advanced - Individual Module Control"])
 
-    C:AddLabel(advSection, "|cffFF6600Warning:|r Individual overrides. The grouped toggles above take priority.", { color = C.Theme.warning })
+    C:AddLabel(advSection, "|cffFF6600" .. LO["Warning:"] .. "|r " .. LO["Individual overrides. The grouped toggles above take priority."], { color = C.Theme.warning })
     C:AddSpacer(advSection)
 
     -- Generate toggles for all registered modules
@@ -173,9 +175,14 @@ local function BuildModulesTab(scroll)
         for _, moduleName in ipairs(MR.loadOrder) do
             local info = MR:GetInfo(moduleName)
             if info then
+                local displayLabel = LO[info.displayName] or info.displayName or moduleName
+                local displayDesc = LO[info.description] or info.description
+                if not displayDesc or displayDesc == "" then
+                    displayDesc = LO["Enable/disable "] .. displayLabel
+                end
                 ModuleToggle(advSection, {
-                    label = info.displayName or moduleName,
-                    desc = (info.description and info.description ~= "") and info.description or ("Enable/disable " .. (info.displayName or moduleName)),
+                    label = displayLabel,
+                    desc = displayDesc,
                     moduleName = moduleName,
                 })
             end
@@ -183,24 +190,24 @@ local function BuildModulesTab(scroll)
     else
         -- Fallback: show known modules from database defaults
         local knownModules = {
-            { key = "mainbars",    name = "Main Bars" },
-            { key = "vehicle",     name = "Vehicle" },
-            { key = "stance",      name = "Stance Bar" },
-            { key = "petbar",      name = "Pet Bar" },
-            { key = "multicast",   name = "Multicast" },
-            { key = "buttons",     name = "Buttons" },
-            { key = "noop",        name = "Hide Blizzard Elements" },
-            { key = "micromenu",   name = "Micro Menu" },
-            { key = "cooldowns",   name = "Cooldowns" },
-            { key = "minimap",     name = "Minimap" },
-            { key = "buffs",       name = "Buffs" },
-            { key = "keybinding",  name = "KeyBinding" },
-            { key = "questtracker", name = "Quest Tracker" },
+            { key = "mainbars",    name = LO["Main Bars"] },
+            { key = "vehicle",     name = LO["Vehicle"] },
+            { key = "stance",      name = LO["Stance Bar"] },
+            { key = "petbar",      name = LO["Pet Bar"] },
+            { key = "multicast",   name = LO["Multicast"] },
+            { key = "buttons",     name = LO["Buttons"] },
+            { key = "noop",        name = LO["Hide Blizzard Elements"] },
+            { key = "micromenu",   name = LO["Micro Menu"] },
+            { key = "cooldowns",   name = LO["Cooldowns"] },
+            { key = "minimap",     name = LO["Minimap"] },
+            { key = "buffs",       name = LO["Buffs"] },
+            { key = "keybinding",  name = LO["KeyBinding"] },
+            { key = "questtracker", name = LO["Quest Tracker"] },
         }
         for _, mod in ipairs(knownModules) do
             ModuleToggle(advSection, {
                 label = mod.name,
-                desc = "Enable/disable " .. mod.name,
+                desc = LO["Enable/disable "] .. mod.name,
                 moduleName = mod.key,
             })
         end
@@ -208,4 +215,4 @@ local function BuildModulesTab(scroll)
 end
 
 -- Register the tab
-Panel:RegisterTab("modules", "Modules", BuildModulesTab, 2)
+Panel:RegisterTab("modules", LO["Modules"], BuildModulesTab, 2)

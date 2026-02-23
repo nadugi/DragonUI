@@ -9,6 +9,8 @@ Stance Bar, Pet Bar, Vehicle Bar, Totem Bar settings.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
 
@@ -17,15 +19,15 @@ local Panel = addon.OptionsPanel
 -- ============================================================================
 
 local function BuildAdditionalBarsTab(scroll)
-    C:AddDescription(scroll, "Bars that appear based on your class and situation.")
+    C:AddDescription(scroll, LO["Bars that appear based on your class and situation."])
 
     -- ====================================================================
     -- STANCE BAR
     -- ====================================================================
-    local stance = C:AddSection(scroll, "Stance Bar")
+    local stance = C:AddSection(scroll, LO["Stance Bar"])
 
     C:AddSlider(stance, {
-        label = "Button Size",
+        label = LO["Button Size"],
         dbPath = "additional.stance.button_size",
         min = 16, max = 64, step = 1,
         width = 200,
@@ -35,7 +37,7 @@ local function BuildAdditionalBarsTab(scroll)
     })
 
     C:AddSlider(stance, {
-        label = "Button Spacing",
+        label = LO["Button Spacing"],
         dbPath = "additional.stance.button_spacing",
         min = 0, max = 20, step = 1,
         width = 200,
@@ -47,10 +49,10 @@ local function BuildAdditionalBarsTab(scroll)
     -- ====================================================================
     -- PET BAR
     -- ====================================================================
-    local pet = C:AddSection(scroll, "Pet Bar")
+    local pet = C:AddSection(scroll, LO["Pet Bar"])
 
     C:AddToggle(pet, {
-        label = "Show Empty Slots",
+        label = LO["Show Empty Slots"],
         dbPath = "additional.pet.grid",
         callback = function()
             if addon.RefreshPetbar then addon.RefreshPetbar() end
@@ -60,11 +62,11 @@ local function BuildAdditionalBarsTab(scroll)
     -- ====================================================================
     -- VEHICLE BAR
     -- ====================================================================
-    local vehicle = C:AddSection(scroll, "Vehicle Bar")
+    local vehicle = C:AddSection(scroll, LO["Vehicle Bar"])
 
     C:AddToggle(vehicle, {
-        label = "Blizzard Art Style",
-        desc = "Use Blizzard vehicle bar art with health/power display. Requires reload.",
+        label = LO["Blizzard Art Style"],
+        desc = LO["Use Blizzard vehicle bar art with health/power display. Requires reload."],
         dbPath = "additional.vehicle.artstyle",
         requiresReload = true,
     })
@@ -72,10 +74,10 @@ local function BuildAdditionalBarsTab(scroll)
     -- ====================================================================
     -- TOTEM BAR
     -- ====================================================================
-    local totem = C:AddSection(scroll, "Totem Bar (Shaman)")
+    local totem = C:AddSection(scroll, LO["Totem Bar (Shaman)"])
 
     C:AddSlider(totem, {
-        label = "Button Size",
+        label = LO["Button Size"],
         getFunc = function()
             local cfg = addon.db.profile.additional.totem
             if cfg and cfg.button_size then return cfg.button_size end
@@ -93,7 +95,7 @@ local function BuildAdditionalBarsTab(scroll)
     })
 
     C:AddSlider(totem, {
-        label = "Button Spacing",
+        label = LO["Button Spacing"],
         getFunc = function()
             local cfg = addon.db.profile.additional.totem
             if cfg and cfg.button_spacing then return cfg.button_spacing end
@@ -112,4 +114,4 @@ local function BuildAdditionalBarsTab(scroll)
 end
 
 -- Register the tab (order 4 = right after Action Bars)
-Panel:RegisterTab("additionalbars", "Additional Bars", BuildAdditionalBarsTab, 4)
+Panel:RegisterTab("additionalbars", LO["Additional Bars"], BuildAdditionalBarsTab, 4)

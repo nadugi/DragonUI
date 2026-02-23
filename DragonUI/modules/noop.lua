@@ -113,6 +113,14 @@ local function ApplyNoopChangesImpl()
     end
     uiManagedFrames = nil
 
+    -- Prevent Blizzard from repositioning the chat dock when bar layout
+    -- changes.  DragonUI manages all bottom bars independently, so the
+    -- Blizzard bottomOffset calculation is meaningless and would move the
+    -- chat frame every time the dual-bar offset changes.
+    if FCF_UpdateDockPosition then
+        FCF_UpdateDockPosition = function() end
+    end
+
     if PlayerTalentFrame then
         PlayerTalentFrame:UnregisterEvent('ACTIVE_TALENT_GROUP_CHANGED')
     else

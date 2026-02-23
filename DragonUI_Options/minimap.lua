@@ -11,19 +11,22 @@ Based on ElvUI_OptionsUI pattern.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
+
 -- ============================================================================
 -- MINIMAP OPTIONS GROUP
 -- ============================================================================
 
 local minimapOptions = {
-    name = "Minimap",
+    name = LO["Minimap"],
     type = "group",
     order = 10,
     args = {
         -- Basic Settings
         scale = {
             type = "range",
-            name = "Scale",
+            name = LO["Scale"],
             min = 0.5,
             max = 2,
             step = 0.1,
@@ -40,8 +43,8 @@ local minimapOptions = {
         },
         border_alpha = {
             type = 'range',
-            name = "Border Alpha",
-            desc = "Top border alpha (0 to hide)",
+            name = LO["Border Alpha"],
+            desc = LO["Top border alpha (0 to hide)"],
             min = 0,
             max = 1,
             step = 0.1,
@@ -59,8 +62,8 @@ local minimapOptions = {
 
         addon_button_skin = {
             type = 'toggle',
-            name = "Addon Button Skin",
-            desc = "Apply DragonUI border styling to addon icons (e.g., bag addons)",
+            name = LO["Addon Button Skin"],
+            desc = LO["Apply DragonUI border styling to addon icons (e.g., bag addons)"],
             get = function()
                 return addon.db.profile.minimap.addon_button_skin
             end,
@@ -75,8 +78,8 @@ local minimapOptions = {
 
         addon_button_fade = {
             type = 'toggle',
-            name = "Addon Button Fade",
-            desc = "Addon icons fade out when not hovered",
+            name = LO["Addon Button Fade"],
+            desc = LO["Addon icons fade out when not hovered"],
             get = function()
                 return addon.db.profile.minimap.addon_button_fade
             end,
@@ -91,8 +94,8 @@ local minimapOptions = {
 
         player_arrow_size = {
             type = 'range',
-            name = "Player Arrow Size",
-            desc = "Size of the player arrow on the minimap",
+            name = LO["Player Arrow Size"],
+            desc = LO["Size of the player arrow on the minimap"],
             min = 8,
             max = 50,
             step = 1,
@@ -111,13 +114,13 @@ local minimapOptions = {
         -- Time & Calendar Section
         time_header = {
             type = 'header',
-            name = "Time & Calendar",
+            name = LO["Time & Calendar"],
             order = 10
         },
         clock = {
             type = 'toggle',
-            name = "Show Clock",
-            desc = "Show/hide the minimap clock",
+            name = LO["Show Clock"],
+            desc = LO["Show/hide the minimap clock"],
             get = function()
                 return addon.db.profile.minimap.clock
             end,
@@ -131,8 +134,8 @@ local minimapOptions = {
         },
         calendar = {
             type = 'toggle',
-            name = "Show Calendar",
-            desc = "Show/hide the calendar frame",
+            name = LO["Show Calendar"],
+            desc = LO["Show/hide the calendar frame"],
             get = function()
                 return addon.db.profile.minimap.calendar
             end,
@@ -150,8 +153,8 @@ local minimapOptions = {
         },
         clock_font_size = {
             type = 'range',
-            name = "Clock Font Size",
-            desc = "Font size for the clock numbers on the minimap",
+            name = LO["Clock Font Size"],
+            desc = LO["Font size for the clock numbers on the minimap"],
             min = 8,
             max = 20,
             step = 1,
@@ -170,13 +173,13 @@ local minimapOptions = {
         -- Display Settings Section
         display_header = {
             type = 'header',
-            name = "Display Settings",
+            name = LO["Display Settings"],
             order = 20
         },
         tracking_icons = {
             type = "toggle",
-            name = "Tracking Icons",
-            desc = "Show current tracking icons (old style)",
+            name = LO["Tracking Icons"],
+            desc = LO["Show current tracking icons (old style)"],
             get = function()
                 return addon.db.profile.minimap.tracking_icons
             end,
@@ -190,8 +193,8 @@ local minimapOptions = {
         },
         zoom_buttons = {
             type = 'toggle',
-            name = "Zoom Buttons",
-            desc = "Show zoom buttons (+/-)",
+            name = LO["Zoom Buttons"],
+            desc = LO["Show zoom buttons (+/-)"],
             get = function()
                 return addon.db.profile.minimap.zoom_buttons
             end,
@@ -211,8 +214,8 @@ local minimapOptions = {
         },
         blip_skin = {
             type = 'toggle',
-            name = "New Blip Style",
-            desc = "Use new DragonUI object icons on the minimap. When disabled, uses classic Blizzard icons.",
+            name = LO["New Blip Style"],
+            desc = LO["Use new DragonUI object icons on the minimap. When disabled, uses classic Blizzard icons."],
             get = function()
                 return addon.db.profile.minimap.blip_skin
             end,
@@ -226,8 +229,8 @@ local minimapOptions = {
         },
         zonetext_font_size = {
             type = 'range',
-            name = "Zone Text Size",
-            desc = "Zone text font size on top border",
+            name = LO["Zone Text Size"],
+            desc = LO["Zone text font size on top border"],
             min = 8,
             max = 20,
             step = 1,
@@ -247,13 +250,13 @@ local minimapOptions = {
         -- Position Section
         position_header = {
             type = 'header',
-            name = "Position",
+            name = LO["Position"],
             order = 30
         },
         position_reset = {
             type = 'execute',
-            name = "Reset Position",
-            desc = "Reset minimap to default position (top-right corner)",
+            name = LO["Reset Position"],
+            desc = LO["Reset minimap to default position (top-right corner)"],
             func = function()
                 if not addon.db.profile.widgets then
                     addon.db.profile.widgets = {}
@@ -269,7 +272,7 @@ local minimapOptions = {
                     addon.MinimapModule:UpdateSettings()
                 end
 
-                print("|cFF00FF00[DragonUI]|r Minimap position reset to default")
+                print("|cFF00FF00[DragonUI]|r " .. LO["Minimap position reset to default"])
             end,
             order = 31
         }

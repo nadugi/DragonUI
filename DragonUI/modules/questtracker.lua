@@ -236,9 +236,10 @@ function QuestTrackerModule:Initialize()
     
     -- Create text label for editor mode
     do
+        local L = addon.L
         local fontString = self.questTrackerFrame:CreateFontString(nil, "OVERLAY", 'GameFontNormalLarge')
         fontString:SetPoint("CENTER", self.questTrackerFrame, "CENTER", 0, 0)
-        fontString:SetText("Quest Tracker")
+        fontString:SetText(L and L["Quest Tracker"] or "Quest Tracker")
         fontString:Hide()
         self.questTrackerFrame.editorText = fontString
     end

@@ -9,6 +9,8 @@ Minimap scale, tracking, clock, display settings.
 local addon = DragonUI
 if not addon then return end
 
+local L = addon.L
+local LO = addon.LO
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
 
@@ -26,10 +28,10 @@ local function BuildMinimapTab(scroll)
     -- ====================================================================
     -- BASIC SETTINGS
     -- ====================================================================
-    local basic = C:AddSection(scroll, "Basic Settings")
+    local basic = C:AddSection(scroll, LO["Basic Settings"])
 
     C:AddSlider(basic, {
-        label = "Scale",
+        label = LO["Scale"],
         dbPath = "minimap.scale",
         min = 0.5, max = 2.0, step = 0.1,
         width = 200,
@@ -37,8 +39,8 @@ local function BuildMinimapTab(scroll)
     })
 
     C:AddSlider(basic, {
-        label = "Border Alpha",
-        desc = "Top border alpha (0 to hide).",
+        label = LO["Border Alpha"],
+        desc = LO["Top border alpha (0 to hide)."],
         dbPath = "minimap.border_alpha",
         min = 0, max = 1, step = 0.1,
         width = 200,
@@ -51,8 +53,8 @@ local function BuildMinimapTab(scroll)
     local fadeToggle  -- forward reference for disabled-state refresh
 
     C:AddToggle(basic, {
-        label = "Addon Button Skin",
-        desc = "Apply DragonUI border styling to addon icons.",
+        label = LO["Addon Button Skin"],
+        desc = LO["Apply DragonUI border styling to addon icons."],
         dbPath = "minimap.addon_button_skin",
         callback = function()
             if addon.RefreshMinimap then addon:RefreshMinimap() end
@@ -60,8 +62,8 @@ local function BuildMinimapTab(scroll)
     })
 
     fadeToggle = C:AddToggle(basic, {
-        label = "Addon Button Fade",
-        desc = "Addon icons fade out when not hovered.",
+        label = LO["Addon Button Fade"],
+        desc = LO["Addon icons fade out when not hovered."],
         dbPath = "minimap.addon_button_fade",
         callback = function()
             if addon.RefreshMinimap then addon:RefreshMinimap() end
@@ -69,14 +71,14 @@ local function BuildMinimapTab(scroll)
     })
 
     C:AddToggle(basic, {
-        label = "New Blip Style",
-        desc = "Use newer-style minimap blip icons.",
+        label = LO["New Blip Style"],
+        desc = LO["Use newer-style minimap blip icons."],
         dbPath = "minimap.blip_skin",
         callback = RefreshMinimap,
     })
 
     C:AddSlider(basic, {
-        label = "Player Arrow Size",
+        label = LO["Player Arrow Size"],
         dbPath = "minimap.player_arrow_size",
         min = 8, max = 50, step = 1,
         width = 200,
@@ -86,16 +88,16 @@ local function BuildMinimapTab(scroll)
     -- ====================================================================
     -- TIME & CALENDAR
     -- ====================================================================
-    local time = C:AddSection(scroll, "Time & Calendar")
+    local time = C:AddSection(scroll, LO["Time & Calendar"])
 
     C:AddToggle(time, {
-        label = "Show Clock",
+        label = LO["Show Clock"],
         dbPath = "minimap.clock",
         callback = RefreshMinimap,
     })
 
     C:AddToggle(time, {
-        label = "Show Calendar",
+        label = LO["Show Calendar"],
         dbPath = "minimap.calendar",
         callback = function()
             local val = C:GetDBValue("minimap.calendar")
@@ -106,7 +108,7 @@ local function BuildMinimapTab(scroll)
     })
 
     C:AddSlider(time, {
-        label = "Clock Font Size",
+        label = LO["Clock Font Size"],
         dbPath = "minimap.clock_font_size",
         min = 8, max = 20, step = 1,
         width = 200,
@@ -116,11 +118,11 @@ local function BuildMinimapTab(scroll)
     -- ====================================================================
     -- DISPLAY SETTINGS
     -- ====================================================================
-    local display = C:AddSection(scroll, "Display Settings")
+    local display = C:AddSection(scroll, LO["Display Settings"])
 
     C:AddToggle(display, {
-        label = "Tracking Icons",
-        desc = "Show current tracking icons (old style).",
+        label = LO["Tracking Icons"],
+        desc = LO["Show current tracking icons (old style)."],
         dbPath = "minimap.tracking_icons",
         callback = function()
             if addon.MinimapModule then addon.MinimapModule:UpdateTrackingIcon() end
@@ -128,15 +130,15 @@ local function BuildMinimapTab(scroll)
     })
 
     C:AddToggle(display, {
-        label = "Zoom Buttons",
-        desc = "Show zoom buttons (+/-).",
+        label = LO["Zoom Buttons"],
+        desc = LO["Show zoom buttons (+/-)."],
         dbPath = "minimap.zoom_buttons",
         callback = RefreshMinimap,
     })
 
     C:AddSlider(display, {
-        label = "Zone Text Font Size",
-        desc = "Font size of the zone text above the minimap.",
+        label = LO["Zone Text Font Size"],
+        desc = LO["Font size of the zone text above the minimap."],
         dbPath = "minimap.zonetext_font_size",
         min = 8, max = 20, step = 1,
         width = 200,
@@ -144,16 +146,16 @@ local function BuildMinimapTab(scroll)
     })
 
     C:AddButton(display, {
-        label = "Reset Minimap Position",
+        label = LO["Reset Minimap Position"],
         width = 200,
         callback = function()
             if addon.ResetMinimapPosition then
                 addon.ResetMinimapPosition()
             end
-            print("|cFF00FF00[DragonUI]|r Minimap position reset.")
+            print("|cFF00FF00[DragonUI]|r " .. LO["Minimap position reset."])
         end,
     })
 end
 
 -- Register the tab
-Panel:RegisterTab("minimap", "Minimap", BuildMinimapTab, 8)
+Panel:RegisterTab("minimap", LO["Minimap"], BuildMinimapTab, 8)
