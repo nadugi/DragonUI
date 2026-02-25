@@ -11,7 +11,7 @@
 - Main bar buttons properly centered within border frame
 - Minimap: improved compatibility with Carbonite and Questie
 - Quest tracker now shows all tracked quests
-- Party frames: disconnected members now display correctly
+- Party frames: disconnected members now display correctly (including mod-playerbots bots)
 - Party frames: hover text no longer hides "always show" text
 
 ## 📅 2026-02-23
