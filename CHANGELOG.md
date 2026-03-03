@@ -6,8 +6,9 @@
 
 ### Added
 - **Weapon Enchants frame** - Weapon enchant icons can now be separated from the buff bar into their own moveable frame (new "Auras" tab in options)
-- **Game menu button** - Restyled with custom texture
+- **Game menu button** - Restyled with custom texture __ <img width="170" height="29" alt="image" src="https://github.com/user-attachments/assets/9a9d3a4d-6923-4441-868e-0bd1dd0cc78c" />
 - **Dungeon Eye mover** - The LFG eye icon is now independently moveable via Editor Mode
+
 
 ### Fixed
 - **Action bar CVar** - Multibar buttons now correctly respect the "Always Show Action Bars" CVar
