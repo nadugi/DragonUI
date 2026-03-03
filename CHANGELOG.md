@@ -5,13 +5,14 @@
 ## 📅 2026-03-03
 
 ### Added
-- **Weapon Enchants frame** — New option ("Separate Weapon Enchants") to detach poison/sharpening stone/oil icons from the buff bar into their own independent frame. Fully moveable via Editor Mode with its own reset button. New "Auras" tab in the options panel
-- **DragonUI game menu button** — Styled shortcut button in the ESC menu to open DragonUI settings directly. Custom blue texture with smooth hover animation
+- **Weapon Enchants frame** — Weapon enchant icons can now be separated from the buff bar into their own moveable frame (new "Auras" tab in options)
+- **Game menu button** — Restyled with custom texture
 
 ### Fixed
-- **Action bar CVar** — Multibar buttons now correctly respect the "Always Show Action Bars" setting. Main bar empty slots always visible; multibars defer completely to Blizzard's show/hide logic. Replaced polling/timer approach with `hooksecurefunc("SetCVar")`
-- **Korean/CJK/Cyrillic font** — All unit frame text now uses `UF.DEFAULT_FONT` (locale-aware selector). Fixes garbled "???" text on koKR, zhCN, zhTW, and ruRU clients
-- **Leader/Assist icon layering** — Leader and master loot icons now render above the portrait overlay and border frames by reparenting to `EliteIconContainer`
+- **Action bar CVar** — Multibar buttons now correctly respect the "Always Show Action Bars" setting
+- **Korean font** — Unit frame text now renders correctly on koKR clients
+- **Compatibility module** — Fixed missing localized popup text
+- **Leader icon** — Fixed overlapping with portrait and border frames
 
 ## 📅 2026-02-25
 
