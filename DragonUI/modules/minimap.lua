@@ -876,6 +876,7 @@ local BLIZZARD_MINIMAP_BUTTONS = {
     ['GameTimeFrame'] = true,
     ['TimeManagerClockButton'] = true,
     ['MiniMapInstanceDifficulty'] = true,
+    ['MiniMapLFGFrame'] = true,   -- dungeon eye — has its own styling, skip skin
 }
 
 local function GetAllMinimapButtons()
@@ -1456,6 +1457,68 @@ function MinimapModule:InitializeMinimapSystem()
         end,
         module = self
     })
+
+    -- ── Dungeon Eye (MiniMapLFGFrame) — independent moveable frame ────────────
+    if MiniMapLFGFrame then
+        -- Size wrapper to match the eye frame (hardcoded fallback: eye is ~52x56)
+        local lfgW = (MiniMapLFGFrame:GetWidth()  > 0 and MiniMapLFGFrame:GetWidth())  or 52
+        local lfgH = (MiniMapLFGFrame:GetHeight() > 0 and MiniMapLFGFrame:GetHeight()) or 56
+        local lfgWrapper = CreateUIFrame(lfgW, lfgH, "LFGFrame")
+
+        -- Apply saved or default position
+        local lfgCfg    = addon.db and addon.db.profile.widgets and addon.db.profile.widgets.lfgframe
+        local lfgAnchor = (lfgCfg and lfgCfg.anchor) or "TOPRIGHT"
+        local lfgX      = (lfgCfg and lfgCfg.posX)   or -20
+        local lfgY      = (lfgCfg and lfgCfg.posY)   or -220
+        lfgWrapper:SetPoint(lfgAnchor, UIParent, lfgAnchor, lfgX, lfgY)
+
+        -- Hook SetPoint/ClearAllPoints BEFORE reparenting so Blizzard can't move it
+        local origLFGSetPoint       = MiniMapLFGFrame.SetPoint
+        local origLFGClearAllPoints = MiniMapLFGFrame.ClearAllPoints
+        local lfgLocked = false
+
+        MiniMapLFGFrame.SetPoint = function(self, ...)
+            if lfgLocked then return end
+            origLFGSetPoint(self, ...)
+        end
+        MiniMapLFGFrame.ClearAllPoints = function(self)
+            if lfgLocked then return end
+            origLFGClearAllPoints(self)
+        end
+
+        -- Reparent and lock in place
+        MiniMapLFGFrame:SetParent(lfgWrapper)
+        origLFGClearAllPoints(MiniMapLFGFrame)
+        origLFGSetPoint(MiniMapLFGFrame, "TOPLEFT", lfgWrapper, "TOPLEFT", 0, 0)
+        lfgLocked = true
+
+        -- Keep track of original Show/Hide so we can force-show in editor mode
+        local origLFGShow = MiniMapLFGFrame.Show
+        local origLFGHide = MiniMapLFGFrame.Hide
+        local lfgWasVisible = false  -- tracks state before editor opened
+
+        -- Register wrapper in editor so it becomes a moveable mover
+        addon:RegisterEditableFrame({
+            name    = "lfgframe",
+            frame   = lfgWrapper,
+            configPath = {"widgets", "lfgframe"},
+            showTest = function()
+                -- Hide the real eye so the wrapper can receive mouse/drag events
+                lfgWasVisible = MiniMapLFGFrame:IsShown()
+                origLFGHide(MiniMapLFGFrame)
+                lfgWrapper:Show()
+            end,
+            hideTest = function()
+                -- Restore eye visibility after editor closes
+                if lfgWasVisible then
+                    origLFGShow(MiniMapLFGFrame)
+                end
+            end,
+            module  = self
+        })
+
+        self.lfgWrapper = lfgWrapper
+    end
 
     local defaultX, defaultY = -7, 0
     local widgetConfig = addon.db and addon.db.profile.widgets and addon.db.profile.widgets.minimap

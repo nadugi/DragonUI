@@ -122,6 +122,11 @@ local defaults = {
                 anchor = "BOTTOM",
                 posX = -251,
                 posY = 145
+            },
+            lfgframe = {
+                anchor = "BOTTOMRIGHT",
+                posX = -270,
+                posY = 20
             }
         },
         -- Quest Tracker

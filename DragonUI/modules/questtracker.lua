@@ -69,7 +69,7 @@ local watchFrameAttached = false
 -- prevents Blizzard's UIParent_ManageFramePositions from managing WatchFrame size.
 -- Without this, WatchFrame_Update calculates maxHeight from tiny/stale bounds
 -- and only shows 1-2 quests.
-local QUESTTRACKER_MAX_HEIGHT = 700
+local QUESTTRACKER_MAX_HEIGHT = 600
 
 local function ReplaceBlizzardFrame(frame)
     local watchFrame = WatchFrame
@@ -232,7 +232,7 @@ function QuestTrackerModule:Initialize()
     end
 
     self.questTrackerFrame = CreateFrame('Frame', 'DragonUI_QuestTrackerFrame', UIParent)
-    self.questTrackerFrame:SetSize(230, 500)
+    self.questTrackerFrame:SetSize(230, 32)  -- Anchor frame: minimal height, WatchFrame manages its own size
     self.questTrackerFrame:SetFrameLevel(100)
     self.questTrackerFrame:SetFrameStrata('FULLSCREEN')
     self.questTrackerFrame:EnableMouse(false)
