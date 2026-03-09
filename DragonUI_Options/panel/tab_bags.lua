@@ -368,6 +368,7 @@ local function BuildBagsTab(scroll)
             if db and db.inventory then db.inventory.leftSideFilter = val end
         end,
         disabled = function() return not IsCombuctorEnabled() end,
+        requiresReload = true,
     })
 
     C:AddToggle(displaySection, {
@@ -382,6 +383,7 @@ local function BuildBagsTab(scroll)
             if db and db.bank then db.bank.leftSideFilter = val end
         end,
         disabled = function() return not IsCombuctorEnabled() end,
+        requiresReload = true,
     })
 end
 

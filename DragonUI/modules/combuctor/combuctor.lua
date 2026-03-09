@@ -141,7 +141,7 @@ local defaults = {
         bags = { -1, 5, 6, 7, 8, 9, 10, 11 },
         position = { "LEFT", nil, "LEFT", 24, 0 },
         showBags = false,
-        leftSideFilter = true,
+        leftSideFilter = false,
         w = 512,
         h = 512,
         sets = {},
@@ -1618,6 +1618,10 @@ do
         local name = bag:GetName()
         bag:SetSize(SIZE, SIZE)
 
+        -- Expand hit rect to match the visual NormalTexture size
+        local inset = (SIZE - NORMAL_TEXTURE_SIZE) / 2
+        bag:SetHitRectInsets(inset, inset, inset, inset)
+
         local icon = bag:CreateTexture(name .. "IconTexture", "BORDER")
         icon:SetAllPoints(bag)
 
@@ -1994,57 +1998,20 @@ do
         self.tooltip = set.name
         if set.icon then
             self:SetNormalTexture(set.icon)
+            self:GetNormalTexture():SetTexCoord(0.06, 0.94, 0.06, 0.94)
         end
     end
 
     function SideTab:SetReversed(reversed)
+        self.reversed = reversed and true or nil
         if self.border then
             self.border:ClearAllPoints()
             if reversed then
-                -- Flip border texture horizontally so the tab shape points left
                 self.border:SetTexCoord(1, 0, 0, 1)
-                self.border:SetPoint("TOPRIGHT", self, "TOPRIGHT", 13, 11)
+                self.border:SetPoint("TOPRIGHT", 3, 11)
             else
-                -- Normal: tab shape points right
                 self.border:SetTexCoord(0, 1, 0, 1)
-                self.border:SetPoint("TOPLEFT", self, "TOPLEFT", -13, 11)
-            end
-        end
-        -- Adjust icon, highlight and checked texture positions
-        local icon = self:GetNormalTexture()
-        local highlight = self:GetHighlightTexture()
-        local checked = self:GetCheckedTexture()
-        if reversed then
-            if icon then
-                icon:ClearAllPoints()
-                icon:SetPoint("TOPLEFT", self, "TOPLEFT", 10, 0)
-                icon:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 10, 0)
-            end
-            if highlight then
-                highlight:ClearAllPoints()
-                highlight:SetPoint("TOPLEFT", self, "TOPLEFT", 10, 0)
-                highlight:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 10, 0)
-            end
-            if checked then
-                checked:ClearAllPoints()
-                checked:SetPoint("TOPLEFT", self, "TOPLEFT", 10, 0)
-                checked:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 10, 0)
-            end
-        else
-            if icon then
-                icon:ClearAllPoints()
-                icon:SetPoint("TOPLEFT", self, "TOPLEFT", -10, 0)
-                icon:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -10, 0)
-            end
-            if highlight then
-                highlight:ClearAllPoints()
-                highlight:SetPoint("TOPLEFT", self, "TOPLEFT", -10, 0)
-                highlight:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -10, 0)
-            end
-            if checked then
-                checked:ClearAllPoints()
-                checked:SetPoint("TOPLEFT", self, "TOPLEFT", -10, 0)
-                checked:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -10, 0)
+                self.border:SetPoint("TOPLEFT", -3, 11)
             end
         end
     end
@@ -2088,12 +2055,12 @@ do
         if self.reversed then
             if self.buttons[1] then
                 self.buttons[1]:ClearAllPoints()
-                self.buttons[1]:SetPoint("TOPLEFT", parent, "TOPLEFT", -33, -80)
+                self.buttons[1]:SetPoint("TOPRIGHT", parent, "TOPLEFT", 10, -80)
             end
         else
             if self.buttons[1] then
                 self.buttons[1]:ClearAllPoints()
-                self.buttons[1]:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 10, -80)
+                self.buttons[1]:SetPoint("TOPLEFT", parent, "TOPRIGHT", -32, -65)
             end
         end
         -- Update border flip and icon offset for all visible buttons
