@@ -115,7 +115,7 @@ local function CreateDragonUIButton()
     -- standard game-menu button). One file per state is supported.
     -- Set TEX_CUSTOM_NORMAL = nil to fall back to the red template.
     -- ============================================================
-    local TEX_CUSTOM_NORMAL  = addon._dir .. "gamemenu_btn.blp"
+    local TEX_CUSTOM_NORMAL  = addon._dir .. "gamemenu_btn.tga"
     local TEX_CUSTOM_HOVER   = nil  -- misma textura, se aclara con vertex color en hover
     local TEX_CUSTOM_PUSHED  = nil  -- misma textura, se oscurece al pulsar
 
