@@ -395,7 +395,7 @@ local function BuildPetSection(scroll)
     })
 
     C:AddSlider(s, {
-        label = "Y Position",
+        label = LO["Y Position"},
         dbPath = "unitframe.pet.y",
         min = -2500, max = 2500, step = 1,
         width = 200,
@@ -482,9 +482,9 @@ local function BuildToTSection(scroll)
     -- Attachment status indicator
     local fotOverride = C:GetDBValue("unitframe.fot.override")
     if fotOverride then
-        C:AddDescription(fot, "|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode")
+        C:AddDescription(fot, LO["|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode"])
     else
-        C:AddDescription(fot, "|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Focus frame")
+        C:AddDescription(fot, LO["|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Focus frame"])
     end
 
     -- Re-attach button (only useful when detached)
