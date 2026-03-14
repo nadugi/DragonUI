@@ -144,7 +144,7 @@ local function BuildEnhancementsTab(scroll)
     C:AddSpacer(scroll)
     local iqSection = C:AddSection(scroll, LO["Item Quality Borders"])
 
-    C:AddDescription(iqSection, LO["Adds quality-colored glow borders to items in your bags, character panel, bank, merchant, and inspect frames: |cff1eff00green|r = uncommon, |cff0070ddblue|r = rare, |cffa335eepurple|r = epic, |cffff8000orange|r = legendary."])
+    C:AddDescription(iqSection, LO["Adds quality-colored glow borders to items in your bags, character panel, bank, merchant, and inspect frames: green = uncommon, blue = rare, purple = epic, orange = legendary."])
 
     C:AddToggle(iqSection, {
         label = LO["Enable Item Quality Borders"],
@@ -166,12 +166,12 @@ local function BuildEnhancementsTab(scroll)
     C:AddDropdown(iqSection, {
         label = LO["Minimum Quality"],
         values = {
-            [0] = LO["|cff9d9d9dPoor|r"],
-            [1] = LO["|cffffffffCommon|r"],
-            [2] = LO["|cff1eff00Uncommon|r"],
-            [3] = LO["|cff0070ddRare|r"],
-            [4] = LO["|cffa335eeEpic|r"],
-            [5] = LO["|cffff8000Legendary|r"],
+            [0] = "|cff9d9d9d" .. LO["Poor"] .. "|r",
+            [1] = "|cffffffff" .. LO["Common"] .. "|r",
+            [2] = "|cff1eff00" .. LO["Uncommon"] .. "|r",
+            [3] = "|cff0070dd" .. LO["Rare"] .. "|r",
+            [4] = "|cffa335ee" .. LO["Epic"] .. "|r",
+            [5] = "|cffff8000" .. LO["Legendary"] .. "|r",
         },
         getFunc = function()
             return GetModuleField("itemquality", "min_quality") or 2

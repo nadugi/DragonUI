@@ -461,6 +461,7 @@ L["Space between buttons for all additional bars"] = true
 L["Stance Bar"] = true
 L["Warriors, Druids, Death Knights"] = true
 L["X Position"] = true
+L["Y Position"] = true
 L["Y Offset"] = true
 L["Horizontal position of stance bar from screen center. Negative values move left, positive values move right."] = true
 

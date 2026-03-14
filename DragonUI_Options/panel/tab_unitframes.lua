@@ -415,7 +415,7 @@ local function BuildToTSection(scroll)
 
     local tot = C:AddSection(scroll, LO["Target of Target"])
     C:AddDescription(tot,
-        LO["Follows the Target frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely."])
+        LO["Follows the Target frame by default. Move it in Editor Mode (/dragonui edit) to detach and position freely."])
 
     C:AddSlider(tot, {
         label = LO["Scale"],
@@ -434,9 +434,9 @@ local function BuildToTSection(scroll)
     -- Attachment status indicator
     local totOverride = C:GetDBValue("unitframe.tot.override")
     if totOverride then
-        C:AddDescription(tot, LO["|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode"])
+        C:AddDescription(tot, "|cff1784d1\226\151\143 " .. LO["Detached — positioned freely via Editor Mode"] .. "|r")
     else
-        C:AddDescription(tot, LO["|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Target frame"])
+        C:AddDescription(tot, "|cffaaaaaa\226\151\143 " .. LO["Attached — follows Target frame"] .. "|r")
     end
 
     -- Re-attach button (only useful when detached)
@@ -463,7 +463,7 @@ local function BuildToTSection(scroll)
 
     local fot = C:AddSection(scroll, LO["Target of Focus"])
     C:AddDescription(fot,
-        LO["Follows the Focus frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely."])
+        LO["Follows the Focus frame by default. Move it in Editor Mode (/dragonui edit) to detach and position freely."])
 
     C:AddSlider(fot, {
         label = LO["Scale"],
@@ -482,9 +482,9 @@ local function BuildToTSection(scroll)
     -- Attachment status indicator
     local fotOverride = C:GetDBValue("unitframe.fot.override")
     if fotOverride then
-        C:AddDescription(fot, LO["|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode"])
+        C:AddDescription(fot, "|cff1784d1\226\151\143 " .. LO["Detached — positioned freely via Editor Mode"] .. "|r")
     else
-        C:AddDescription(fot, LO["|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Focus frame"])
+        C:AddDescription(fot, "|cffaaaaaa\226\151\143 " .. LO["Attached — follows Focus frame"] .. "|r")
     end
 
     -- Re-attach button (only useful when detached)
