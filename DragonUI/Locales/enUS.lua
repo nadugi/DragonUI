@@ -164,6 +164,15 @@ L["Reason:"] = true
 L["Disable the conflicting addon now?"] = true
 L["Disable"] = true
 L["Keep Both"] = true
+L["DragonUI - UnitFrameLayers Detected"] = true
+L["DragonUI already includes Unit Frame Layers functionality (heal prediction, absorb shields, and animated health loss)."] = true
+L["Choose how to resolve this overlap:"] = true
+L["Use DragonUI: disable external UnitFrameLayers and enable DragonUI layers."] = true
+L["Disable Both: disable external UnitFrameLayers and keep DragonUI layers disabled."] = true
+L["Use DragonUI"] = true
+L["Disable Both"] = true
+L["Use DragonUI Unit Frame Layers"] = true
+L["Disable both Unit Frame Layers"] = true
 
 -- Conflict reasons
 L["Conflicts with DragonUI's custom unit frame textures and power bar system."] = true

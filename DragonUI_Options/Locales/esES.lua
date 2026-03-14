@@ -733,6 +733,7 @@ L["Threat Glow"] = "Brillo de Amenaza"
 L["Show threat glow effect"] = "Mostrar efecto de brillo de amenaza"
 L["Show Name Background"] = "Mostrar Fondo del Nombre"
 L["Show the colored name background behind the target name."] = "Muestra el fondo de color detrás del nombre del objetivo."
+L["Show the colored name background behind the focus name."] = "Muestra el fondo de color detrás del nombre del foco."
 
 -- Focus frame
 L["Focus Frame"] = "Marco del Foco"

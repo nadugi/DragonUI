@@ -153,6 +153,20 @@ L["Boss3Frame"] = "보스 프레임"
 L["Boss4Frame"] = "보스 프레임"
 
 -- ============================================================================
+-- 호환성 모듈 (COMPATIBILITY MODULE)
+-- ============================================================================
+
+L["DragonUI - UnitFrameLayers Detected"] = "DragonUI - UnitFrameLayers 감지됨"
+L["DragonUI already includes Unit Frame Layers functionality (heal prediction, absorb shields, and animated health loss)."] = "DragonUI에는 이미 Unit Frame Layers 기능(치유 예측, 흡수 보호막, 애니메이션 체력 손실)이 포함되어 있습니다."
+L["Choose how to resolve this overlap:"] = "이 중복을 해결할 방법을 선택하세요:"
+L["Use DragonUI: disable external UnitFrameLayers and enable DragonUI layers."] = "DragonUI 사용: 외부 UnitFrameLayers를 끄고 DragonUI 레이어를 켭니다."
+L["Disable Both: disable external UnitFrameLayers and keep DragonUI layers disabled."] = "둘 다 비활성화: 외부 UnitFrameLayers를 끄고 DragonUI 레이어도 끈 상태로 유지합니다."
+L["Use DragonUI"] = "DragonUI 사용"
+L["Disable Both"] = "둘 다 비활성화"
+L["Use DragonUI Unit Frame Layers"] = "DragonUI Unit Frame Layers 사용"
+L["Disable both Unit Frame Layers"] = "두 Unit Frame Layers 모두 비활성화"
+
+-- ============================================================================
 -- 고정 팝업창 (STATIC POPUPS)
 -- ============================================================================
 

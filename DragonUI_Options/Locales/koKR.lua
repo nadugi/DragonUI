@@ -548,6 +548,7 @@ L["Reset Colors to Default"] = "기본 색상으로 초기화"
 L["Target Frame"] = "대상 프레임"
 L["Show Name Background"] = "이름 배경 표시"
 L["Show the colored name background behind the target name."] = "대상 이름 뒤의 색상 배경을 표시합니다."
+L["Show the colored name background behind the focus name."] = "주시 대상 이름 뒤의 색상 배경을 표시합니다."
 L["Focus Frame"] = "주시 대상 프레임"
 L["Override Position"] = "위치 수동 설정"
 L["Pet Frame"] = "소환수 프레임"
@@ -556,6 +557,9 @@ L["Move the pet frame independently from the player frame."] = "소환수 프레
 L["X Position"] = "가로 위치"
 L["Y Position"] = "세로 위치"
 L["Follows the Target frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely."] = "기본적으로 대상 프레임을 따라다니며, 편집 모드(|cffffd700/dragonui edit|r)에서 이동 시 고정 해제 및 자유로운 배치 가능"
+L["Follows the Target frame by default. Move it in Editor Mode (/dragonui edit) to detach and position freely."] = "기본적으로 대상 프레임을 따라다닙니다. 편집 모드(/dragonui edit)에서 이동하면 분리되어 자유롭게 배치할 수 있습니다."
+L["Detached — positioned freely via Editor Mode"] = "분리됨 — 편집 모드에서 자유롭게 배치됨"
+L["Attached — follows Target frame"] = "부착됨 — 대상 프레임을 따라감"
 -- Attachment status indicator
 L["|cff1784d1\226\151\143 Detached|r \226\128\148 positioned freely via Editor Mode"] = "|cff1784d1● 분리됨|r — 편집 모드에서 자유로운 배치 가능"
 L["|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Target frame"] = "|cffaaaaaa● 부착됨|r — 대상 프레임 추적"
@@ -566,6 +570,8 @@ L["Re-attach to Target"] = "대상 프레임에 다시 고정"
 -- Target of Focus
 L["Target of Focus"] = "주시 대상의 대상"
 L["Follows the Focus frame by default. Move it in Editor Mode (|cffffd700/dragonui edit|r) to detach and position freely."] = "기본적으로 주시 대상 프레임을 따라다니며, 편집 모드(|cffffd700/dragonui edit|r)에서 이동 시 고정 해제 및 자유로운 배치 가능"
+L["Follows the Focus frame by default. Move it in Editor Mode (/dragonui edit) to detach and position freely."] = "기본적으로 주시 대상 프레임을 따라다닙니다. 편집 모드(/dragonui edit)에서 이동하면 분리되어 자유롭게 배치할 수 있습니다."
+L["Attached — follows Focus frame"] = "부착됨 — 주시 대상 프레임을 따라감"
 
 -- Attachment status indicator
 L["|cffaaaaaa\226\151\143 Attached|r \226\128\148 follows Focus frame"] = "|cffaaaaaa● 부착됨|r — 주시 대상 프레임 추적"

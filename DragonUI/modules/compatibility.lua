@@ -68,6 +68,50 @@ behaviors.ConflictWarning = function(addonName, addonInfo)
     StaticPopup_Show(popupName)
 end
 
+-- Behavior: UnitFrameLayers overlap resolution
+behaviors.UnitFrameLayersCompatibility = function(addonName, addonInfo)
+    local popupName = "DRAGONUI_UNITFRAMELAYERS_DETECTED"
+
+    StaticPopupDialogs[popupName] = {
+        text = "|cFFFF0000" .. L["DragonUI Conflict Warning"] .. "|r\n\n" ..
+            "|cFFFFFF00" .. L["DragonUI - UnitFrameLayers Detected"] .. "|r\n\n" ..
+            L["DragonUI already includes Unit Frame Layers functionality (heal prediction, absorb shields, and animated health loss)."] .. "\n\n" ..
+            L["Choose how to resolve this overlap:"] .. "\n" ..
+            "- " .. L["Use DragonUI: disable external UnitFrameLayers and enable DragonUI layers."] .. "\n" ..
+            "- " .. L["Disable Both: disable external UnitFrameLayers and keep DragonUI layers disabled."],
+        button1 = L["Use DragonUI"],
+        button2 = L["Disable Both"],
+        OnAccept = function()
+            DisableAddOn(addonName)
+
+            addon.db = addon.db or {}
+            addon.db.profile = addon.db.profile or {}
+            addon.db.profile.modules = addon.db.profile.modules or {}
+            addon.db.profile.modules.unitframe_layers = addon.db.profile.modules.unitframe_layers or {}
+            addon.db.profile.modules.unitframe_layers.enabled = true
+
+            ReloadUI()
+        end,
+        OnCancel = function()
+            DisableAddOn(addonName)
+
+            addon.db = addon.db or {}
+            addon.db.profile = addon.db.profile or {}
+            addon.db.profile.modules = addon.db.profile.modules or {}
+            addon.db.profile.modules.unitframe_layers = addon.db.profile.modules.unitframe_layers or {}
+            addon.db.profile.modules.unitframe_layers.enabled = false
+
+            ReloadUI()
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = false,
+        preferredIndex = 3
+    }
+
+    StaticPopup_Show(popupName)
+end
+
 -- Behavior: CompactRaidFrame taint mitigation
 behaviors.CompactRaidFrameFix = function(addonName, addonInfo)
     
@@ -566,7 +610,7 @@ local ADDON_REGISTRY = {
     ["unitframelayers"] = {
         name = "UnitFrameLayers",
         reason = L["Conflicts with DragonUI's custom unit frame textures and power bar system."],
-        behavior = behaviors.ConflictWarning,
+        behavior = behaviors.UnitFrameLayersCompatibility,
         checkOnce = true
     },
     ["compactraidframe"] = {

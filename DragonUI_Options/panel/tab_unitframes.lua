@@ -322,6 +322,13 @@ local function BuildFocusSection(scroll)
     })
 
     C:AddToggle(s, {
+        label = LO["Show Name Background"],
+        desc = LO["Show the colored name background behind the focus name."],
+        dbPath = "unitframe.focus.show_name_background",
+        callback = refreshFocus,
+    })
+
+    C:AddToggle(s, {
         label = LO["Override Position"],
         dbPath = "unitframe.focus.override",
         callback = refreshFocus,

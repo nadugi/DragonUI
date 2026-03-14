@@ -484,6 +484,7 @@ local defaults = {
                 textFormat = 'both',
                 showHealthTextAlways = false,
                 showManaTextAlways = false,
+                show_name_background = true,
                 scale = 0.9,
                 override = false
             },
