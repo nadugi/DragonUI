@@ -124,7 +124,7 @@ end
 local function GetCompactRaidPartyOffsetX()
     -- Runtime-only offset: avoids persisting shifted positions in the profile.
     if IsCompactRaidFrameAddonLoaded() then
-        return 3
+        return 9
     end
     return 0
 end
