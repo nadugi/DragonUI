@@ -181,16 +181,10 @@ GetBagSlotFromButton = function(btn)
         slot = btn:GetID()
     end
 
-    -- Vanilla container item buttons: bag id comes from parent frame.
-    if (not bag) and btn.GetParent and btn.GetID then
-        local parent = btn:GetParent()
-        if parent and parent.GetID then
-            bag = parent:GetID()
-            slot = btn:GetID()
-        end
-    end
-
     -- Vanilla bank generic slots (BankFrameItem1..N).
+    -- Must be checked BEFORE the parent-frame path: BankFrame:GetID() returns 0
+    -- (truthy in Lua), which would cause the parent check to match and store the
+    -- lock under bag=0 (backpack) instead of BANK_CONTAINER.
     if (not bag) and btn.GetName then
         local name = btn:GetName()
         if name then
@@ -199,6 +193,15 @@ GetBagSlotFromButton = function(btn)
                 bag = BANK_CONTAINER
                 slot = bankSlot
             end
+        end
+    end
+
+    -- Vanilla container item buttons: bag id comes from parent frame.
+    if (not bag) and btn.GetParent and btn.GetID then
+        local parent = btn:GetParent()
+        if parent and parent.GetID then
+            bag = parent:GetID()
+            slot = btn:GetID()
         end
     end
 
@@ -220,16 +223,9 @@ local function GetHoveredBagSlot()
         slot = owner:GetID()
     end
 
-    -- Vanilla container item buttons: bag id is on parent frame.
-    if (not bag) and owner.GetParent and owner.GetID then
-        local parent = owner:GetParent()
-        if parent and parent.GetID then
-            bag = parent:GetID()
-            slot = owner:GetID()
-        end
-    end
-
-    -- Vanilla bank generic slots (BankFrameItem1..N) do not live in a bag frame.
+    -- Vanilla bank generic slots (BankFrameItem1..N).
+    -- Must be checked BEFORE the parent-frame path for the same reason as
+    -- GetBagSlotFromButton: BankFrame:GetID() returns 0 which is truthy.
     if (not bag) and owner.GetName then
         local name = owner:GetName()
         if name then
@@ -238,6 +234,15 @@ local function GetHoveredBagSlot()
                 bag = BANK_CONTAINER
                 slot = bankSlot
             end
+        end
+    end
+
+    -- Vanilla container item buttons: bag id is on parent frame.
+    if (not bag) and owner.GetParent and owner.GetID then
+        local parent = owner:GetParent()
+        if parent and parent.GetID then
+            bag = parent:GetID()
+            slot = owner:GetID()
         end
     end
 
