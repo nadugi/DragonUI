@@ -30,6 +30,7 @@ UF.SmallFrame = UF.SmallFrame or {}
 --   defaultX            : number  default X offset for positioning
 --   defaultY            : number  default Y offset for positioning
 --   cvar                : string? "showTargetOfTarget" for ToT, nil for FoT
+--   hideWhenParentIsPlayer : bool? Hide companion frame when parent unit is the player
 --   extraInit           : func?   function(Module, config) — called at end of InitializeFrame
 -- ============================================================================
 
@@ -95,13 +96,13 @@ function UF.SmallFrame.Create(opts)
             return false
         end
 
-        -- Always show if the companion unit exists
-        if UnitExists(opts.unitToken) then
-            return true
+        -- Optional guard used by ToT: do not show when target is the player.
+        if opts.hideWhenParentIsPlayer and UnitIsUnit(opts.parentUnit, "player") then
+            return false
         end
 
-        -- Also show when parent is targeting yourself
-        if UnitIsUnit(opts.parentUnit, "player") then
+        -- Always show if the companion unit exists
+        if UnitExists(opts.unitToken) then
             return true
         end
 
