@@ -1,10 +1,11 @@
 ## Interface: 30300
 ## Title: |cff1784d1DragonUI|r
-## Notes: |cffcaf7faDragonflightUI for 3.3.5a|r
-## Version: 2.3
+## Notes: |cffcaf7faDragonflight-style UI for 3.3.5a with mixed third-party licensing|r
+## Version: 2.4.0
 ## Author: NeticSoul
 ## SavedVariables: DragonUIDB
 ## OptionalDeps: Blizzard_TimeManager, Blizzard_PartyUI
+## X-License: MIT for project-authored code; bundled dependencies retain their own licenses
 
 Atlas.lua
 

@@ -2,9 +2,10 @@
 ## Title: |cff1784d1DragonUI|r |cffffffffOptions|r
 ## Notes: Configuration UI for DragonUI
 ## Author: DragonUI Team
-## Version: 1.0
+## Version: 2.4.0
 ## LoadOnDemand: 1
 ## Dependencies: DragonUI
+## X-License: MIT for project-authored code; bundled dependencies retain their own licenses
 
 # Libraries for options UI (loaded only when options are opened)
 libs\LibStub\LibStub.lua
