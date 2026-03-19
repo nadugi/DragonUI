@@ -71,12 +71,22 @@ end
 
 local function ToggleInventorySet(setName, enabled)
     local db = GetCombuctorDB()
-    if db and db.inventory then ToggleSetInList(db.inventory.sets, setName, enabled) end
+    if db and db.inventory then
+        ToggleSetInList(db.inventory.sets, setName, enabled)
+    end
+    if addon.RefreshCombuctorFrames then
+        addon.RefreshCombuctorFrames()
+    end
 end
 
 local function ToggleBankSet(setName, enabled)
     local db = GetCombuctorDB()
-    if db and db.bank then ToggleSetInList(db.bank.sets, setName, enabled) end
+    if db and db.bank then
+        ToggleSetInList(db.bank.sets, setName, enabled)
+    end
+    if addon.RefreshCombuctorFrames then
+        addon.RefreshCombuctorFrames()
+    end
 end
 
 -- Subtab exclude helpers
@@ -115,6 +125,10 @@ local function ToggleSubtab(parentName, childName, enabled)
                 if not found then table.insert(list, childName) end
             end
         end
+    end
+
+    if addon.RefreshCombuctorFrames then
+        addon.RefreshCombuctorFrames()
     end
 end
 
@@ -387,9 +401,9 @@ local function BuildBagsTab(scroll)
         setFunc = function(val)
             local db = GetCombuctorDB()
             if db and db.inventory then db.inventory.leftSideFilter = val end
+            if addon.RefreshCombuctorFrames then addon.RefreshCombuctorFrames() end
         end,
         disabled = function() return not IsCombuctorEnabled() end,
-        requiresReload = true,
     })
 
     C:AddToggle(displaySection, {
@@ -402,9 +416,9 @@ local function BuildBagsTab(scroll)
         setFunc = function(val)
             local db = GetCombuctorDB()
             if db and db.bank then db.bank.leftSideFilter = val end
+            if addon.RefreshCombuctorFrames then addon.RefreshCombuctorFrames() end
         end,
         disabled = function() return not IsCombuctorEnabled() end,
-        requiresReload = true,
     })
 end
 

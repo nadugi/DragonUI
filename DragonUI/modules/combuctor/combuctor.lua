@@ -2729,7 +2729,8 @@ local function ApplyCombuctorSystem()
 
     _G.ToggleBank = function(bag) mod:Toggle(bag) end
     _G.ToggleBackpack = function() mod:Toggle(BACKPACK_CONTAINER) end
-    _G.OpenAllBags = function() mod:Show(BACKPACK_CONTAINER) end
+    -- Some keybind paths call OpenAllBags directly, so make it a true toggle.
+    _G.OpenAllBags = function() mod:Toggle(BACKPACK_CONTAINER) end
     if _G.ToggleAllBags then
         _G.ToggleAllBags = function() mod:Toggle(BACKPACK_CONTAINER) end
     end
@@ -2815,6 +2816,22 @@ local function RestoreCombuctorSystem()
     CombuctorModule.applied = false
 end
 
+local function RefreshCombuctorFrames()
+    if not mod.frames then return end
+
+    for _, frame in pairs(mod.frames) do
+        if frame and frame.UpdateSets then
+            frame:UpdateSets()
+        end
+        if frame and frame.SetLeftSideFilter then
+            frame:SetLeftSideFilter(frame:IsSideFilterOnLeft())
+        end
+        if frame and frame.UpdateClampInsets then
+            frame:UpdateClampInsets()
+        end
+    end
+end
+
 -- ============================================================================
 -- PROFILE CHANGE HANDLER
 -- ============================================================================
@@ -2881,3 +2898,4 @@ end)
 -- Export for external use
 addon.ApplyCombuctorSystem = ApplyCombuctorSystem
 addon.RestoreCombuctorSystem = RestoreCombuctorSystem
+addon.RefreshCombuctorFrames = RefreshCombuctorFrames
