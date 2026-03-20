@@ -246,8 +246,6 @@ L["Some interface settings are not configured optimally for DragonUI. Do you wan
 L["Do you want to fix them now?"] = true
 L["Party/Arena Background"] = true
 L["Default Status Text"] = true
-L["Always Show Action Bars"] = true
-L["Show Clock"] = true
 L["Conflict"] = true
 L["Recommended"] = true
 

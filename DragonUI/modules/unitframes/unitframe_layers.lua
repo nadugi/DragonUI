@@ -348,6 +348,11 @@ end
 local function UnitFrameLayer_Initialize(self, myHealPredictionBar, otherHealPredictionBar, totalAbsorbBar,
 	totalAbsorbBarOverlay, overAbsorbGlow, overHealAbsorbGlow, healAbsorbBar,
 	healAbsorbBarLeftShadow, healAbsorbBarRightShadow, myManaCostPredictionBar)
+	if not (self and self.healthbar and myHealPredictionBar and otherHealPredictionBar and totalAbsorbBar
+		and totalAbsorbBarOverlay and overAbsorbGlow and overHealAbsorbGlow and healAbsorbBar
+		and healAbsorbBarLeftShadow and healAbsorbBarRightShadow and myManaCostPredictionBar) then
+		return
+	end
 
 	self.myHealPredictionBar = myHealPredictionBar;
 	self.otherHealPredictionBar = otherHealPredictionBar;
@@ -442,6 +447,7 @@ local function UnitFrameLayer_Initialize(self, myHealPredictionBar, otherHealPre
 	-- Force bars to use global OnUpdate handlers so prediction/loss logic updates
 	-- continuously even when other modules reset scripts on the statusbars.
 	self.__DragonUI_UFL = self.__DragonUI_UFL or {};
+	self.__DragonUI_UFL.initialized = true;
 	if self.healthbar then
 		if self.__DragonUI_UFL.origHealthOnUpdate == nil then
 			self.__DragonUI_UFL.origHealthOnUpdate = self.healthbar:GetScript("OnUpdate");
@@ -459,6 +465,82 @@ local function UnitFrameLayer_Initialize(self, myHealPredictionBar, otherHealPre
 	UnitFrameLayersModule.frames[self:GetName() or tostring(self)] = self;
 
 	UnitFrameHealPredictionBars_Update(self);
+end
+
+local function InitializeSingleUnitFrame(frame)
+	if not (frame and frame.GetName) then
+		return
+	end
+
+	if frame.__DragonUI_UFL and frame.__DragonUI_UFL.initialized then
+		return
+	end
+
+	local frameName = frame:GetName();
+	if not frameName then
+		return
+	end
+
+	-- Some frames (notably party frames) expose bars as named globals instead of
+	-- frame.healthbar/frame.manabar fields.
+	if not frame.healthbar then
+		frame.healthbar = _G[frameName .. "HealthBar"];
+	end
+	if not frame.manabar then
+		frame.manabar = _G[frameName .. "ManaBar"];
+	end
+
+	if not frame.unit then
+		local partyIndex = frameName:match("^PartyMemberFrame(%d+)$");
+		local partyPetIndex = frameName:match("^PartyMemberFrame(%d+)PetFrame$");
+		if partyIndex then
+			frame.unit = "party" .. partyIndex;
+		elseif partyPetIndex then
+			frame.unit = "partypet" .. partyPetIndex;
+		end
+	end
+
+	if not (frame.healthbar and frame.unit) then
+		return
+	end
+
+	if not frame.myHealPredictionBar then
+		CreateFrame("Frame", nil, frame, "DragonUI_StatusBarHealPredictionTemplate");
+	end
+
+	UnitFrameLayer_Initialize(frame,
+		_G[frameName .. "FrameMyHealPredictionBar"],
+		_G[frameName .. "FrameOtherHealPredictionBar"],
+		_G[frameName .. "TotalAbsorbBar"],
+		_G[frameName .. "TotalAbsorbBarOverlay"],
+		_G[frameName .. "FrameOverAbsorbGlow"],
+		_G[frameName .. "OverHealAbsorbGlow"],
+		_G[frameName .. "HealAbsorbBar"],
+		_G[frameName .. "HealAbsorbBarLeftShadow"],
+		_G[frameName .. "HealAbsorbBarRightShadow"],
+		_G[frameName .. "FrameManaCostPredictionBar"]
+	);
+end
+
+local function InitializeExistingUnitFrames()
+	-- Named Blizzard frames we support in 3.3.5a.
+	local candidates = {
+		_G.PlayerFrame,
+		_G.TargetFrame,
+		_G.FocusFrame,
+		_G.PetFrame,
+		_G.TargetFrameToT,
+		_G.FocusFrameToT,
+	};
+
+	for i = 1, 4 do
+		table.insert(candidates, _G["PartyMemberFrame" .. i]);
+		table.insert(candidates, _G["PartyMemberFrame" .. i .. "PetFrame"]);
+	end
+
+	for _, frame in ipairs(candidates) do
+		InitializeSingleUnitFrame(frame);
+	end
 end
 
 -- ============================================================================
@@ -582,24 +664,9 @@ local function ApplyUnitFrameLayersSystem()
 		hooksecurefunc("UnitFrame_OnEvent", function(self, event, ...)
 			if not IsModuleEnabled() then return end
 
-			if ( not self.myHealPredictionBar ) then
+			if ( not self.__DragonUI_UFL or not self.__DragonUI_UFL.initialized ) then
 				-- Create the heal prediction template on this frame
-				CreateFrame("Frame", nil, self, "DragonUI_StatusBarHealPredictionTemplate");
-				local thisName = self:GetName();
-				if not thisName then return end
-
-				UnitFrameLayer_Initialize(self,
-					_G[thisName .. "FrameMyHealPredictionBar"],
-					_G[thisName .. "FrameOtherHealPredictionBar"],
-					_G[thisName .. "TotalAbsorbBar"],
-					_G[thisName .. "TotalAbsorbBarOverlay"],
-					_G[thisName .. "FrameOverAbsorbGlow"],
-					_G[thisName .. "OverHealAbsorbGlow"],
-					_G[thisName .. "HealAbsorbBar"],
-					_G[thisName .. "HealAbsorbBarLeftShadow"],
-					_G[thisName .. "HealAbsorbBarRightShadow"],
-					_G[thisName .. "FrameManaCostPredictionBar"]
-				);
+				InitializeSingleUnitFrame(self);
 			end
 
 			UnitFrameHealPredictionBars_Update(self);
@@ -615,6 +682,10 @@ local function ApplyUnitFrameLayersSystem()
 		end);
 		UnitFrameLayersModule.hooks["UnitFrame_OnEvent"] = true;
 	end
+
+	-- Reload-safe bootstrap: initialize currently existing frames immediately,
+	-- instead of waiting for a future UnitFrame_OnEvent call.
+	InitializeExistingUnitFrames();
 
 	UnitFrameLayersModule.applied = true;
 	UnitFrameLayersModule.initialized = true;

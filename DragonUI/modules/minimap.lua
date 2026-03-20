@@ -2038,6 +2038,48 @@ local function GetClockTextFrame()
     return nil
 end
 
+local function SetShowClockCVar(enabled)
+    if not (GetCVar and SetCVar) then
+        return
+    end
+
+    local desired = enabled and "1" or "0"
+    local current = GetCVar("showClock")
+    if current ~= desired then
+        SetCVar("showClock", desired)
+    end
+end
+
+local function ApplyClockAndZoneLayout(showClock)
+    if TimeManagerClockButton then
+        if showClock then
+            TimeManagerClockButton:Show()
+        else
+            TimeManagerClockButton:Hide()
+        end
+    end
+
+    if MinimapZoneTextButton and MinimapBorderTop then
+        MinimapZoneTextButton:ClearAllPoints()
+        if showClock then
+            -- Restore default DragonUI position when clock is visible.
+            MinimapZoneTextButton:SetPoint("LEFT", MinimapBorderTop, "LEFT", 7, 1)
+            MinimapZoneTextButton:SetWidth(108)
+        else
+            -- Center the zone text when clock is hidden.
+            MinimapZoneTextButton:SetPoint("CENTER", MinimapBorderTop, "CENTER", 0, 1)
+            MinimapZoneTextButton:SetWidth(150)
+        end
+    end
+
+    if MinimapZoneText then
+        MinimapZoneText:SetJustifyH(showClock and "LEFT" or "CENTER")
+        if MinimapZoneTextButton then
+            MinimapZoneText:SetAllPoints(MinimapZoneTextButton)
+        end
+    end
+end
+
 -- Apply all minimap settings from the database
 function MinimapModule:ApplyAllSettings()
     if not addon.db or not addon.db.profile or not addon.db.profile.minimap then
@@ -2073,31 +2115,8 @@ function MinimapModule:ApplyAllSettings()
 
         --  APPLY CLOCK VISIBILITY AND ADJUST ZONE TEXT
         if settings.clock ~= nil then
-            if TimeManagerClockButton then
-                if settings.clock then
-                    TimeManagerClockButton:Show()
-                    -- Clock visible: zone text left-aligned (original position)
-                    if MinimapZoneTextButton then
-                        MinimapZoneTextButton:ClearAllPoints()
-                        MinimapZoneTextButton:SetPoint("LEFT", MinimapBorderTop, "LEFT", 7, 1)
-                        MinimapZoneTextButton:SetWidth(108)
-                    end
-                    if MinimapZoneText then
-                        MinimapZoneText:SetJustifyH("LEFT")
-                    end
-                else
-                    TimeManagerClockButton:Hide()
-                    -- Clock hidden: center zone text across the entire border
-                    if MinimapZoneTextButton then
-                        MinimapZoneTextButton:ClearAllPoints()
-                        MinimapZoneTextButton:SetPoint("CENTER", MinimapBorderTop, "CENTER", 0, 1)
-                        MinimapZoneTextButton:SetWidth(150) -- Wider for centered text
-                    end
-                    if MinimapZoneText then
-                        MinimapZoneText:SetJustifyH("CENTER")
-                    end
-                end
-            end
+            SetShowClockCVar(settings.clock)
+            ApplyClockAndZoneLayout(settings.clock)
         end
     end -- not isHybridMode (border, calendar, clock, zone text)
 

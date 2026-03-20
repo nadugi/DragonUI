@@ -244,8 +244,6 @@ L["Some interface settings are not configured optimally for DragonUI. Do you wan
 L["Do you want to fix them now?"] = "Möchtest du sie jetzt korrigieren?"
 L["Party/Arena Background"] = "Gruppen/Arena-Hintergrund"
 L["Default Status Text"] = "Standard-Statustext"
-L["Always Show Action Bars"] = "Aktionsleisten immer anzeigen"
-L["Show Clock"] = "Uhr anzeigen"
 L["Conflict"] = "Konflikt"
 L["Recommended"] = "Empfohlen"
 

@@ -142,20 +142,6 @@ local InterfaceSettingsFixer = {
             type = "CVar",
             category = "conflict",
             displayName = "Default Status Text"
-        },
-        {
-            setting = "alwaysShowActionBars",
-            desiredValue = "1",
-            type = "CVar",
-            category = "recommended",
-            displayName = "Always Show Action Bars"
-        },
-        {
-            setting = "showClock",
-            desiredValue = "1",
-            type = "CVar",
-            category = "recommended",
-            displayName = "Show Clock"
         }
     }
 }
@@ -215,13 +201,6 @@ local function ApplyInterfaceSettingsFixes(issues)
     end
     if UpdateTextStatusBarText then
         UpdateTextStatusBarText()
-    end
-    if TimeManagerClockButton then
-        if GetCVar("showClock") == "1" then
-            TimeManagerClockButton:Show()
-        else
-            TimeManagerClockButton:Hide()
-        end
     end
 
     InterfaceSettingsFixer.applyingFixes = false
