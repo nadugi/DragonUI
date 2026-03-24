@@ -17,6 +17,7 @@ if not L then return end
 -- L["Cannot toggle editor mode during combat!"] = "Impossible de basculer le mode éditeur en combat !"
 
 -- UnitFrameLayers compatibility popup
+L["TooltipWidget"] = true
 L["DragonUI - UnitFrameLayers Detected"] = true
 L["DragonUI already includes Unit Frame Layers functionality (heal prediction, absorb shields, and animated health loss)."] = true
 L["Choose how to resolve this overlap:"] = true

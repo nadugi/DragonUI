@@ -237,15 +237,10 @@ local function BuildEnhancementsTab(scroll)
         getFunc = function() return IsEnabled("tooltip") end,
         setFunc = function(val)
             EnsureModuleTable("tooltip").enabled = val
-            if val then
-                if addon.ApplyTooltipSystem then addon.ApplyTooltipSystem() end
-            else
-                if addon.RestoreTooltipSystem then addon.RestoreTooltipSystem() end
-            end
             -- Rebuild tab so sub-toggles update their disabled state
             Panel:SelectTab("enhancements")
         end,
-        requiresReload = false,
+            requiresReload = true,
     })
 
     C:AddToggle(ttSection, {

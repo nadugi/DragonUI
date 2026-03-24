@@ -4,7 +4,7 @@
 
 ![Interface Version](https://img.shields.io/badge/Interface-30300-blue)
 ![WoW Version](https://img.shields.io/badge/WoW-3.3.5a-orange)
-![Version](https://img.shields.io/badge/Version-2.4.0-green)
+![Version](https://img.shields.io/badge/Version-2.4.1-green)
 
 **DragonUI is a modular UI addon for World of Warcraft 3.3.5a (Wrath of the Lich King), inspired by Dragonflight UI Classic.**
 
@@ -19,23 +19,24 @@ DragonUI is in active development. While already in an advanced state, occasiona
 ## ✨ Features
 
 - 🧩 Modular system: enable or disable any major UI component independently.
-- 🎯 Custom action bars with configurable grid layouts, visibility rules, and quick presets.
-- 💚 Reworked unit frames for player, target, focus, party, pet, boss, ToT, and ToF, with elite dragon decoration and fat health bar modes.
+- 🎯 Custom action bars with configurable grid layouts, visibility rules, and button spacing.
+- 💚 Reworked unit frames for player, target, focus, party, pet, boss, ToT, and ToF, with elite dragon decoration, class portrait icons, and fat health bar modes.
 - 🩹 Unit Frame Layers: heal prediction, absorb shields, and animated health loss overlays.
 - 📊 XP & Reputation bars with Dragonflight and RetailUI styles, independently movable.
 - 🎒 Auto-sort for bags and bank with slot locking, plus integrated Combuctor for unified inventory browsing.
 - 🗺️ Custom minimap, micro menu, cast bars, buff frame, quest tracker, and more.
-- ⌨️ Editor Mode: move and reposition nearly every UI element.
+- ⌨️ Editor Mode: move and reposition nearly every UI element, with live X/Y coordinates and pixel-by-pixel position controls.
+- 📋 Layout Presets: save, load, duplicate, delete, import, and export full UI layouts and addon settings using shareable export codes.
 - 💬 Chat enhancements: moveable editbox, URL detection, chat copy, and `/tt` whisper command.
 - 🌙 Dark mode with three intensity presets and custom color picker.
 - 💎 Item quality borders, enhanced tooltips, range indicator, and latency indicator.
 - ⌨️ Easy-to-use keybinding mode on supported buttons.
 - ⚙️ Custom dark-themed configuration panel with profile support and per-module controls.
-- 🌍 Localization for English, Spanish, Mexican Spanish, German, Korean, and Russian.
+- 🌍 Localization for English, Spanish, Mexican Spanish, German, Korean, Russian, Simplified Chinese, and Traditional Chinese.
 
 ## 📦 Installation
 
-1. Download the [latest release archive](https://github.com/NeticSoul/DragonUI/releases/download/v2.4/DragonUI.zip).
+1. Download the [latest release archive](https://github.com/NeticSoul/DragonUI/releases/download/v2.4.1/DragonUI.zip).
 2. Extract the archive.
 3. Copy `DragonUI` and `DragonUI_Options` into your client's `Interface\AddOns\` folder.
 

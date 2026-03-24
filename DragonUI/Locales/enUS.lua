@@ -158,6 +158,7 @@ L["Boss3Frame"] = "Boss Frames"
 L["Boss4Frame"] = "Boss Frames"
 L["TotemBarOverlay"] = "Totem Bar"
 L["PlayerCastbar"] = "Castbar"
+L["TooltipWidget"] = "Tooltip"
 L["Auras"] = true
 L["WeaponEnchants"] = "Weapon Enchants"
 L["Loot Roll"] = true

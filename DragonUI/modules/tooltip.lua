@@ -60,6 +60,9 @@ local HEALTHBAR_HEIGHT = 6
 local HEALTHBAR_PADDING = -5  -- space between text and bar
 local HEALTHBAR_BOTTOM_PAD = 8  -- space between bar and tooltip bottom edge
 local HEALTHBAR_TOTAL = HEALTHBAR_HEIGHT + HEALTHBAR_PADDING + HEALTHBAR_BOTTOM_PAD
+local TOOLTIP_WIDGET_ANCHOR = "BOTTOMRIGHT"
+local TOOLTIP_WIDGET_POSX = -90
+local TOOLTIP_WIDGET_POSY = 100
 
 -- Restyle the existing Blizzard GameTooltipStatusBar instead of creating a new one.
 -- This avoids the double health bar bug.
@@ -242,7 +245,150 @@ end
 -- TOOLTIP ANCHOR (optional: anchor to cursor vs default)
 -- ============================================================================
 
--- This is hooked into GameTooltip_SetDefaultAnchor in ApplyTooltipSystem
+local function GetTooltipWidgetConfig()
+    if not addon.db or not addon.db.profile then
+        return nil
+    end
+
+    addon.db.profile.widgets = addon.db.profile.widgets or {}
+    addon.db.profile.widgets.tooltip = addon.db.profile.widgets.tooltip or {}
+
+    local cfg = addon.db.profile.widgets.tooltip
+    if not cfg.anchor then cfg.anchor = TOOLTIP_WIDGET_ANCHOR end
+    if cfg.posX == nil then cfg.posX = TOOLTIP_WIDGET_POSX end
+    if cfg.posY == nil then cfg.posY = TOOLTIP_WIDGET_POSY end
+
+    return cfg
+end
+
+local function IsTooltipCursorAnchored()
+    local config = GetModuleConfig()
+    return config and config.anchor_cursor == true
+end
+
+local function ApplyTooltipWidgetPosition()
+    local anchorFrame = TooltipModule.frames and TooltipModule.frames.tooltipAnchor
+    local cfg = GetTooltipWidgetConfig()
+    if not anchorFrame or not cfg then return end
+
+    anchorFrame:ClearAllPoints()
+    anchorFrame:SetPoint(cfg.anchor or TOOLTIP_WIDGET_ANCHOR, UIParent, cfg.anchor or TOOLTIP_WIDGET_ANCHOR, cfg.posX or TOOLTIP_WIDGET_POSX, cfg.posY or TOOLTIP_WIDGET_POSY)
+end
+
+local function SyncTooltipEditorPreviewLayout()
+    local anchorFrame = TooltipModule.frames and TooltipModule.frames.tooltipAnchor
+    if not anchorFrame or not GameTooltip or not GameTooltip:IsShown() then
+        return
+    end
+
+    local width = GameTooltip:GetWidth()
+    local height = GameTooltip:GetHeight()
+    if width and width > 0 and height and height > 0 then
+        anchorFrame:SetSize(width, height)
+    end
+
+    anchorFrame:SetFrameStrata(GameTooltip:GetFrameStrata() or "TOOLTIP")
+    anchorFrame:SetFrameLevel((GameTooltip:GetFrameLevel() or 1) + 20)
+end
+
+local function ShowTooltipEditorPreview()
+    local anchorFrame = TooltipModule.frames and TooltipModule.frames.tooltipAnchor
+    if not anchorFrame or IsTooltipCursorAnchored() then
+        return
+    end
+
+    if anchorFrame.editorText then
+        anchorFrame.editorText:ClearAllPoints()
+        anchorFrame.editorText:SetPoint("BOTTOM", anchorFrame, "BOTTOM", 0, 6)
+    end
+
+    GameTooltip:SetOwner(anchorFrame, "ANCHOR_NONE")
+    GameTooltip:ClearAllPoints()
+    GameTooltip:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT", 0, 0)
+    GameTooltip:SetUnit("player")
+    GameTooltip:Show()
+
+    SyncTooltipEditorPreviewLayout()
+    anchorFrame:SetScript("OnUpdate", function()
+        SyncTooltipEditorPreviewLayout()
+    end)
+end
+
+local function HideTooltipEditorPreview()
+    local anchorFrame = TooltipModule.frames and TooltipModule.frames.tooltipAnchor
+    if anchorFrame then
+        anchorFrame:SetScript("OnUpdate", nil)
+        anchorFrame:SetSize(180, 50)
+    end
+
+    if GameTooltip and GameTooltip:IsShown() then
+        GameTooltip:Hide()
+    end
+end
+
+local function EnsureTooltipWidget()
+    if TooltipModule.frames.tooltipAnchor or not addon.CreateUIFrame then
+        return
+    end
+
+    local anchorFrame = addon.CreateUIFrame(180, 50, "TooltipWidget")
+    TooltipModule.frames.tooltipAnchor = anchorFrame
+
+    anchorFrame:SetFrameStrata("TOOLTIP")
+    anchorFrame:SetFrameLevel((GameTooltip and GameTooltip:GetFrameLevel() or 1) + 20)
+
+    if anchorFrame.editorText then
+        anchorFrame.editorText:ClearAllPoints()
+        anchorFrame.editorText:SetPoint("BOTTOM", anchorFrame, "BOTTOM", 0, 6)
+    end
+
+    ApplyTooltipWidgetPosition()
+
+    if addon.RegisterEditableFrame then
+        addon:RegisterEditableFrame({
+            name = "tooltip",
+            frame = anchorFrame,
+            blizzardFrame = GameTooltip,
+            configPath = {"widgets", "tooltip"},
+            editorVisible = function()
+                return not IsTooltipCursorAnchored()
+            end,
+            showTest = ShowTooltipEditorPreview,
+            hideTest = HideTooltipEditorPreview,
+            onShow = ShowTooltipEditorPreview,
+            onHide = function()
+                HideTooltipEditorPreview()
+                ApplyTooltipWidgetPosition()
+            end,
+            module = TooltipModule,
+        })
+    end
+end
+
+local function EnsureTooltipAnchorHook()
+    if TooltipModule.hooks["DefaultAnchor"] then
+        return
+    end
+
+    hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
+        if tooltip ~= GameTooltip then return end
+
+        if IsTooltipCursorAnchored() then
+            tooltip:SetOwner(parent, "ANCHOR_CURSOR")
+            return
+        end
+
+        local anchorFrame = TooltipModule.frames and TooltipModule.frames.tooltipAnchor
+        if anchorFrame then
+            local point, _, relativePoint, x, y = anchorFrame:GetPoint(1)
+            tooltip:SetOwner(parent or UIParent, "ANCHOR_NONE")
+            tooltip:ClearAllPoints()
+            tooltip:SetPoint(point or TOOLTIP_WIDGET_ANCHOR, UIParent, relativePoint or point or TOOLTIP_WIDGET_ANCHOR, x or TOOLTIP_WIDGET_POSX, y or TOOLTIP_WIDGET_POSY)
+        end
+    end)
+
+    TooltipModule.hooks["DefaultAnchor"] = true
+end
 
 -- ============================================================================
 -- APPLY / RESTORE SYSTEM
@@ -251,17 +397,9 @@ end
 local function ApplyTooltipSystem()
     if TooltipModule.applied then return end
 
-    -- Hook GameTooltip_SetDefaultAnchor to optionally anchor to cursor
-    if not TooltipModule.hooks["DefaultAnchor"] then
-        hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
-            if not IsModuleEnabled() then return end
-            local config = GetModuleConfig()
-            if config and config.anchor_cursor then
-                tooltip:SetOwner(parent, "ANCHOR_CURSOR")
-            end
-        end)
-        TooltipModule.hooks["DefaultAnchor"] = true
-    end
+    EnsureTooltipAnchorHook()
+    EnsureTooltipWidget()
+    ApplyTooltipWidgetPosition()
 
     -- Hook GameTooltip:SetUnit
     if not TooltipModule.hooks["SetUnit"] then
@@ -328,6 +466,10 @@ end
 -- ============================================================================
 
 local function OnProfileChanged()
+    EnsureTooltipAnchorHook()
+    EnsureTooltipWidget()
+    ApplyTooltipWidgetPosition()
+
     if IsModuleEnabled() then
         ApplyTooltipSystem()
     else
@@ -348,6 +490,10 @@ eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "DragonUI" then
+        EnsureTooltipAnchorHook()
+        EnsureTooltipWidget()
+        ApplyTooltipWidgetPosition()
+
         if not IsModuleEnabled() then return end
 
         -- Register profile callbacks
@@ -360,6 +506,10 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
         end)
 
     elseif event == "PLAYER_ENTERING_WORLD" then
+        EnsureTooltipAnchorHook()
+        EnsureTooltipWidget()
+        ApplyTooltipWidgetPosition()
+
         if not IsModuleEnabled() then return end
         ApplyTooltipSystem()
     end

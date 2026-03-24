@@ -136,6 +136,11 @@ local defaults = {
                 anchor = "BOTTOMRIGHT",
                 posX = -270,
                 posY = 20
+            },
+            tooltip = {
+                anchor = "BOTTOMRIGHT",
+                posX = -90,
+                posY = 100
             }
         },
         -- Quest Tracker
