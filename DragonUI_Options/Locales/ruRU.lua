@@ -55,9 +55,9 @@ L["Error: DragonUI addon not found!"] = "Ошибка: Аддон DragonUI не 
 -- ============================================================================
 
 L["Changing this setting requires a UI reload to apply correctly."] = "Для применения этой настройки требуется перезагрузка интерфейса."
-L["Reload UI"] = "Перезагрузить интерфейс"
+L["Reload UI"] = "Перезагрузить"
 L["Not Now"] = "Не сейчас"
-L["Reload Now"] = "Перезагрузить сейчас"
+L["Reload Now"] = "Перезагрузить"
 L["Cancel"] = "Отмена"
 L["Yes"] = "Да"
 L["No"] = "Нет"
