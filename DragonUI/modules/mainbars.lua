@@ -442,30 +442,18 @@ end
     local alpha = (addon.db and addon.db.profile and addon.db.profile.buttons and
                       addon.db.profile.buttons.hide_main_bar_background) and 0 or 1
 
-    -- handle button background textures
-    for i = 1, NUM_ACTIONBAR_BUTTONS do
-        local button = _G["ActionButton" .. i]
-        if button then
-            if button.NormalTexture then
-                button.NormalTexture:SetAlpha(alpha)
-            end
-            
-            -- Also hide textures applied by SetThreeSlice
-            local regions = {button:GetRegions()}
-            for j = 1, #regions do
-                local region = regions[j]
-                if region and region:GetObjectType() == "Texture" then
-                    local drawLayer = region:GetDrawLayer()
-                    -- Hide background and artwork textures that aren't icons
-                    if (drawLayer == "BACKGROUND" or drawLayer == "ARTWORK") and region ~= button:GetNormalTexture() then
-                        local texPath = region:GetTexture()
-                        if texPath and not string.find(texPath, "ICON") and not string.find(texPath, "Interface\\Icons") then
-                            region:SetAlpha(alpha)
-                        end
-                    end
-                end
-            end
-        end
+    -- This option is for the main bar frame art, not the per-button slot/shadow art.
+    -- Button background handling is controlled separately by buttons.only_actionbackground.
+    if addon.pUiMainBarArt then addon.pUiMainBarArt:SetAlpha(alpha) end
+    if MainMenuBarArtFrame then MainMenuBarArtFrame:SetAlpha(alpha) end
+    if MainMenuBarLeftEndCap then MainMenuBarLeftEndCap:SetAlpha(alpha) end
+    if MainMenuBarRightEndCap then MainMenuBarRightEndCap:SetAlpha(alpha) end
+    if ActionBarUpButton then ActionBarUpButton:SetAlpha(alpha) end
+    if ActionBarDownButton then ActionBarDownButton:SetAlpha(alpha) end
+    if MainMenuBarPageNumber then MainMenuBarPageNumber:SetAlpha(alpha) end
+    if addon.pUiMainBar then
+        if addon.pUiMainBar.BorderArt then addon.pUiMainBar.BorderArt:SetAlpha(alpha) end
+        if addon.pUiMainBar.Background then addon.pUiMainBar.Background:SetAlpha(alpha) end
     end
 
     if pUiMainBar then
