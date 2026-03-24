@@ -666,6 +666,49 @@ local CreateCustomTexts
 local UpdateHealthText
 local UpdateManaText
 
+local PARTY_TEXT_SIZE = 11
+local PARTY_TEXT_FLAGS = "OUTLINE"
+
+local function ApplyPartyTextVisualStyle(fontString)
+    if not fontString then
+        return
+    end
+
+    fontString:SetTextColor(1, 1, 1, 1)
+    fontString:SetShadowOffset(1, -1)
+    fontString:SetShadowColor(0, 0, 0, 1)
+end
+
+local function GetPartyTextFontPath()
+    return (UF and UF.DEFAULT_FONT) or (addon.Fonts and addon.Fonts.PRIMARY) or "Fonts\\FRIZQT__.TTF"
+end
+
+local function EnsurePartyTextFont(fontString)
+    if not fontString then
+        return false
+    end
+
+    if fontString:GetFont() then
+        return true
+    end
+
+    if GameFontNormalSmall then
+        fontString:SetFontObject(TextStatusBarText or GameFontNormalSmall)
+    end
+
+    local fontPath = GetPartyTextFontPath()
+    if fontPath and fontString:SetFont(fontPath, PARTY_TEXT_SIZE, PARTY_TEXT_FLAGS) then
+        return true
+    end
+
+    local fallbackPath, _, fallbackFlags = fontString:GetFont()
+    if fallbackPath then
+        return fontString:SetFont(fallbackPath, PARTY_TEXT_SIZE, fallbackFlags or PARTY_TEXT_FLAGS) and true or false
+    end
+
+    return false
+end
+
 -- ===============================================================
 -- TEXT AND COLOR UPDATE FUNCTIONS
 -- ===============================================================
@@ -734,11 +777,11 @@ UpdateHealthText = function(statusBar, forceShow)
         if textFormat == "both" and type(finalText) == "table" then
             -- Dual format: use left and right, hide center
             if frame.DragonUI_HealthText then frame.DragonUI_HealthText:Hide() end
-            if frame.DragonUI_HealthTextLeft and frame.DragonUI_HealthTextLeft:GetFont() then
+            if EnsurePartyTextFont(frame.DragonUI_HealthTextLeft) then
                 frame.DragonUI_HealthTextLeft:SetText(finalText.left or "")
                 frame.DragonUI_HealthTextLeft:Show()
             end
-            if frame.DragonUI_HealthTextRight and frame.DragonUI_HealthTextRight:GetFont() then
+            if EnsurePartyTextFont(frame.DragonUI_HealthTextRight) then
                 frame.DragonUI_HealthTextRight:SetText(finalText.right or "")
                 frame.DragonUI_HealthTextRight:Show()
             end
@@ -746,7 +789,7 @@ UpdateHealthText = function(statusBar, forceShow)
             -- Simple format: use center, hide left and right
             if frame.DragonUI_HealthTextLeft then frame.DragonUI_HealthTextLeft:Hide() end
             if frame.DragonUI_HealthTextRight then frame.DragonUI_HealthTextRight:Hide() end
-            if healthText and healthText:GetFont() then
+            if EnsurePartyTextFont(healthText) then
                 healthText:SetText(finalText or "")
                 healthText:Show()
             end
@@ -824,11 +867,11 @@ UpdateManaText = function(statusBar, forceShow)
         if textFormat == "both" and type(finalText) == "table" then
             -- Dual format: use left and right, hide center
             if customText then customText:Hide() end
-            if frame.DragonUI_ManaTextLeft and frame.DragonUI_ManaTextLeft:GetFont() then
+            if EnsurePartyTextFont(frame.DragonUI_ManaTextLeft) then
                 frame.DragonUI_ManaTextLeft:SetText(finalText.left or "")
                 frame.DragonUI_ManaTextLeft:Show()
             end
-            if frame.DragonUI_ManaTextRight and frame.DragonUI_ManaTextRight:GetFont() then
+            if EnsurePartyTextFont(frame.DragonUI_ManaTextRight) then
                 frame.DragonUI_ManaTextRight:SetText(finalText.right or "")
                 frame.DragonUI_ManaTextRight:Show()
             end
@@ -836,7 +879,7 @@ UpdateManaText = function(statusBar, forceShow)
             -- Simple format: use center, hide left and right
             if frame.DragonUI_ManaTextLeft then frame.DragonUI_ManaTextLeft:Hide() end
             if frame.DragonUI_ManaTextRight then frame.DragonUI_ManaTextRight:Hide() end
-            if customText and customText:GetFont() then
+            if EnsurePartyTextFont(customText) then
                 customText:SetText(finalText or "")
                 customText:Show()
             end
@@ -915,13 +958,24 @@ end
 
 -- Create our own text elements for party frames
 CreateCustomTexts = function(frame)
-    if not frame or frame.DragonUI_CustomTexts then return end
+    if not frame then return end
+
+    if frame.DragonUI_CustomTexts then
+        EnsurePartyTextFont(frame.DragonUI_HealthText)
+        EnsurePartyTextFont(frame.DragonUI_HealthTextLeft)
+        EnsurePartyTextFont(frame.DragonUI_HealthTextRight)
+        EnsurePartyTextFont(frame.DragonUI_ManaText)
+        EnsurePartyTextFont(frame.DragonUI_ManaTextLeft)
+        EnsurePartyTextFont(frame.DragonUI_ManaTextRight)
+        return
+    end
+
+    if InCombatLockdown() then
+        return
+    end
     
     local frameIndex = frame:GetID()
     if not frameIndex or frameIndex < 1 or frameIndex > 4 then return end
-    
-    -- Validate font before creating text elements
-    local font = UF.DEFAULT_FONT or "Fonts\\FRIZQT__.TTF"
     
     -- Initialize hover states (separate for health and mana)
     if not hoverStates[frameIndex] then
@@ -944,31 +998,31 @@ CreateCustomTexts = function(frame)
     if healthBar then
         -- Center text for simple formats (numeric, percentage, formatted)
         if not frame.DragonUI_HealthText then
-            frame.DragonUI_HealthText = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
-            frame.DragonUI_HealthText:SetFont(font, 10, "OUTLINE")
-            frame.DragonUI_HealthText:SetTextColor(1, 1, 1, 1)
-            frame.DragonUI_HealthText:SetPoint("CENTER", healthBar, "CENTER", 0, 0)
+            frame.DragonUI_HealthText = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+            frame.DragonUI_HealthText:SetPoint("CENTER", healthBar, "CENTER", 2, 0)
             frame.DragonUI_HealthText:SetJustifyH("CENTER")
             frame.DragonUI_HealthText:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
+        ApplyPartyTextVisualStyle(frame.DragonUI_HealthText)
+        EnsurePartyTextFont(frame.DragonUI_HealthText)
         -- Left text for "both" format (percentage)
         if not frame.DragonUI_HealthTextLeft then
-            frame.DragonUI_HealthTextLeft = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
-            frame.DragonUI_HealthTextLeft:SetFont(font, 10, "OUTLINE")
-            frame.DragonUI_HealthTextLeft:SetTextColor(1, 1, 1, 1)
-            frame.DragonUI_HealthTextLeft:SetPoint("RIGHT", healthBar, "RIGHT", -39, 0)
+            frame.DragonUI_HealthTextLeft = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+            frame.DragonUI_HealthTextLeft:SetPoint("RIGHT", healthBar, "RIGHT", -37, 0)
             frame.DragonUI_HealthTextLeft:SetJustifyH("LEFT")
             frame.DragonUI_HealthTextLeft:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
+        ApplyPartyTextVisualStyle(frame.DragonUI_HealthTextLeft)
+        EnsurePartyTextFont(frame.DragonUI_HealthTextLeft)
         -- Right text for "both" format (numbers)
         if not frame.DragonUI_HealthTextRight then
-            frame.DragonUI_HealthTextRight = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
-            frame.DragonUI_HealthTextRight:SetFont(font, 10, "OUTLINE")
-            frame.DragonUI_HealthTextRight:SetTextColor(1, 1, 1, 1)
-            frame.DragonUI_HealthTextRight:SetPoint("RIGHT", healthBar, "RIGHT", -3, 0)
+            frame.DragonUI_HealthTextRight = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+            frame.DragonUI_HealthTextRight:SetPoint("RIGHT", healthBar, "RIGHT", -1, 0)
             frame.DragonUI_HealthTextRight:SetJustifyH("RIGHT")
             frame.DragonUI_HealthTextRight:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
+        ApplyPartyTextVisualStyle(frame.DragonUI_HealthTextRight)
+        EnsurePartyTextFont(frame.DragonUI_HealthTextRight)
     end
 
     -- Create custom mana text elements (dual system for "both" format)
@@ -976,31 +1030,31 @@ CreateCustomTexts = function(frame)
     if manaBar then
         -- Center text for simple formats
         if not frame.DragonUI_ManaText then
-            frame.DragonUI_ManaText = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
-            frame.DragonUI_ManaText:SetFont(font, 10, "OUTLINE")
-            frame.DragonUI_ManaText:SetTextColor(1, 1, 1, 1)
-            frame.DragonUI_ManaText:SetPoint("CENTER", manaBar, "CENTER", 1.5, 0)
+            frame.DragonUI_ManaText = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+            frame.DragonUI_ManaText:SetPoint("CENTER", manaBar, "CENTER", 3.5, 0)
             frame.DragonUI_ManaText:SetJustifyH("CENTER")
             frame.DragonUI_ManaText:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
+        ApplyPartyTextVisualStyle(frame.DragonUI_ManaText)
+        EnsurePartyTextFont(frame.DragonUI_ManaText)
         -- Left text for "both" format (percentage)
         if not frame.DragonUI_ManaTextLeft then
-            frame.DragonUI_ManaTextLeft = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
-            frame.DragonUI_ManaTextLeft:SetFont(font, 10, "OUTLINE")
-            frame.DragonUI_ManaTextLeft:SetTextColor(1, 1, 1, 1)
-            frame.DragonUI_ManaTextLeft:SetPoint("RIGHT", manaBar, "RIGHT", -39, 0)
+            frame.DragonUI_ManaTextLeft = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+            frame.DragonUI_ManaTextLeft:SetPoint("RIGHT", manaBar, "RIGHT", -37, 0)
             frame.DragonUI_ManaTextLeft:SetJustifyH("LEFT")
             frame.DragonUI_ManaTextLeft:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
+        ApplyPartyTextVisualStyle(frame.DragonUI_ManaTextLeft)
+        EnsurePartyTextFont(frame.DragonUI_ManaTextLeft)
         -- Right text for "both" format (numbers)
         if not frame.DragonUI_ManaTextRight then
-            frame.DragonUI_ManaTextRight = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY")
-            frame.DragonUI_ManaTextRight:SetFont(font, 10, "OUTLINE")
-            frame.DragonUI_ManaTextRight:SetTextColor(1, 1, 1, 1)
-            frame.DragonUI_ManaTextRight:SetPoint("RIGHT", manaBar, "RIGHT", -3, 0)
+            frame.DragonUI_ManaTextRight = frame.DragonUI_TextFrame:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+            frame.DragonUI_ManaTextRight:SetPoint("RIGHT", manaBar, "RIGHT", -1, 0)
             frame.DragonUI_ManaTextRight:SetJustifyH("RIGHT")
             frame.DragonUI_ManaTextRight:SetDrawLayer("OVERLAY", 1) -- Above everything
         end
+        ApplyPartyTextVisualStyle(frame.DragonUI_ManaTextRight)
+        EnsurePartyTextFont(frame.DragonUI_ManaTextRight)
     end
     
     -- Create invisible dummy frames for independent hover (taint-free)
