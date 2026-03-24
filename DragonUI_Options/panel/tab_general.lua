@@ -458,14 +458,11 @@ local function BuildGeneralTab(scroll)
     end
     table.sort(presetNames)
 
-    -- Selected preset tracking (local to this build cycle)
-    local selectedPreset = nil
-
     if #presetNames == 0 then
         C:AddLabel(presets, "|cff888888" .. LO["No presets saved yet."] .. "|r")
         C:AddSpacer(presets)
     else
-        -- Preset list: clickable labels styled as selectable rows
+        -- Preset list: clickable labels that trigger load on click
         for _, name in ipairs(presetNames) do
             local entry = presetData[name]
             local dateStr = entry.date or ""
@@ -482,7 +479,7 @@ local function BuildGeneralTab(scroll)
                 btn.label:SetFont(C.Theme.font, 12, "")
             end
 
-            -- Selection highlight frame
+            -- Hover highlight frame (visual feedback only)
             local hlFrame = CreateFrame("Frame", nil, btn.frame)
             hlFrame:SetAllPoints(btn.frame)
             hlFrame:SetFrameLevel(btn.frame:GetFrameLevel())
@@ -492,9 +489,8 @@ local function BuildGeneralTab(scroll)
             hlTex:SetVertexColor(0.09, 0.52, 0.82, 0)
 
             btn:SetCallback("OnClick", function()
-                selectedPreset = name
-                -- Refresh to update selection visual
-                Panel:SelectTab("general")
+                local dialog = StaticPopup_Show("DRAGONUI_PRESET_LOAD", name)
+                if dialog then dialog.data = name end
             end)
             btn:SetCallback("OnEnter", function()
                 hlTex:SetVertexColor(0.09, 0.52, 0.82, 0.15)
