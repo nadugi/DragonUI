@@ -329,20 +329,33 @@ end
 
 local function UpdateCalendarDate()
     local _, _, day = CalendarGetDate()
+    if not day or day < 1 or day > 31 then
+        return
+    end
 
     local gameTimeFrame = GameTimeFrame
+    if not gameTimeFrame then
+        return
+    end
 
     local normalTexture = gameTimeFrame:GetNormalTexture()
+    if not normalTexture then
+        return
+    end
     normalTexture:SetAllPoints(gameTimeFrame)
     SetAtlasTexture(normalTexture, 'Minimap-Calendar-' .. day .. '-Normal')
 
     local highlightTexture = gameTimeFrame:GetHighlightTexture()
-    highlightTexture:SetAllPoints(gameTimeFrame)
-    SetAtlasTexture(highlightTexture, 'Minimap-Calendar-' .. day .. '-Highlight')
+    if highlightTexture then
+        highlightTexture:SetAllPoints(gameTimeFrame)
+        SetAtlasTexture(highlightTexture, 'Minimap-Calendar-' .. day .. '-Highlight')
+    end
 
     local pushedTexture = gameTimeFrame:GetPushedTexture()
-    pushedTexture:SetAllPoints(gameTimeFrame)
-    SetAtlasTexture(pushedTexture, 'Minimap-Calendar-' .. day .. '-Pushed')
+    if pushedTexture then
+        pushedTexture:SetAllPoints(gameTimeFrame)
+        SetAtlasTexture(pushedTexture, 'Minimap-Calendar-' .. day .. '-Pushed')
+    end
 end
 
 local function ReplaceBlizzardFrame(frame)
@@ -446,6 +459,21 @@ local function ReplaceBlizzardFrame(frame)
         gameTimeFrame:GetFontString():Hide()
 
         UpdateCalendarDate()
+
+        -- Blizzard refreshes calendar visuals on several events; re-apply our atlas after each update.
+        if not gameTimeFrame.DragonUI_CalendarHooked then
+            gameTimeFrame.DragonUI_CalendarHooked = true
+            gameTimeFrame:HookScript("OnEvent", function()
+                if MinimapModule.applied then
+                    UpdateCalendarDate()
+                end
+            end)
+            gameTimeFrame:HookScript("OnShow", function()
+                if MinimapModule.applied then
+                    UpdateCalendarDate()
+                end
+            end)
+        end
     end
 
     -- Configure DurabilityFrame properly
@@ -1190,10 +1218,8 @@ local function ApplySkinsToAllMinimapButtons()
 
     local buttons = GetAllMinimapButtons()
     for _, child in ipairs(buttons) do
-        -- Apply to unskinned buttons OR re-activate previously unskinned ones
-        if not child.DragonUI_Skinned or not child.DragonUI_SkinActive then
-            ApplyAddonIconSkin(child)
-        end
+        -- Always re-apply. Some addons/editor transitions mutate existing icon regions in-place.
+        ApplyAddonIconSkin(child)
     end
 end
 
@@ -1254,12 +1280,10 @@ minimapButtonSkinFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 minimapButtonSkinFrame:SetScript("OnEvent", function(self, event, addonName)
     if event == "PLAYER_ENTERING_WORLD" then
         -- Watch for new minimap children for a few seconds after login/reload.
-        -- Instead of fixed delays, we detect when the child count changes (cheap C call)
-        -- and re-scan immediately — skins buttons within 0.3s of creation.
+        -- Re-scan periodically: some addons mutate existing icon regions without changing child count.
         if addon.db and addon.db.profile and addon.db.profile.minimap and addon.db.profile.minimap.addon_button_skin then
             local elapsed = 0
             local checkInterval = 0
-            local lastChildCount = 0
             self:SetScript("OnUpdate", function(self, dt)
                 elapsed = elapsed + dt
                 if elapsed > 6.0 then
@@ -1269,12 +1293,8 @@ minimapButtonSkinFrame:SetScript("OnEvent", function(self, event, addonName)
                 checkInterval = checkInterval + dt
                 if checkInterval >= 0.3 then
                     checkInterval = 0
-                    local count = Minimap:GetNumChildren()
-                        + (MinimapBackdrop and MinimapBackdrop:GetNumChildren() or 0)
-                    if count ~= lastChildCount then
-                        lastChildCount = count
-                        ApplySkinsToAllMinimapButtons()
-                    end
+                    ApplySkinsToAllMinimapButtons()
+                    UpdateCalendarDate()
                 end
             end)
         end
@@ -1849,6 +1869,7 @@ function MinimapModule:InitializeMinimapSystem()
         configPath = {"widgets", "minimap"},
         onHide = function()
             self:UpdateWidgets() -- Apply new configuration on editor exit
+            addon:RefreshMinimap()
         end,
         module = self
     })
@@ -2250,7 +2271,11 @@ function addon:RefreshMinimapSystem()
     end
 
     if isEnabled then
-        MinimapModule:ApplyMinimapSystem()
+        if MinimapModule.applied then
+            addon:RefreshMinimap()
+        else
+            MinimapModule:ApplyMinimapSystem()
+        end
     else
         if addon:ShouldDeferModuleDisable("minimap", MinimapModule) then
             return
