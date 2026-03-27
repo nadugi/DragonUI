@@ -527,7 +527,17 @@ local function RestoreMicromenuSystem()
     -- Unregister all state drivers
     for name, data in pairs(MicromenuModule.stateDrivers) do
         if data.frame then
-            UnregisterStateDriver(data.frame, data.state)
+            if InCombatLockdown() then
+                if addon.CombatQueue then
+                    addon.CombatQueue:Add("micromenu_restore_state_driver_" .. tostring(name), function()
+                        if data.frame and data.state then
+                            UnregisterStateDriver(data.frame, data.state)
+                        end
+                    end)
+                end
+            else
+                UnregisterStateDriver(data.frame, data.state)
+            end
         end
     end
     MicromenuModule.stateDrivers = {}
@@ -2173,6 +2183,13 @@ end
             return
         end
 
+        if InCombatLockdown() then
+            if addon.CombatQueue then
+                addon.CombatQueue:Add("micromenu_refresh_vehicle", addon.RefreshMicromenuVehicle)
+            end
+            return
+        end
+
         if addon.db.profile.micromenu.hide_on_vehicle then
             RegisterStateDriver(_G.pUiMicroMenu, 'visibility', '[vehicleui] hide;show')
         else
@@ -2182,6 +2199,13 @@ end
 
     function addon.RefreshBagsVehicle()
         if not _G.pUiBagsBar then
+            return
+        end
+
+        if InCombatLockdown() then
+            if addon.CombatQueue then
+                addon.CombatQueue:Add("micromenu_refresh_bags_vehicle", addon.RefreshBagsVehicle)
+            end
             return
         end
 

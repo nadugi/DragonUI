@@ -13,7 +13,7 @@ local format, gsub = string.format, string.gsub
 local GetTime = GetTime
 local UnitExists, UnitGUID = UnitExists, UnitGUID
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo
-local UnitAura, GetSpellTexture, GetSpellInfo = UnitAura, GetSpellTexture, GetSpellInfo
+local GetSpellTexture, GetSpellInfo = GetSpellTexture, GetSpellInfo
 
 -- ============================================================================
 -- CONSTANTS AND TEXTURES
@@ -174,13 +174,6 @@ end
 -- Phase 2: Hidden parent frame to suppress Blizzard castbars without SetScript taint
 local DragonUI_HiddenCastbarParent = CreateFrame("Frame")
 DragonUI_HiddenCastbarParent:Hide()
--- Dummy properties required by Blizzard's Target_Spellbar_AdjustPosition.
--- When spellbars are reparented here, the Blizzard function accesses these on GetParent();
--- nil values cause "attempt to compare number with nil" errors.
-DragonUI_HiddenCastbarParent.haveToT = false
-DragonUI_HiddenCastbarParent.haveElite = false
-DragonUI_HiddenCastbarParent.auraRows = 0
-DragonUI_HiddenCastbarParent.spellbarAnchor = DragonUI_HiddenCastbarParent
 
 -- Store original parents for restore
 local blizzardCastbarOriginalParents = {}
@@ -208,19 +201,14 @@ local function HideBlizzardCastbar(unitType)
         blizzardCastbarOriginalParents[unitType] = frame:GetParent()
     end
     
-    -- Reparent to hidden frame — must be done outside combat
-    if not InCombatLockdown() then
+    -- Keep target/focus under Blizzard's parent so vanilla position logic still runs.
+    -- Player castbar can still be reparented to avoid interference with the custom bar.
+    if unitType == "player" and not InCombatLockdown() then
         frame:SetParent(DragonUI_HiddenCastbarParent)
     end
     
     frame:Hide()
     frame:SetAlpha(0)
-    
-    if unitType == "target" then
-        frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -5000, -5000)
-        frame:SetSize(1, 1)
-    end
     
     -- Backup: HookScript (not SetScript) for extra safety if parent gets changed
     if not frame._dragonUIHooked then
@@ -249,19 +237,12 @@ local function ShowBlizzardCastbar(unitType)
         return
     end
     
-    -- Phase 2: Restore original parent
-    if not InCombatLockdown() and blizzardCastbarOriginalParents[unitType] then
+    -- Phase 2: Restore original parent for player castbar only
+    if unitType == "player" and not InCombatLockdown() and blizzardCastbarOriginalParents[unitType] then
         frame:SetParent(blizzardCastbarOriginalParents[unitType])
     end
     
     frame:SetAlpha(1)
-    
-    if unitType == "target" then
-        -- Phase 3A: Restore original size (was collapsed to 1x1 in HideBlizzardCastbar)
-        frame:SetSize(150, 10)
-        frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", TargetFrame, "BOTTOMLEFT", 25, -5)
-    end
     
     -- Phase 3A: Only show frame if there's an active cast/channel
     -- Do NOT call frame:Show() unconditionally — that causes a ghost castbar
@@ -506,96 +487,6 @@ local function CreateShield(parent, icon, frameName, iconSize)
     shield:Hide()
     
     return shield
-end
-
--- ============================================================================
--- AURA OFFSET SYSTEM
--- ============================================================================
-
--- Height per aura row (buff icon ~17px + ~2px spacing in WotLK 3.3.5a)
-local AURA_ROW_HEIGHT = 17
-local FOCUS_AURA_OFFSET_TWEAK = 2
-
-local function GetFirstVisibleAuraAnchor(parentFrame, unit)
-    if not parentFrame or not parentFrame.GetName then
-        return nil
-    end
-
-    local frameName = parentFrame:GetName()
-    local buff1 = _G[frameName .. "Buff1"]
-    local debuff1 = _G[frameName .. "Debuff1"]
-    local buffShown = buff1 and buff1:IsShown()
-    local debuffShown = debuff1 and debuff1:IsShown()
-
-    if UnitIsFriend("player", unit) then
-        return buffShown and buff1 or (debuffShown and debuff1 or nil)
-    end
-
-    if debuffShown then
-        return debuff1
-    end
-
-    return buffShown and buff1 or nil
-end
-
-local function GetAuraOffset(unit)
-    local cfg = GetConfig(unit)
-    if not cfg or not cfg.autoAdjust then
-        return 0
-    end
-    if not UnitExists(unit) then
-        return 0
-    end
-
-    -- Read Blizzard's native auraRows (set by TargetFrame_UpdateAuras)
-    -- instead of manually counting auras with UnitAura() loops
-    local parentFrame
-    if unit == "target" then
-        parentFrame = _G.TargetFrame
-    elseif unit == "focus" then
-        parentFrame = _G.FocusFrame
-    end
-    if not parentFrame then
-        return 0
-    end
-
-    local auraRows = parentFrame.auraRows or 0
-    if auraRows <= 1 then
-        return 0
-    end
-
-    local calibration = unit == "focus" and FOCUS_AURA_OFFSET_TWEAK or 0
-
-    local firstAnchor = GetFirstVisibleAuraAnchor(parentFrame, unit)
-    local currentAnchor = parentFrame.spellbarAnchor
-    if firstAnchor and currentAnchor and firstAnchor.GetBottom and currentAnchor.GetBottom then
-        local firstBottom = firstAnchor:GetBottom()
-        local currentBottom = currentAnchor:GetBottom()
-        if firstBottom and currentBottom then
-            return max(0, (firstBottom - currentBottom) - calibration)
-        end
-    end
-
-    -- First row is already accounted for by castbar base position
-    return max(0, ((auraRows - 1) * AURA_ROW_HEIGHT) - calibration)
-end
-
-local function ApplyAuraOffset(unit)
-    local frames = CastbarModule.frames[unit]
-    if not frames or not frames.container or not frames.container:IsVisible() then
-        return
-    end
-    
-    local cfg = GetConfig(unit)
-    if not cfg or not cfg.enabled or not cfg.autoAdjust then
-        return
-    end
-    
-    local offset = GetAuraOffset(unit)
-    local anchorFrame = _G[cfg.anchorFrame] or _G[unit:gsub("^%l", string.upper) .. "Frame"] or UIParent
-    
-    frames.container:ClearAllPoints()
-    frames.container:SetPoint(cfg.anchor, anchorFrame, cfg.anchorParent, cfg.x_position, cfg.y_position - offset)
 end
 
 -- ============================================================================
@@ -1296,9 +1187,6 @@ function CastbarModule:RefreshCastbar(unitType)
     
     local frames = self.frames[unitType]
     
-    -- Calculate aura offset
-    local auraOffset = cfg.autoAdjust and GetAuraOffset(unitType) or 0
-    
     -- Calculate positioning
     local anchorFrame = UIParent
     local anchorPoint = "CENTER"
@@ -1318,14 +1206,22 @@ function CastbarModule:RefreshCastbar(unitType)
             anchorPoint = "BOTTOM"
             relativePoint = "BOTTOM"
         end
-    elseif unitType ~= "player" then
-        anchorFrame = _G[cfg.anchorFrame] or (unitType == "target" and TargetFrame or FocusFrame) or UIParent
-        anchorPoint = cfg.anchor or "CENTER"
-        relativePoint = cfg.anchorParent or "BOTTOM"
+    elseif unitType == "target" then
+        anchorFrame = TargetFrameSpellBar or TargetFrame or UIParent
+        anchorPoint = "TOPLEFT"
+        relativePoint = "TOPLEFT"
+        xPos = 0
+        yPos = 0
+    elseif unitType == "focus" then
+        anchorFrame = FocusFrameSpellBar or FocusFrame or UIParent
+        anchorPoint = "TOPLEFT"
+        relativePoint = "TOPLEFT"
+        xPos = 0
+        yPos = 0
     end
     
     frames.container:ClearAllPoints()
-    frames.container:SetPoint(anchorPoint, anchorFrame, relativePoint, xPos, yPos - auraOffset)
+    frames.container:SetPoint(anchorPoint, anchorFrame, relativePoint, xPos, yPos)
     frames.container:SetSize(cfg.sizeX or 200, cfg.sizeY or 16)
     frames.container:SetScale(cfg.scale or 1)
     
@@ -1510,7 +1406,6 @@ function CastbarModule:HandleTargetChanged()
         elseif UnitChannelInfo("target") then
             self:HandleCastingEvent('UNIT_SPELLCAST_CHANNEL_START', "target")
         end
-        ApplyAuraOffset("target")
     end
 end
 
@@ -1541,7 +1436,6 @@ function CastbarModule:HandleFocusChanged()
         elseif UnitChannelInfo("focus") then
             self:HandleCastingEvent('UNIT_SPELLCAST_CHANNEL_START', "focus")
         end
-        ApplyAuraOffset("focus")
     end
 end
 
@@ -1812,40 +1706,6 @@ for _, event in ipairs(events) do
 end
 
 eventFrame:SetScript('OnEvent', OnEvent)
-
--- Hook Blizzard's TargetFrame_UpdateAuras for immediate castbar repositioning
--- Fires AFTER auraRows is updated, handles both TargetFrame and FocusFrame
-if _G.TargetFrame_UpdateAuras then
-    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
-        if self == _G.TargetFrame then
-            ApplyAuraOffset("target")
-        elseif self == _G.FocusFrame then
-            ApplyAuraOffset("focus")
-        end
-    end)
-end
-
--- Fallback: also reposition after Blizzard's spellbar adjustment
-if TargetFrameSpellBar then
-    hooksecurefunc('Target_Spellbar_AdjustPosition', function(self)
-        if self and self:GetParent() == _G.TargetFrame then
-            ApplyAuraOffset("target")
-        elseif self and self:GetParent() == _G.FocusFrame then
-            ApplyAuraOffset("focus")
-        end
-    end)
-end
-
--- Phase 2: Replaced SetScript with HookScript to avoid taint on protected TargetFrameSpellBar
--- The hidden parent pattern in HideBlizzardCastbar() handles suppression; this is extra safety
-if TargetFrameSpellBar then
-    TargetFrameSpellBar:HookScript("OnShow", function(self)
-        local cfg = GetConfig("target")
-        if cfg and cfg.enabled then
-            self:Hide()
-        end
-    end)
-end
 
 -- Initialize centralized system
 InitializeCastbarForEditor()

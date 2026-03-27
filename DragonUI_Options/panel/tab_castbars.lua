@@ -138,15 +138,6 @@ local function AddCastbarControls(parent, dbPrefix, refreshFunc, opts)
         callback = refreshFunc,
     })
 
-    if opts.hasAutoAdjust then
-        C:AddToggle(parent, {
-            label = LO["Auto-Adjust for Auras"],
-            desc = LO["Shift castbar when buff/debuff rows are showing."],
-            dbPath = dbPrefix .. ".autoAdjust",
-            callback = refreshFunc,
-        })
-    end
-
     if opts.resetFunc then
         C:AddButton(parent, {
             label = LO["Reset Position"],
@@ -187,7 +178,6 @@ local function BuildTargetCastbar(scroll)
     AddCastbarControls(s, "castbar.target", refresh, {
         sizeXMin = 50, sizeXMax = 400,
         sizeYMin = 5, sizeYMax = 50,
-        hasAutoAdjust = true,
         resetFunc = function()
             if addon.ResetTargetCastbarPosition then
                 addon.ResetTargetCastbarPosition()
@@ -206,7 +196,6 @@ local function BuildFocusCastbar(scroll)
     AddCastbarControls(s, "castbar.focus", refresh, {
         sizeXMin = 50, sizeXMax = 400,
         sizeYMin = 5, sizeYMax = 50,
-        hasAutoAdjust = true,
         resetFunc = function()
             if addon.ResetFocusCastbarPosition then
                 addon.ResetFocusCastbarPosition()
