@@ -39,8 +39,9 @@ DragonUI is in active development. While already in an advanced state, occasiona
 ## 📦 Installation
 
 1. Download the [latest main branch archive](https://github.com/NeticSoul/DragonUI/archive/refs/heads/main.zip).
-2. Extract the archive.
-3. Copy `DragonUI` and `DragonUI_Options` into your client's `Interface\AddOns\` folder.
+2. Extract the archive. You'll get a `DragonUI-main` folder.
+3. Inside `DragonUI-main`, find the `DragonUI` and `DragonUI_Options` folders.
+4. Copy both folders into your client's `Interface\AddOns\` directory.
 
 > 💡 **Clean install:** delete `WTF\Account\<AccountName>\` to wipe all saved settings for all addons on that account.
 
