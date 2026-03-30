@@ -45,6 +45,10 @@ local function IsModuleEnabled()
     return addon:IsModuleEnabled("minimap")
 end
 
+local function IsMinimapSystemActive()
+    return IsModuleEnabled() and MinimapModule.applied
+end
+
 local DEFAULT_MINIMAP_WIDTH = Minimap:GetWidth() * 1.36
 local DEFAULT_MINIMAP_HEIGHT = Minimap:GetHeight() * 1.36
 local blipScale = 1.12
@@ -1214,6 +1218,8 @@ end
 
 -- Function to apply skins to all minimap buttons (exposed for re-application on addon load)
 local function ApplySkinsToAllMinimapButtons()
+    if not IsMinimapSystemActive() then return end
+
     local skinEnabled = addon.db and addon.db.profile and addon.db.profile.minimap and
                             addon.db.profile.minimap.addon_button_skin
     if not skinEnabled then return end
@@ -1280,6 +1286,11 @@ local minimapButtonSkinFrame = CreateFrame("Frame")
 minimapButtonSkinFrame:RegisterEvent("ADDON_LOADED")
 minimapButtonSkinFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 minimapButtonSkinFrame:SetScript("OnEvent", function(self, event, addonName)
+    if not IsMinimapSystemActive() then
+        self:SetScript("OnUpdate", nil)
+        return
+    end
+
     if event == "PLAYER_ENTERING_WORLD" then
         -- Watch for new minimap children for a few seconds after login/reload.
         -- Re-scan periodically: some addons mutate existing icon regions without changing child count.
@@ -1844,6 +1855,18 @@ function MinimapModule:RestoreMinimapSystem()
         MinimapModule._settingBlipTexture = true
         Minimap:SetBlipTexture('Interface\\Minimap\\ObjectIcons')
         MinimapModule._settingBlipTexture = false
+    end
+
+    -- Fully disable minimap icon/calendar styling when the module is toggled off.
+    UnskinAllMinimapButtons()
+    if GameTimeFrame and GameTimeFrame.GetFontString then
+        local gameTimeText = GameTimeFrame:GetFontString()
+        if gameTimeText then
+            gameTimeText:Show()
+        end
+    end
+    if GameTimeFrame_Update then
+        GameTimeFrame_Update()
     end
 
     -- Cleanup hooks (tracked for debugging)
