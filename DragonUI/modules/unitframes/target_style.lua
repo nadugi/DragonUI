@@ -403,7 +403,7 @@ function UF.TargetStyle.Create(opts)
         end
         if ManaBar then
             ManaBar:ClearAllPoints()
-            ManaBar:SetSize(132, 9)
+            ManaBar:SetSize(132, 9.5)
             ManaBar:SetPoint("RIGHT", Portrait, "LEFT", 6.5, -16.5)
         end
         if NameText then
@@ -416,7 +416,7 @@ function UF.TargetStyle.Create(opts)
         end
         if NameBackground then
             NameBackground:ClearAllPoints()
-            NameBackground:SetPoint("BOTTOMLEFT", HealthBar, "TOPLEFT", -2, -5)
+            NameBackground:SetPoint("BOTTOMLEFT", HealthBar, "TOPLEFT", -1, -5)
         end
     end
 
@@ -798,7 +798,7 @@ function UF.TargetStyle.Create(opts)
         if NameBackground then
             NameBackground:ClearAllPoints()
             NameBackground:SetPoint(
-                "BOTTOMLEFT", HealthBar, "TOPLEFT", -2, -5)
+                "BOTTOMLEFT", HealthBar, "TOPLEFT", -1, -5)
             NameBackground:SetSize(135, 18)
             NameBackground:SetTexture(TEXTURES.NAME_BACKGROUND)
             NameBackground:SetDrawLayer("BORDER", 1)
@@ -822,7 +822,7 @@ function UF.TargetStyle.Create(opts)
 
         -- ---- Configure power bar ----
         ManaBar:ClearAllPoints()
-        ManaBar:SetSize(132, 9)
+        ManaBar:SetSize(132, 9.5)
         ManaBar:SetPoint("RIGHT", Portrait, "LEFT", 6.5, -16.5)
         ManaBar:SetFrameLevel(BlizzFrame:GetFrameLevel())
 

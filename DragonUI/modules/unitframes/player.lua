@@ -284,7 +284,7 @@ local function ApplyFatManaBar()
     if not fatMode then
         -- Normal mode: standard mana bar positioning (ignore fat settings)
         PlayerFrameManaBar:ClearAllPoints()
-        PlayerFrameManaBar:SetSize(hasVehicleUI and 117 or 125, hasVehicleUI and 9 or 8)
+        PlayerFrameManaBar:SetSize(hasVehicleUI and 117 or 125, hasVehicleUI and 9 or 9)
         if hasVehicleUI then
             -- Vehicle: position relative to PlayerFrame (matches RetailUI pattern)
             PlayerFrameManaBar:SetPoint('TOPLEFT', PlayerFrame, 'TOPLEFT', 78, -37)
@@ -1367,8 +1367,8 @@ local function UpdatePlayerDragonDecoration()
         else
             -- Normal decoration (no fat)
             bgX, bgY   = -128, -29.5
-            bgW, bgH    = 255, 130
-            borderX, borderY = -128, -29.5
+            bgW, bgH    = 255, 129
+            borderX, borderY = -129, -29.5
         end
 
         if dragonFrame.PlayerFrameBackground then
@@ -1491,10 +1491,10 @@ local function UpdatePlayerDragonDecoration()
         elseif PlayerFrameManaBar then
             -- Normal (non-fat) decoration: stretch mana bar to fit decoration frame
             local normalWidth = 125
-            local extendedWidth = 130
+            local extendedWidth = 131
 
             PlayerFrameManaBar:ClearAllPoints()
-            PlayerFrameManaBar:SetSize(extendedWidth, 8)
+            PlayerFrameManaBar:SetSize(extendedWidth, 9)
             -- Anchor by RIGHT side so it stretches leftward
             PlayerFrameManaBar:SetPoint('RIGHT', PlayerPortrait, 'RIGHT', 1 + normalWidth, -16.5)
         end
@@ -2219,11 +2219,11 @@ local function ChangePlayerframe()
         end
         if dragonFrame and dragonFrame.EliteStatusGlow then
             dragonFrame.EliteStatusGlow:ClearAllPoints()
-            dragonFrame.EliteStatusGlow:SetPoint('TOPLEFT', PlayerPortrait, 'TOPLEFT', -24, 20)
+            dragonFrame.EliteStatusGlow:SetPoint('TOPLEFT', PlayerPortrait, 'TOPLEFT', -24.5, 19)
         end
         if dragonFrame and dragonFrame.EliteCombatGlow then
             dragonFrame.EliteCombatGlow:ClearAllPoints()
-            dragonFrame.EliteCombatGlow:SetPoint('TOPLEFT', PlayerPortrait, 'TOPLEFT', -24, 20)
+            dragonFrame.EliteCombatGlow:SetPoint('TOPLEFT', PlayerPortrait, 'TOPLEFT', -24.5, 19)
         end
     end
 
