@@ -266,8 +266,24 @@ local function IsCompactPartyFramesEnabled()
     return GetCVar and GetCVar("useCompactPartyFrames") == "1"
 end
 
+local function IsHidePartyInRaidEnabled()
+    if CUF_CVar and CUF_CVar.GetCVarBool then
+        return CUF_CVar:GetCVarBool("hidePartyInRaid") and true or false
+    end
+
+    if GetCVarBool then
+        return GetCVarBool("hidePartyInRaid") and true or false
+    end
+
+    return GetCVar and GetCVar("hidePartyInRaid") == "1"
+end
+
+local function ShouldHidePartyFramesInRaid()
+    return (GetNumRaidMembers and GetNumRaidMembers() > 0) and IsHidePartyInRaidEnabled()
+end
+
 local function ShouldPartyFramesBeVisible()
-    return GetNumPartyMembers() > 0 and not IsCompactPartyFramesEnabled()
+    return GetNumPartyMembers() > 0 and not IsCompactPartyFramesEnabled() and not ShouldHidePartyFramesInRaid()
 end
 
 -- Test functions for the editor
@@ -1497,7 +1513,7 @@ local function UpdateDisconnectedState(frame)
 end
 
 local function ShouldShowDragonUIPartySlot(index)
-    if IsCompactPartyFramesEnabled() then
+    if not ShouldPartyFramesBeVisible() then
         return false
     end
     return UnitExists("party" .. index)
@@ -1547,7 +1563,7 @@ local function SetupPartyHooks()
             local unit = frameIndex and ("party" .. frameIndex)
 
             if unit and UnitExists(unit) and not frame:IsShown() and not InCombatLockdown()
-                and not IsCompactPartyFramesEnabled() then
+                and ShouldPartyFramesBeVisible() then
                 frame:Show()
             end
 
@@ -1941,6 +1957,7 @@ recoveryFrame:RegisterEvent("PLAYER_ENTERING_WORLD")   -- Recovery after reload/
 recoveryFrame:RegisterEvent("PLAYER_ALIVE")             -- Player resurrects (accept rez or spirit healer)
 recoveryFrame:RegisterEvent("PLAYER_UNGHOST")           -- Player returns from ghost form
 recoveryFrame:RegisterEvent("UNIT_HEALTH")              -- Any unit health change (catches party member rez too)
+recoveryFrame:RegisterEvent("CVAR_UPDATE")              -- React to Blizzard party visibility options changes
 recoveryFrame:SetScript("OnEvent", function(self, event, unit)
     if event == "PLAYER_ENTERING_WORLD" then
         local delayFrame = CreateFrame("Frame")
@@ -1982,6 +1999,30 @@ recoveryFrame:SetScript("OnEvent", function(self, event, unit)
         else
             RefreshPartyFrames()
         end
+    end
+
+    if event == "CVAR_UPDATE" then
+        if unit ~= "useCompactPartyFrames" and unit ~= "hidePartyInRaid" then
+            return
+        end
+
+        if addon.EditorMode and addon.EditorMode:IsActive() then
+            return
+        end
+
+        local function RefreshPartyFrames()
+            RefreshAllPartyFrameVisibility()
+        end
+
+        if InCombatLockdown() then
+            if addon.CombatQueue then
+                addon.CombatQueue:Add("party_refresh", RefreshPartyFrames)
+            end
+        else
+            RefreshPartyFrames()
+        end
+
+        return
     end
 
     -- For UNIT_HEALTH, only process party units
