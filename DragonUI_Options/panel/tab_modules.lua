@@ -188,7 +188,14 @@ local function BuildModulesTab(scroll)
     -- Generate toggles for all registered modules
     local MR = addon.ModuleRegistry
     if MR and MR.loadOrder then
+        local hiddenAdvancedModules = {
+            castbar = true,
+            player = true,
+            boss = true,
+        }
+
         for _, moduleName in ipairs(MR.loadOrder) do
+            if not hiddenAdvancedModules[moduleName] then
             local info = MR:GetInfo(moduleName)
             if info then
                 -- displayName/description are already translated at registration time via addon.L
@@ -202,6 +209,7 @@ local function BuildModulesTab(scroll)
                     desc = displayDesc,
                     moduleName = moduleName,
                 })
+            end
             end
         end
     else
