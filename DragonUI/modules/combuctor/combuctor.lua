@@ -2733,11 +2733,14 @@ local function ApplyCombuctorSystem()
     -- Sets are empty by default (no category tabs shown)
     -- Users can enable individual tabs via the options panel
 
-    -- Create frames
-    mod.frames = {
-        mod.Frame:New(L.InventoryTitle, DB.inventory, false, "inventory"),
-        mod.Frame:New(L.BankTitle, DB.bank, true, "bank")
-    }
+    -- Create frames only once; toggling module should reuse existing frames.
+    mod.frames = mod.frames or {}
+    if not mod.frames[1] then
+        mod.frames[1] = mod.Frame:New(L.InventoryTitle, DB.inventory, false, "inventory")
+    end
+    if not mod.frames[2] then
+        mod.frames[2] = mod.Frame:New(L.BankTitle, DB.bank, true, "bank")
+    end
 
     AutoShowInventory = function()
         mod:Show(BACKPACK_CONTAINER, true)
@@ -2755,7 +2758,10 @@ local function ApplyCombuctorSystem()
 
     -- Hook bag functions
     _G.OpenBackpack = AutoShowInventory
-    hooksecurefunc("CloseBackpack", AutoHideInventory)
+    if not CombuctorModule.hooks.closeBackpack then
+        hooksecurefunc("CloseBackpack", AutoHideInventory)
+        CombuctorModule.hooks.closeBackpack = true
+    end
 
     _G.ToggleBank = function(bag) mod:Toggle(bag) end
     _G.ToggleBackpack = function() mod:Toggle(BACKPACK_CONTAINER) end
@@ -2765,21 +2771,28 @@ local function ApplyCombuctorSystem()
         _G.ToggleAllBags = function() mod:Toggle(BACKPACK_CONTAINER) end
     end
 
-    hooksecurefunc("CloseAllBags", function() mod:Hide(BACKPACK_CONTAINER) end)
+    if not CombuctorModule.hooks.closeAllBags then
+        hooksecurefunc("CloseAllBags", function() mod:Hide(BACKPACK_CONTAINER) end)
+        CombuctorModule.hooks.closeAllBags = true
+    end
     BankFrame:UnregisterAllEvents()
     BankFrame:Hide()
 
-    mod("InventoryEvents"):Register(mod, "BANK_OPENED", function()
-        mod:Show(BANK_CONTAINER, true)
-        mod:Show(BACKPACK_CONTAINER, true)
-    end)
-    mod("InventoryEvents"):Register(mod, "BANK_CLOSED", function()
-        mod:Hide(BANK_CONTAINER, true)
-        mod:Hide(BACKPACK_CONTAINER, true)
-    end)
+    if not CombuctorModule.hooks.inventoryEvents then
+        mod("InventoryEvents"):Register(mod, "BANK_OPENED", function()
+            mod:Show(BANK_CONTAINER, true)
+            mod:Show(BACKPACK_CONTAINER, true)
+        end)
+        mod("InventoryEvents"):Register(mod, "BANK_CLOSED", function()
+            mod:Hide(BANK_CONTAINER, true)
+            mod:Hide(BACKPACK_CONTAINER, true)
+        end)
+        CombuctorModule.hooks.inventoryEvents = true
+    end
 
     -- Auto show/hide on trade/auction/mail
-    local autoEventFrame = CreateFrame("Frame")
+    local autoEventFrame = CombuctorModule.frames.autoEventFrame or CreateFrame("Frame")
+    autoEventFrame:UnregisterAllEvents()
     autoEventFrame:SetScript("OnEvent", function(self, event)
         if event == "MAIL_CLOSED" or event == "TRADE_CLOSED" or
            event == "TRADE_SKILL_CLOSE" or event == "AUCTION_HOUSE_CLOSED" then
@@ -2817,6 +2830,11 @@ end
 
 local function RestoreCombuctorSystem()
     if not CombuctorModule.applied then return end
+
+    if CombuctorModule.frames.autoEventFrame then
+        CombuctorModule.frames.autoEventFrame:UnregisterAllEvents()
+        CombuctorModule.frames.autoEventFrame:SetScript("OnEvent", nil)
+    end
 
     -- Hide all frames
     if mod.frames then

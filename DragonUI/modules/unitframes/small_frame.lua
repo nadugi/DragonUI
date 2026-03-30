@@ -49,6 +49,7 @@ function UF.SmallFrame.Create(opts)
         retryFrame = nil,
         updateTypeHooked = false,
         portraitHooked = false,
+        parentUpdateHooked = false,
     }
 
     local frames = opts.frames
@@ -378,6 +379,14 @@ function UF.SmallFrame.Create(opts)
     -- ========================================================================
 
     local function SetupAdditionalHooks()
+        local function ReapplyDetachedWidgetPositionIfNeeded()
+            if not IsEnabled() then return end
+            local config = GetConfig()
+            if config and config.override then
+                Module:UpdateWidgets()
+            end
+        end
+
         -- Hook UnitFrameManaBar_UpdateType to reapply textures on power type changes
         if not Module.updateTypeHooked then
             hooksecurefunc("UnitFrameManaBar_UpdateType", function(manaBar)
@@ -423,6 +432,21 @@ function UF.SmallFrame.Create(opts)
             end)
             Module.portraitHooked = true
         end
+
+        -- Keep detached companion frames anchored after Blizzard parent refreshes.
+        if not Module.parentUpdateHooked then
+            if opts.parentUnit == "target" and type(TargetFrame_Update) == "function" then
+                hooksecurefunc("TargetFrame_Update", function()
+                    ReapplyDetachedWidgetPositionIfNeeded()
+                end)
+                Module.parentUpdateHooked = true
+            elseif opts.parentUnit == "focus" and type(FocusFrame_Update) == "function" then
+                hooksecurefunc("FocusFrame_Update", function()
+                    ReapplyDetachedWidgetPositionIfNeeded()
+                end)
+                Module.parentUpdateHooked = true
+            end
+        end
     end
 
 
@@ -466,6 +490,12 @@ function UF.SmallFrame.Create(opts)
 
         -- Get configuration
         local config = GetConfig()
+
+        -- Ensure detached anchor has the latest saved widget position.
+        -- ADDON_LOADED may have already fired before this module registered events.
+        if config.override and Module.anchorFrame then
+            Module:ApplyWidgetPosition()
+        end
 
         -- Position frame: override (detached) or attached to parent
         frames.main:ClearAllPoints()
@@ -686,6 +716,11 @@ function UF.SmallFrame.Create(opts)
                 UpdateSmallFrameClassPortrait()
             end
 
+            local config = GetConfig()
+            if config and config.override then
+                Module:UpdateWidgets()
+            end
+
         -- ----------------------------------------------------------------
         -- Unit event (target/focus changed)
         -- ----------------------------------------------------------------
@@ -702,6 +737,11 @@ function UF.SmallFrame.Create(opts)
 
             UpdateClassification()
             UpdateSmallFrameClassPortrait()
+
+            local config = GetConfig()
+            if config and config.override then
+                Module:UpdateWidgets()
+            end
 
         -- ----------------------------------------------------------------
         -- UNIT_TARGET
@@ -728,6 +768,11 @@ function UF.SmallFrame.Create(opts)
                 end
                 UpdateClassification()
                 UpdateSmallFrameClassPortrait()
+
+                local config = GetConfig()
+                if config and config.override then
+                    Module:UpdateWidgets()
+                end
             end
 
         -- ----------------------------------------------------------------
@@ -769,10 +814,22 @@ function UF.SmallFrame.Create(opts)
             -- Detached mode: use saved widget position from DB
             if addon.db and addon.db.profile and addon.db.profile.widgets then
                 local widgetConfig = addon.db.profile.widgets[opts.configKey]
-                if widgetConfig and widgetConfig.posX and widgetConfig.posY then
+                if widgetConfig and widgetConfig.posX ~= nil and widgetConfig.posY ~= nil then
                     local anchor = widgetConfig.anchor or "CENTER"
                     Module.anchorFrame:ClearAllPoints()
                     Module.anchorFrame:SetPoint(anchor, UIParent, anchor, widgetConfig.posX, widgetConfig.posY)
+                    return
+                end
+            end
+
+            -- Fallback: if detached but DB coords are missing, keep anchor at
+            -- the current Blizzard frame position to avoid center flicker.
+            if frames.main and frames.main.GetCenter then
+                local fx, fy = frames.main:GetCenter()
+                local ux, uy = UIParent:GetCenter()
+                if fx and fy and ux and uy then
+                    Module.anchorFrame:ClearAllPoints()
+                    Module.anchorFrame:SetPoint("CENTER", UIParent, "CENTER", fx - ux, fy - uy)
                     return
                 end
             end
@@ -780,6 +837,30 @@ function UF.SmallFrame.Create(opts)
         -- Attached mode or no saved data: temporary position (showTest will reposition in editor)
         Module.anchorFrame:ClearAllPoints()
         Module.anchorFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    end
+
+    local function PersistDetachedAnchorFromCurrentPosition()
+        if not Module.anchorFrame then
+            return false
+        end
+
+        if not (addon.db and addon.db.profile) then
+            return false
+        end
+
+        addon.db.profile.widgets = addon.db.profile.widgets or {}
+        addon.db.profile.widgets[opts.configKey] = addon.db.profile.widgets[opts.configKey] or {}
+
+        local cx, cy = Module.anchorFrame:GetCenter()
+        local ux, uy = UIParent:GetCenter()
+        if not (cx and cy and ux and uy) then
+            return false
+        end
+
+        addon.db.profile.widgets[opts.configKey].anchor = "CENTER"
+        addon.db.profile.widgets[opts.configKey].posX = math.floor((cx - ux) + 0.5)
+        addon.db.profile.widgets[opts.configKey].posY = math.floor((cy - uy) + 0.5)
+        return true
     end
 
     function Module:UpdateWidgets()
@@ -883,12 +964,20 @@ function UF.SmallFrame.Create(opts)
         )
     end
     -- Temporary position until ADDON_LOADED restores from DB
-    Module.anchorFrame:ClearAllPoints()
-    Module.anchorFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    Module:ApplyWidgetPosition()
 
     -- Track if the user actually dragged this frame in editor mode
     Module.anchorFrame:HookScript("OnDragStop", function(self)
         self.DragonUI_WasDragged = true
+
+        -- Detach and persist immediately on drag stop so ToT does not get
+        -- re-attached by Blizzard updates before editor mode is closed.
+        local config = GetConfig()
+        if config then
+            config.override = true
+        end
+        PersistDetachedAnchorFromCurrentPosition()
+        Module:UpdateWidgets()
     end)
 
     -- Register with editor mode system immediately
@@ -926,14 +1015,18 @@ function UF.SmallFrame.Create(opts)
             end
         end,
         onHide = function()
-            -- Only detach if the user actually dragged the frame
-            if Module.anchorFrame.DragonUI_WasDragged then
+            -- Detach if the user dragged OR adjusted via pixel-perfect controls.
+            if Module.anchorFrame.DragonUI_WasDragged or Module.anchorFrame.DragonUI_WasAdjustedByEditor then
                 local config = GetConfig()
                 if config then
                     config.override = true
                 end
+
+                PersistDetachedAnchorFromCurrentPosition()
+
                 Module:UpdateWidgets()
                 Module.anchorFrame.DragonUI_WasDragged = nil
+                Module.anchorFrame.DragonUI_WasAdjustedByEditor = nil
             end
         end,
         module = Module

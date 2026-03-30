@@ -20,6 +20,54 @@ local TargetFrameTextureFrameName      = _G.TargetFrameTextureFrameName
 local TargetFrameTextureFrameLevelText = _G.TargetFrameTextureFrameLevelText
 local TargetFrameNameBackground        = _G.TargetFrameNameBackground
 
+local function IsToTDetached()
+    local cfg = addon.db and addon.db.profile and addon.db.profile.unitframe and addon.db.profile.unitframe.tot
+    if cfg and cfg.override then
+        return true
+    end
+
+    local totFrame = _G.TargetFrameToT
+    if totFrame and totFrame.GetPoint then
+        local _, relativeTo = totFrame:GetPoint(1)
+        if relativeTo and relativeTo ~= TargetFrame then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function InstallTargetAuraVisibilityWrapper()
+    if _G.DragonUI_TargetAuraVisibilityWrapped or not _G.TargetFrame_UpdateAuras then
+        return
+    end
+
+    local originalUpdateAuras = _G.TargetFrame_UpdateAuras
+    _G.TargetFrame_UpdateAuras = function(frame, ...)
+        if frame == TargetFrame and IsToTDetached() and frame and frame.totFrame then
+            local totFrame = frame.totFrame
+            local originalIsShown = totFrame.IsShown
+
+            totFrame.IsShown = function()
+                return false
+            end
+
+            local ok, err = pcall(originalUpdateAuras, frame, ...)
+
+            totFrame.IsShown = originalIsShown
+
+            if not ok then
+                error(err)
+            end
+            return
+        end
+
+        return originalUpdateAuras(frame, ...)
+    end
+
+    _G.DragonUI_TargetAuraVisibilityWrapped = true
+end
+
 -- ============================================================================
 -- CREATE VIA FACTORY
 -- ============================================================================
@@ -142,6 +190,8 @@ local api = UF.TargetStyle.Create({
 
             ctx.Module.classificationHooked = true
         end
+
+        InstallTargetAuraVisibilityWrapper()
     end,
 
     -- ----------------------------------------------------------------

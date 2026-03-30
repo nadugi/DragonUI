@@ -855,6 +855,9 @@ local function ReplaceBlizzardFrame(frame)
 
     -- Also listen for key events as a safety net
     local captureBarWatcher = CreateFrame("Frame")
+    local captureBarDelayFrame = CreateFrame("Frame")
+    local captureBarDelayElapsed = 0
+    local captureBarDelayRetries = 0
     captureBarWatcher:RegisterEvent("UPDATE_WORLD_STATES")
     captureBarWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
     captureBarWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -863,18 +866,17 @@ local function ReplaceBlizzardFrame(frame)
         SetupWorldStateCaptureBar()
         -- After reload/login, capture bars may not exist yet — do delayed re-checks
         if event == "PLAYER_ENTERING_WORLD" then
-            local elapsed = 0
-            local retries = 0
-            local delayFrame = CreateFrame("Frame")
-            delayFrame:SetScript("OnUpdate", function(self, dt)
-                elapsed = elapsed + dt
-                if elapsed >= 0.5 then
-                    elapsed = 0
-                    retries = retries + 1
+            captureBarDelayElapsed = 0
+            captureBarDelayRetries = 0
+            captureBarDelayFrame:SetScript("OnUpdate", function(delaySelf, dt)
+                captureBarDelayElapsed = captureBarDelayElapsed + dt
+                if captureBarDelayElapsed >= 0.5 then
+                    captureBarDelayElapsed = 0
+                    captureBarDelayRetries = captureBarDelayRetries + 1
                     SetupWorldStateCaptureBar()
                     -- Stop after 5 retries (2.5 seconds total)
-                    if retries >= 5 then
-                        self:SetScript("OnUpdate", nil)
+                    if captureBarDelayRetries >= 5 then
+                        delaySelf:SetScript("OnUpdate", nil)
                     end
                 end
             end)

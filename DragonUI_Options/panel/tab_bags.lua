@@ -142,6 +142,21 @@ local function BuildBagsTab(scroll)
     C:AddSpacer(scroll)
 
     -- ====================================================================
+    -- BAG BAR
+    -- ====================================================================
+    local bagBarSection = C:AddSection(scroll, LO["Bags"])
+
+    C:AddSlider(bagBarSection, {
+        label = LO["Bag Bar Scale"],
+        dbPath = "bags.scale",
+        min = 0.5, max = 2.0, step = 0.01,
+        width = 200,
+        callback = function()
+            if addon.RefreshBagsPosition then addon.RefreshBagsPosition() end
+        end,
+    })
+
+    -- ====================================================================
     -- COMBUCTOR ENABLE
     -- ====================================================================
     local mainSection = C:AddSection(scroll, LO["Combuctor"])

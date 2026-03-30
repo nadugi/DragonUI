@@ -24,6 +24,7 @@ function UF.TargetStyle.Create(opts)
         initialized   = false,  -- ADDON_LOADED has fired
         configured    = false,  -- Frame setup is complete
         eventsFrame   = nil,    -- Event handler frame
+        positionStabilizer = nil,
     }
 
     -- ----------------------------------------------------------------
@@ -101,8 +102,8 @@ function UF.TargetStyle.Create(opts)
             Module.overlay:SetPoint(
                 wc.anchor or defaultPos.anchor, UIParent,
                 wc.anchor or defaultPos.anchor,
-                wc.posX   or defaultPos.posX,
-                wc.posY   or defaultPos.posY)
+                wc.posX ~= nil and wc.posX or defaultPos.posX,
+                wc.posY ~= nil and wc.posY or defaultPos.posY)
             BlizzFrame:ClearAllPoints()
             BlizzFrame:SetPoint("CENTER", Module.overlay, "CENTER", 20, -7)
         else
@@ -111,8 +112,31 @@ function UF.TargetStyle.Create(opts)
                 defaultPos.anchor, UIParent, defaultPos.anchor,
                 defaultPos.posX, defaultPos.posY)
             BlizzFrame:ClearAllPoints()
-            BlizzFrame:SetPoint("CENTER", Module.overlay, "CENTER", 0, 0)
+            BlizzFrame:SetPoint("CENTER", Module.overlay, "CENTER", 20, -7)
         end
+    end
+
+    local function StartPositionStabilizer(duration)
+        if not Module.configured then return end
+
+        if not Module.positionStabilizer then
+            Module.positionStabilizer = CreateFrame("Frame")
+        end
+
+        local elapsed = 0
+        local maxDuration = duration or 1.0
+        Module.positionStabilizer:SetScript("OnUpdate", function(self, dt)
+            elapsed = elapsed + dt
+
+            -- Re-apply often for a short window to win any delayed Blizzard reanchor.
+            if Module.configured then
+                ApplyWidgetPosition()
+            end
+
+            if elapsed >= maxDuration then
+                self:SetScript("OnUpdate", nil)
+            end
+        end)
     end
 
     -- ================================================================
@@ -844,7 +868,6 @@ function UF.TargetStyle.Create(opts)
         -- ---- Apply config (scale + position) ----
         local config = GetConfig()
         if not InCombatLockdown() then
-            BlizzFrame:ClearAllPoints()
             BlizzFrame:SetClampedToScreen(false)
             BlizzFrame:SetScale(config.scale or 1)
         end
@@ -1049,6 +1072,9 @@ function UF.TargetStyle.Create(opts)
 
         elseif event == "PLAYER_ENTERING_WORLD" then
             InitializeFrame()
+            if opts.forceLayoutOnUnitChange then
+                StartPositionStabilizer(1.2)
+            end
 
             -- Setup TextSystem
             if addon.TextSystem and not Module.textSystem then

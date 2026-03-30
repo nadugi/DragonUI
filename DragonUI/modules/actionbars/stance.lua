@@ -171,6 +171,38 @@ local function CreateStanceFrames()
     local dragStartX, dragStartY = 0, 0
     local configStartX, configStartY = 0, 0
     local isDragging = false
+
+    function editorOverlay:SyncManualOverlayDeltaToStanceConfig()
+        if not anchor then
+            return
+        end
+
+        if not (addon.db and addon.db.profile and addon.db.profile.additional and addon.db.profile.additional.stance) then
+            return
+        end
+
+        local overlayX, overlayY = self:GetLeft(), self:GetBottom()
+        local anchorX, anchorY = anchor:GetLeft(), anchor:GetBottom()
+        if not overlayX or not overlayY or not anchorX or not anchorY then
+            return
+        end
+
+        local deltaX = overlayX - anchorX
+        local deltaY = overlayY - anchorY
+        if math.abs(deltaX) < 0.5 and math.abs(deltaY) < 0.5 then
+            return
+        end
+
+        local stanceCfg = addon.db.profile.additional.stance
+        stanceCfg.x_position = math.floor((stanceCfg.x_position or -211) + deltaX + 0.5)
+        stanceCfg.y_offset = math.floor((stanceCfg.y_offset or -60) + deltaY + 0.5)
+
+        stancebar_update()
+
+        -- Keep overlay glued to the real anchor after applying DB delta.
+        self:ClearAllPoints()
+        self:SetPoint('BOTTOMLEFT', anchor, 'BOTTOMLEFT', 0, 0)
+    end
     
     -- Make draggable with custom behavior (disable built-in movement)
     editorOverlay:SetMovable(false)
@@ -180,9 +212,12 @@ local function CreateStanceFrames()
     editorOverlay:SetScript("OnDragStart", function(self)
         isDragging = true
         
-        -- Show selected state
+        -- Show dragging state (orange/yellow, like other editor frames).
         if self.NineSlice and addon.SetNinesliceState then
             addon.SetNinesliceState(self, true)
+        end
+        if addon.ClearSelectionTint then
+            addon.ClearSelectionTint(self)
         end
         
         -- Store mouse position when drag starts
@@ -199,7 +234,16 @@ local function CreateStanceFrames()
     
     -- Real-time update during drag
     editorOverlay:SetScript("OnUpdate", function(self, elapsed)
-        if not isDragging then return end
+        if not isDragging then
+            -- Pixel-perfect editor controls move the overlay directly.
+            -- Convert that overlay movement into stance DB coordinates.
+            if self.DragonUI_WasAdjustedByEditor or self.DragonUI_WasDragged then
+                self:SyncManualOverlayDeltaToStanceConfig()
+                self.DragonUI_WasAdjustedByEditor = nil
+                self.DragonUI_WasDragged = nil
+            end
+            return
+        end
         
         -- Calculate current delta from mouse movement
         local scale = self:GetEffectiveScale()
@@ -226,9 +270,12 @@ local function CreateStanceFrames()
     editorOverlay:SetScript("OnDragStop", function(self)
         isDragging = false
         
-        -- Return to highlight state
+        -- Return to selected highlight state.
         if self.NineSlice and addon.SetNinesliceState then
             addon.SetNinesliceState(self, false)
+        end
+        if addon.ApplySelectionTint then
+            addon.ApplySelectionTint(self)
         end
         -- Overlay is already in correct position from OnUpdate
     end)
@@ -503,6 +550,10 @@ local function ApplyStanceSystem()
             end,
             
             hideTest = function()
+                -- Ensure manual editor adjustments are persisted before hiding.
+                if editorOverlay and editorOverlay.SyncManualOverlayDeltaToStanceConfig then
+                    editorOverlay:SyncManualOverlayDeltaToStanceConfig()
+                end
                 editorOverlay:Hide()
                 -- Hide nineslice overlay
                 if addon.HideNineslice then
@@ -510,6 +561,16 @@ local function ApplyStanceSystem()
                 end
                 if editorOverlay.editorText then
                     editorOverlay.editorText:Hide()
+                end
+            end,
+
+            onHide = function()
+                if editorOverlay and editorOverlay.SyncManualOverlayDeltaToStanceConfig then
+                    editorOverlay:SyncManualOverlayDeltaToStanceConfig()
+                end
+                if editorOverlay then
+                    editorOverlay.DragonUI_WasAdjustedByEditor = nil
+                    editorOverlay.DragonUI_WasDragged = nil
                 end
             end,
             

@@ -17,6 +17,7 @@ Reference/
 docs/
 mcp/
 .venv/
+memories/
 
 # Local test/debug scripts
 test_*.lua

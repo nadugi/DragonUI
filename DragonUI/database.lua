@@ -99,7 +99,7 @@ local defaults = {
             },
             bagsbar = {
                 anchor = "BOTTOMRIGHT",
-                posX = -3,
+                posX = -5,
                 posY = 40
             },
             xpbar = {
@@ -246,7 +246,7 @@ local defaults = {
         },
 
         bags = {
-            scale = 0.9,
+            scale = 1,
             x_position = 1,
             y_position = 41
         },
@@ -529,8 +529,8 @@ local defaults = {
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
                 scale = 1.0,
-                x = 25,
-                y = -15,
+                x = -27,
+                y = -14,
                 textFormat = 'numeric',
                 breakUpLargeNumbers = false,
                 showHealthTextAlways = false,
@@ -545,8 +545,8 @@ local defaults = {
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
                 scale = 1.0,
-                x = 25,
-                y = -15,
+                x = -27,
+                y = -14,
                 textFormat = 'numeric',
                 breakUpLargeNumbers = false,
                 showHealthTextAlways = false,

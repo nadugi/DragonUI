@@ -1505,6 +1505,9 @@ local function ApplyMicromenuSystem()
     end
 
     function MainMenuMicroButtonMixin:bagbuttons_reposition()
+        local bagScale = addon.db and addon.db.profile and addon.db.profile.bags and addon.db.profile.bags.scale or 1.0
+        MainMenuBarBackpackButton:SetScale(bagScale)
+
         CharacterBag0Slot:SetClearPoint('RIGHT', MainMenuBarBackpackButton, 'LEFT', -14, -2)
 
         if not GetBagCollapseState() then
@@ -1921,18 +1924,21 @@ local function ApplyMicromenuSystem()
 
                         -- Instant unpush: SetButtonState hook fires right
                         -- when Blizzard internally sets NORMAL.
-                        hooksecurefunc(button, "SetButtonState", function(self, state)
-                            if state ~= "PUSHED" then
-                                -- Only act on unpush direction
-                                if self.dragonUIState and self.dragonUIState.pushed then
-                                    self.dragonUIState.pushed = false
-                                    self.dragonUILastState = false
-                                    if self.HandleDragonUIState then
-                                        self.HandleDragonUIState()
+                        if not button.DragonUISetButtonStateHooked then
+                            hooksecurefunc(button, "SetButtonState", function(self, state)
+                                if state ~= "PUSHED" then
+                                    -- Only act on unpush direction
+                                    if self.dragonUIState and self.dragonUIState.pushed then
+                                        self.dragonUIState.pushed = false
+                                        self.dragonUILastState = false
+                                        if self.HandleDragonUIState then
+                                            self.HandleDragonUIState()
+                                        end
                                     end
                                 end
-                            end
-                        end)
+                            end)
+                            button.DragonUISetButtonStateHooked = true
+                        end
                     else
                         -- Re-apply size/position/visibility in case a late Blizzard pass altered regions.
                         local backgroundTexture = 'Interface\\AddOns\\DragonUI\\Textures\\Micromenu\\uimicromenu2x'
@@ -2137,6 +2143,12 @@ end
             return
         end
 
+        local scale = addon.db and addon.db.profile and addon.db.profile.bags and addon.db.profile.bags.scale
+        if scale then
+            _G.pUiBagsBar:SetScale(scale)
+            MainMenuBarBackpackButton:SetScale(scale)
+        end
+
         local frameInfo = addon:GetEditableFrameInfo("bagsbar")
         if frameInfo and frameInfo.frame then
             -- Apply position from database or use default
@@ -2338,12 +2350,14 @@ end
     end
 
     -- LFG Frame customization
-    hooksecurefunc('MiniMapLFG_UpdateIsShown', function()
+    local function ApplyLFGFrameStyle()
         MiniMapLFGFrame:SetClearPoint('LEFT', _G.CharacterMicroButton, -32, 2)
         MiniMapLFGFrame:SetScale(1.6)
         MiniMapLFGFrameBorder:SetTexture(nil)
         MiniMapLFGFrame.eye.texture:SetTexture(addon._dir .. 'uigroupfinderflipbookeye.tga')
-    end)
+    end
+
+    ApplyLFGFrameStyle()
 
     MiniMapLFGFrame:SetScript('OnClick', function(self, button)
         local mode, submode = GetLFGMode();
@@ -2385,7 +2399,10 @@ end
     end
 
     ReanchorLFDStatus()
-    hooksecurefunc("LFDSearchStatus_Update", ReanchorLFDStatus)
+    if not MicromenuModule.hooks.LFDSearchStatus_Update then
+        hooksecurefunc("LFDSearchStatus_Update", ReanchorLFDStatus)
+        MicromenuModule.hooks.LFDSearchStatus_Update = true
+    end
 
     -- ============================================================================
     -- SECTION 9: EVENT HANDLERS
@@ -2509,10 +2526,7 @@ end
         MicromenuModule.hooks.MiniMapLFG_UpdateIsShown = true
         hooksecurefunc('MiniMapLFG_UpdateIsShown', function()
             if IsModuleEnabled() then
-                MiniMapLFGFrame:SetClearPoint('LEFT', _G.CharacterMicroButton, -32, 2)
-                MiniMapLFGFrame:SetScale(1.6)
-                MiniMapLFGFrameBorder:SetTexture(nil)
-                MiniMapLFGFrame.eye.texture:SetTexture(addon._dir .. 'uigroupfinderflipbookeye.tga')
+                ApplyLFGFrameStyle()
             end
         end)
     end

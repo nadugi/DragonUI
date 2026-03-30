@@ -548,6 +548,8 @@ local function ApplyTypedCoordinates()
     -- Position is relative to UIParent CENTER (matches what we display)
     selectedEditorFrame:ClearAllPoints()
     selectedEditorFrame:SetPoint("CENTER", UIParent, "CENTER", newX, newY)
+    selectedEditorFrame.DragonUI_WasAdjustedByEditor = true
+    selectedEditorFrame.DragonUI_WasDragged = true
     -- Auto-save
     if addon.EditableFrames then
         for _, frameData in pairs(addon.EditableFrames) do
@@ -569,10 +571,18 @@ end
 -- Move the selected frame by dx, dy pixels and auto-save
 local function NudgeSelectedFrame(dx, dy)
     if not selectedEditorFrame then return end
-    local point, relativeTo, relativePoint, posX, posY = selectedEditorFrame:GetPoint(1)
-    if not point then return end
+
+    local cx, cy = selectedEditorFrame:GetCenter()
+    local ux, uy = UIParent:GetCenter()
+    if not cx or not cy or not ux or not uy then return end
+
+    local relX = (cx - ux) + dx
+    local relY = (cy - uy) + dy
+
     selectedEditorFrame:ClearAllPoints()
-    selectedEditorFrame:SetPoint(point, relativeTo, relativePoint, (posX or 0) + dx, (posY or 0) + dy)
+    selectedEditorFrame:SetPoint("CENTER", UIParent, "CENTER", relX, relY)
+    selectedEditorFrame.DragonUI_WasAdjustedByEditor = true
+    selectedEditorFrame.DragonUI_WasDragged = true
     -- Auto-save position
     if addon.EditableFrames then
         for _, frameData in pairs(addon.EditableFrames) do

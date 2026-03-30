@@ -460,8 +460,11 @@ local function ApplyChatModsSystem()
     ApplyStickyChannels()
 
     -- AFK/DND dedup filters
-    ChatFrame_AddMessageEventFilter("CHAT_MSG_AFK", FilterAfkDnd)
-    ChatFrame_AddMessageEventFilter("CHAT_MSG_DND", FilterAfkDnd)
+    if not ChatModsModule.hooks.afkDndFilter then
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_AFK", FilterAfkDnd)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_DND", FilterAfkDnd)
+        ChatModsModule.hooks.afkDndFilter = true
+    end
 
     -- Tell Target slash command
     SlashCmdList["DRAGONUI_TELLTARGET"] = TellTarget
@@ -469,17 +472,33 @@ local function ApplyChatModsSystem()
     SLASH_DRAGONUI_TELLTARGET2 = "/wt"
 
     -- Mousewheel scroll hook
-    hooksecurefunc("FloatingChatFrame_OnMouseScroll", OnMouseScroll)
+    if not ChatModsModule.hooks.mouseScroll then
+        hooksecurefunc("FloatingChatFrame_OnMouseScroll", OnMouseScroll)
+        ChatModsModule.hooks.mouseScroll = true
+    end
 
     -- Editbox mouse toggle hooks
-    hooksecurefunc("ChatFrame_OpenChat", OnChatFrameOpenChat)
-    hooksecurefunc("ChatEdit_SendText", OnChatEditSendText)
+    if not ChatModsModule.hooks.chatOpen then
+        hooksecurefunc("ChatFrame_OpenChat", OnChatFrameOpenChat)
+        ChatModsModule.hooks.chatOpen = true
+    end
+    if not ChatModsModule.hooks.chatSend then
+        hooksecurefunc("ChatEdit_SendText", OnChatEditSendText)
+        ChatModsModule.hooks.chatSend = true
+    end
 
     ChatModsModule.applied = true
 end
 
 local function RestoreChatModsSystem()
     if not ChatModsModule.applied then return end
+
+    -- Remove filters on disable so re-enable does not stack duplicate handlers.
+    if ChatModsModule.hooks.afkDndFilter and ChatFrame_RemoveMessageEventFilter then
+        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_AFK", FilterAfkDnd)
+        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_DND", FilterAfkDnd)
+        ChatModsModule.hooks.afkDndFilter = nil
+    end
 
     -- Restore original chat font heights
     if ChatModsModule.originalStates.CHAT_FONT_HEIGHTS then

@@ -1207,17 +1207,47 @@ function CastbarModule:RefreshCastbar(unitType)
             relativePoint = "BOTTOM"
         end
     elseif unitType == "target" then
-        anchorFrame = TargetFrameSpellBar or TargetFrame or UIParent
+        local blizzSpellBar = TargetFrameSpellBar
         anchorPoint = "TOPLEFT"
         relativePoint = "TOPLEFT"
         xPos = 0
         yPos = 0
+
+        if blizzSpellBar and TargetFrame and TargetFrameToT and TargetFrameToT:IsShown() then
+            local _, rel = blizzSpellBar:GetPoint(1)
+            -- First target after reload can transiently anchor spellbar to Buff1.
+            -- Use the stable vanilla ToT offset to avoid intermediate bad position.
+            if rel and TargetFrameBuff1 and rel == TargetFrameBuff1 then
+                anchorFrame = TargetFrame
+                relativePoint = "BOTTOMLEFT"
+                xPos = 25
+                yPos = -21
+            else
+                anchorFrame = blizzSpellBar
+            end
+        else
+            anchorFrame = blizzSpellBar or TargetFrame or UIParent
+        end
     elseif unitType == "focus" then
-        anchorFrame = FocusFrameSpellBar or FocusFrame or UIParent
+        local blizzSpellBar = FocusFrameSpellBar
         anchorPoint = "TOPLEFT"
         relativePoint = "TOPLEFT"
         xPos = 0
         yPos = 0
+
+        if blizzSpellBar and FocusFrame and FocusFrameToT and FocusFrameToT:IsShown() then
+            local _, rel = blizzSpellBar:GetPoint(1)
+            if rel and FocusFrameBuff1 and rel == FocusFrameBuff1 then
+                anchorFrame = FocusFrame
+                relativePoint = "BOTTOMLEFT"
+                xPos = 25
+                yPos = -21
+            else
+                anchorFrame = blizzSpellBar
+            end
+        else
+            anchorFrame = blizzSpellBar or FocusFrame or UIParent
+        end
     end
     
     frames.container:ClearAllPoints()
@@ -1628,12 +1658,36 @@ local function InitializeCastbarForEditor()
     CastbarModule.initialized = true
 end
 
+local function SetupBlizzardLayoutHooks()
+    if CastbarModule.layoutHooksInstalled then
+        return
+    end
+
+    -- DragonflightUI pattern: sync to Blizzard's final spellbar positioning callback.
+    if type(Target_Spellbar_AdjustPosition) == "function" then
+        hooksecurefunc("Target_Spellbar_AdjustPosition", function(spellbar)
+            if spellbar == TargetFrameSpellBar then
+                if IsEnabled("target") then
+                    CastbarModule:RefreshCastbar("target")
+                end
+            elseif spellbar == FocusFrameSpellBar then
+                if IsEnabled("focus") then
+                    CastbarModule:RefreshCastbar("focus")
+                end
+            end
+        end)
+    end
+
+    CastbarModule.layoutHooksInstalled = true
+end
+
 local function OnEvent(self, event, unit, ...)
     if event == 'PLAYER_TARGET_CHANGED' then
         CastbarModule:HandleTargetChanged()
     elseif event == 'PLAYER_FOCUS_CHANGED' then
         CastbarModule:HandleFocusChanged()
     elseif event == 'PLAYER_ENTERING_WORLD' then
+        SetupBlizzardLayoutHooks()
         -- Full protection for reload during combat
         if addon.core and addon.core.ScheduleTimer then
             -- Normal path with timers
@@ -1709,6 +1763,7 @@ eventFrame:SetScript('OnEvent', OnEvent)
 
 -- Initialize centralized system
 InitializeCastbarForEditor()
+SetupBlizzardLayoutHooks()
 
 -- Load settings when addon is ready
 local readyFrame = CreateFrame("Frame")
