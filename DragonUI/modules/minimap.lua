@@ -1957,6 +1957,21 @@ function MinimapModule:InitializeMinimapSystem()
     end
 
     self.minimapFrame = CreateUIFrame(230, 230, "MinimapFrame")
+    -- Simple visual tweak: keep minimap editor overlay 10px lower.
+    do
+        local slice = self.minimapFrame and self.minimapFrame.NineSlice
+        if slice then
+            slice.TopLeftCorner:ClearAllPoints();     slice.TopLeftCorner:SetPoint("TOPLEFT", -8, -2)
+            slice.TopRightCorner:ClearAllPoints();    slice.TopRightCorner:SetPoint("TOPRIGHT", 8, -2)
+            slice.BottomLeftCorner:ClearAllPoints();  slice.BottomLeftCorner:SetPoint("BOTTOMLEFT", -8, -18)
+            slice.BottomRightCorner:ClearAllPoints(); slice.BottomRightCorner:SetPoint("BOTTOMRIGHT", 8, -18)
+            slice.Center:ClearAllPoints();            slice.Center:SetPoint("TOPLEFT", 0, -10); slice.Center:SetPoint("BOTTOMRIGHT", 0, -10)
+        end
+        if self.minimapFrame and self.minimapFrame.editorText then
+            self.minimapFrame.editorText:ClearAllPoints()
+            self.minimapFrame.editorText:SetPoint("CENTER", self.minimapFrame, "CENTER", 0, -10)
+        end
+    end
 
     --  AUTOMATIC REGISTRATION IN THE CENTRALIZED SYSTEM
     addon:RegisterEditableFrame({
@@ -1964,7 +1979,16 @@ function MinimapModule:InitializeMinimapSystem()
         frame = self.minimapFrame,
         blizzardFrame = MinimapCluster,
         configPath = {"widgets", "minimap"},
+        onShow = function()
+            -- Match quest tracker behavior: clamp while editing.
+            -- Allow a small overflow so users can fine-tune near edges.
+            self.minimapFrame:SetClampedToScreen(true)
+            self.minimapFrame:SetClampRectInsets(20, -20, -20, -5)
+        end,
         onHide = function()
+            -- Remove custom clamp settings after editor mode.
+            self.minimapFrame:SetClampRectInsets(0, 0, 0, 0)
+            self.minimapFrame:SetClampedToScreen(false)
             self:UpdateWidgets() -- Apply new configuration on editor exit
             addon:RefreshMinimap()
         end,
