@@ -395,3 +395,5 @@ L["You must be at the bank."] = "은행에 있어야 합니다."
 L["Bank already sorted!"] = "은행이 이미 정렬되어 있습니다!"
 L["Reputation: "] = "평판: "
 L["Error in SafeCall:"] = "SafeCall 오류:"
+
+L["Copy Text"] = "텍스트 복사"

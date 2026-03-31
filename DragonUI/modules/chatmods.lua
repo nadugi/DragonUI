@@ -1,65 +1,265 @@
-local addon = select(2, ...)
+    local addon = select(2, ...)
 
--- ============================================================================
--- CHAT MODS MODULE FOR DRAGONUI
--- Ported from KPack ChatMods by bkader
--- Features: hide chat buttons, editbox positioning, mousewheel scroll,
--- tell target (/tt), URL detection & copy, link hover tooltips,
--- chat copy (double-click tab), unlimited resizing, AFK/DND dedup.
--- ============================================================================
+    -- ============================================================================
+    -- CHAT MODS MODULE FOR DRAGONUI
+    -- Ported from KPack ChatMods by bkader
+    -- Features: hide chat buttons, editbox positioning, mousewheel scroll,
+    -- tell target (/tt), URL detection & copy, link hover tooltips,
+    -- chat copy (double-click tab), unlimited resizing, AFK/DND dedup.
+    -- ============================================================================
 
-local _G = _G
-local format, gsub = string.format, string.gsub
-local pairs, ipairs, select, tostring = pairs, ipairs, select, tostring
-local tinsert, table_concat = table.insert, table.concat
-local NUM_CHAT_WINDOWS = NUM_CHAT_WINDOWS or 10
+    local _G = _G
+    local format, gsub = string.format, string.gsub
+    local pairs, ipairs, select, tostring = pairs, ipairs, select, tostring
+    local tinsert, table_concat = table.insert, table.concat
+    local NUM_CHAT_WINDOWS = NUM_CHAT_WINDOWS or 10
 
--- Module state tracking
-local ChatModsModule = {
-    initialized = false,
-    applied = false,
-    originalStates = {},
-    hooks = {},
-    frames = {}
-}
+    -- Module state tracking
+    local ChatModsModule = {
+        initialized = false,
+        applied = false,
+        originalStates = {},
+        hooks = {},
+        frames = {}
+    }
 
--- Register with ModuleRegistry
-if addon.RegisterModule then
-    addon:RegisterModule("chatmods", ChatModsModule,
-        (addon.L and addon.L["Chat Mods"]) or "Chat Mods",
-        (addon.L and addon.L["Chat enhancements: hide buttons, editbox position, URL copy, chat copy, link hover, tell target"]) or "Chat enhancements: hide buttons, editbox position, URL copy, chat copy, link hover, tell target")
+    -- Register with ModuleRegistry
+    if addon.RegisterModule then
+        addon:RegisterModule("chatmods", ChatModsModule,
+            (addon.L and addon.L["Chat Mods"]) or "Chat Mods",
+            (addon.L and addon.L["Chat enhancements: hide buttons, editbox position, URL copy, chat copy, link hover, tell target"]) or "Chat enhancements: hide buttons, editbox position, URL copy, chat copy, link hover, tell target")
+    end
+
+    -- ============================================================================
+    -- CONFIGURATION FUNCTIONS
+    -- ============================================================================
+
+    local function GetModuleConfig()
+        return addon:GetModuleConfig("chatmods")
+    end
+
+    local function IsModuleEnabled()
+        return addon:IsModuleEnabled("chatmods")
+    end
+
+    -- ============================================================================
+    -- BUTTON HIDING & CHAT FRAME TWEAKS
+    -- ============================================================================
+
+    local function SetButtonVisible(button, visible)
+        if not button then return end
+
+        button:Show()
+        button:SetAlpha(visible and 1 or 0)
+        button:EnableMouse(visible)
+    end
+
+    local function SetButtonAlpha(button, alpha)
+        if not button then return end
+
+        button:Show()
+        button:SetAlpha(alpha)
+        button:EnableMouse(alpha >= 0.95)
+    end
+
+    local function GetChatHoverButtons(i)
+        local buttons = {
+            _G["ChatFrame" .. i .. "ButtonFrameUpButton"],
+            _G["ChatFrame" .. i .. "ButtonFrameDownButton"],
+            _G["ChatFrame" .. i .. "ButtonFrameBottomButton"]
+        }
+
+        if i == 1 then
+            tinsert(buttons, _G.ChatFrameMenuButton)
+            tinsert(buttons, _G.FriendsMicroButton)
+        end
+
+        return buttons
+    end
+
+    local function SetChatHoverButtonsVisible(i, visible)
+    local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
+    if bf then
+        bf:Show()
+        bf:EnableMouse(visible)
+    end
+
+    for _, button in ipairs(GetChatHoverButtons(i)) do
+        SetButtonVisible(button, visible)
+    end
 end
 
--- ============================================================================
--- CONFIGURATION FUNCTIONS
--- ============================================================================
-
-local function GetModuleConfig()
-    return addon:GetModuleConfig("chatmods")
+local function SetChatHoverButtonsAlpha(i, alpha)
+    for _, button in ipairs(GetChatHoverButtons(i)) do
+        SetButtonAlpha(button, alpha)
+    end
 end
 
-local function IsModuleEnabled()
-    return addon:IsModuleEnabled("chatmods")
+local function StripButtonFrameBackground(buttonFrame)
+    if not buttonFrame then return end
+
+    for idx = 1, select("#", buttonFrame:GetRegions()) do
+        local region = select(idx, buttonFrame:GetRegions())
+        if region and region:GetObjectType() == "Texture" then
+            region:SetAlpha(0)
+        end
+    end
+
+    if buttonFrame.GetBackdropColor and buttonFrame.SetBackdropColor then
+        local r, g, b = buttonFrame:GetBackdropColor()
+        buttonFrame:SetBackdropColor(r or 0, g or 0, b or 0, 0)
+    end
+
+    if buttonFrame.GetBackdropBorderColor and buttonFrame.SetBackdropBorderColor then
+        local r, g, b = buttonFrame:GetBackdropBorderColor()
+        buttonFrame:SetBackdropBorderColor(r or 0, g or 0, b or 0, 0)
+    end
+
+    buttonFrame.DragonUIBackgroundStripped = true
 end
 
--- ============================================================================
--- BUTTON HIDING & CHAT FRAME TWEAKS
--- ============================================================================
+local function MoveCopyTextButtonToTop()
+    local list = _G.DropDownList1
+    if not list then return end
 
-local function NoOp(f)
-    if f then f:Hide() end
+    local numButtons = list.numButtons or 0
+    if numButtons < 2 then return end
+
+    local copyIndex
+    for idx = 1, numButtons do
+        local button = _G["DropDownList1Button" .. idx]
+        if button and button.value == "DRAGONUI_COPY_TEXT" then
+            copyIndex = idx
+            break
+        end
+    end
+
+    if not copyIndex or copyIndex == 1 then
+        return
+    end
+
+    local copyButton = _G["DropDownList1Button" .. copyIndex]
+    if not copyButton then return end
+
+    local copyData = {
+        text = copyButton:GetText(),
+        value = copyButton.value,
+        func = copyButton.func,
+        arg1 = copyButton.arg1,
+        arg2 = copyButton.arg2,
+        checked = copyButton.checked,
+        notCheckable = copyButton.notCheckable,
+        tooltipTitle = copyButton.tooltipTitle,
+        tooltipText = copyButton.tooltipText,
+        disabled = copyButton.disabled,
+        keepShownOnClick = copyButton.keepShownOnClick,
+        hasArrow = copyButton.hasArrow,
+        menuList = copyButton.menuList,
+        owner = copyButton.owner
+    }
+
+    for idx = copyIndex, 2, -1 do
+        local button = _G["DropDownList1Button" .. idx]
+        local prev = _G["DropDownList1Button" .. (idx - 1)]
+        if button and prev then
+            button:SetText(prev:GetText())
+            button.value = prev.value
+            button.func = prev.func
+            button.arg1 = prev.arg1
+            button.arg2 = prev.arg2
+            button.checked = prev.checked
+            button.notCheckable = prev.notCheckable
+            button.tooltipTitle = prev.tooltipTitle
+            button.tooltipText = prev.tooltipText
+            button.disabled = prev.disabled
+            button.keepShownOnClick = prev.keepShownOnClick
+            button.hasArrow = prev.hasArrow
+            button.menuList = prev.menuList
+            button.owner = prev.owner
+        end
+    end
+
+    local first = _G.DropDownList1Button1
+    if first then
+        first:SetText(copyData.text)
+        first.value = copyData.value
+        first.func = copyData.func
+        first.arg1 = copyData.arg1
+        first.arg2 = copyData.arg2
+        first.checked = copyData.checked
+        first.notCheckable = copyData.notCheckable
+        first.tooltipTitle = copyData.tooltipTitle
+        first.tooltipText = copyData.tooltipText
+        first.disabled = copyData.disabled
+        first.keepShownOnClick = copyData.keepShownOnClick
+        first.hasArrow = copyData.hasArrow
+        first.menuList = copyData.menuList
+        first.owner = copyData.owner
+    end
 end
 
-local function ScrollToBottom(self)
-    self:GetParent():ScrollToBottom()
+local function IsTabHoverActive(tab)
+    if not tab then return false end
+    if tab:IsMouseOver() then return true end
+    return tab:GetAlpha() > ((tab.noMouseAlpha or 0) + 0.02)
+end
+
+local function EnsureChatButtonsHoverUpdater()
+    if ChatModsModule.hooks.chatButtonsHoverUpdater then
+        return
+    end
+
+    local updater = CreateFrame("Frame")
+    local BUTTON_FADE_SPEED = 10
+    updater:SetScript("OnUpdate", function(_, elapsed)
+        if not ChatModsModule.applied then return end
+
+        local entries = ChatModsModule.frames.chatHoverEntries
+        if not entries then return end
+
+        for _, entry in ipairs(entries) do
+            if entry.bf then
+                StripButtonFrameBackground(entry.bf)
+            end
+
+            local visible = false
+
+            if IsTabHoverActive(entry.tab) then
+                visible = true
+            elseif entry.bf and entry.bf:IsMouseOver() then
+                visible = true
+            else
+                for _, button in ipairs(entry.buttons) do
+                    if button and button:IsMouseOver() then
+                        visible = true
+                        break
+                    end
+                end
+            end
+
+            local targetAlpha = visible and 1 or 0
+            entry.targetAlpha = targetAlpha
+
+            if entry.alpha ~= entry.targetAlpha then
+                local delta = BUTTON_FADE_SPEED * elapsed
+                if entry.alpha < entry.targetAlpha then
+                    entry.alpha = math.min(entry.targetAlpha, entry.alpha + delta)
+                else
+                    entry.alpha = math.max(entry.targetAlpha, entry.alpha - delta)
+                end
+
+                SetChatHoverButtonsAlpha(entry.index, entry.alpha)
+            end
+        end
+    end)
+
+    ChatModsModule.hooks.chatButtonsHoverUpdater = updater
 end
 
 local function ApplyChatFrameTweaks()
-    -- Hide chat buttons
-    ChatFrameMenuButton:Hide()
-    ChatFrameMenuButton:SetScript("OnShow", NoOp)
-    FriendsMicroButton:Hide()
-    FriendsMicroButton:SetScript("OnShow", NoOp)
+
+    ChatModsModule.frames.chatHoverEntries = ChatModsModule.frames.chatHoverEntries or {}
+    wipe(ChatModsModule.frames.chatHoverEntries)
 
     for i = 1, 10 do
         local cf = _G[format("ChatFrame%d", i)]
@@ -92,26 +292,31 @@ local function ApplyChatFrameTweaks()
                 end
             end
 
-            -- Remove scroll button frame, keep bottom button
             local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
+            local tab = _G["ChatFrame" .. i .. "Tab"]
             if bf then
-                bf:Hide()
-                bf:SetScript("OnShow", NoOp)
-            end
+                StripButtonFrameBackground(bf)
+                if not bf.DragonUIBackgroundHooked then
+                    bf:HookScript("OnShow", function(self)
+                        StripButtonFrameBackground(self)
+                    end)
+                    bf.DragonUIBackgroundHooked = true
+                end
+                SetChatHoverButtonsVisible(i, false)
 
-            local bb = _G["ChatFrame" .. i .. "ButtonFrameBottomButton"]
-            if bb then
-                bb:SetParent(cf)
-                bb:SetHeight(18)
-                bb:SetWidth(18)
-                bb:ClearAllPoints()
-                bb:SetPoint("TOPRIGHT", cf, "TOPRIGHT", 0, -6)
-                bb:SetAlpha(0.4)
-                bb.SetPoint = function() end
-                bb:SetScript("OnClick", ScrollToBottom)
+                tinsert(ChatModsModule.frames.chatHoverEntries, {
+                    index = i,
+                    tab = tab,
+                    bf = bf,
+                    buttons = GetChatHoverButtons(i),
+                    alpha = 0,
+                    targetAlpha = 0
+                })
             end
         end
     end
+
+    EnsureChatButtonsHoverUpdater()
 
     -- Keep toast frame on screen
     if BNToastFrame then
@@ -416,6 +621,28 @@ local function ApplyChatCopy()
     if not copyFrame then
         CreateCopyFrame()
     end
+
+    local copyLabel = (addon.L and addon.L["Copy Text"]) or "Copy Text"
+
+    if not ChatModsModule.hooks.chatTabMenuCopyText then
+        hooksecurefunc("FCF_Tab_OnClick", function(tab, button)
+            if not ChatModsModule.applied then return end
+            if button ~= "RightButton" then return end
+            if not tab or not tab.GetID or tab:GetID() ~= 1 then return end
+            if not UIDropDownMenu_CreateInfo or not UIDropDownMenu_AddButton then return end
+
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = copyLabel
+            info.notCheckable = 1
+            info.value = "DRAGONUI_COPY_TEXT"
+            info.func = function()
+                ChatCopyFunc(tab)
+            end
+            UIDropDownMenu_AddButton(info)
+        end)
+        ChatModsModule.hooks.chatTabMenuCopyText = true
+    end
+
     for i = 1, 10 do
         local tab = _G[format("ChatFrame%dTab", i)]
         if tab then
@@ -510,6 +737,12 @@ local function RestoreChatModsSystem()
     if ChatModsModule.originalStates.ChatFrame_OnHyperlinkShow then
         _G.ChatFrame_OnHyperlinkShow = ChatModsModule.originalStates.ChatFrame_OnHyperlinkShow
         ChatModsModule.originalStates.ChatFrame_OnHyperlinkShow = nil
+    end
+
+    -- Restore right-click chat tab menu initializer
+    if ChatModsModule.originalStates.ChatFrame_Initialize then
+        _G.ChatFrame_Initialize = ChatModsModule.originalStates.ChatFrame_Initialize
+        ChatModsModule.originalStates.ChatFrame_Initialize = nil
     end
 
     -- Hide copy frame

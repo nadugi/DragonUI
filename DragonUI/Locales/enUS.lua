@@ -397,3 +397,5 @@ L["You must be at the bank."] = true
 L["Bank already sorted!"] = true
 L["Reputation: "] = true
 L["Error in SafeCall:"] = true
+
+L["Copy Text"] = true

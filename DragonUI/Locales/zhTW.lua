@@ -25,3 +25,5 @@ L["Use DragonUI: disable external UnitFrameLayers and enable DragonUI layers."] 
 L["Disable Both: disable external UnitFrameLayers and keep DragonUI layers disabled."] = true
 L["Use DragonUI"] = true
 L["Disable Both"] = true
+
+L["Copy Text"] = "複製文字"

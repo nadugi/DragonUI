@@ -395,3 +395,5 @@ L["You must be at the bank."] = "Du musst an der Bank sein."
 L["Bank already sorted!"] = "Bank ist bereits sortiert!"
 L["Reputation: "] = "Ruf: "
 L["Error in SafeCall:"] = "Fehler in SafeCall:"
+
+L["Copy Text"] = "Text kopieren"
