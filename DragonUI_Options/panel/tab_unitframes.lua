@@ -60,6 +60,41 @@ local function HandleClassPortraitToggle(unitKey, refreshFunc, enabled)
     RefreshUnitFramesTabAfterToggle(refreshFunc)
 end
 
+local function ResetDetachedFrameToDatabaseDefaults(unitKey, refreshFunc)
+    local defaults = addon.defaults and addon.defaults.profile
+    local profile = addon.db and addon.db.profile
+
+    if not (defaults and profile and defaults.unitframe and defaults.unitframe[unitKey]) then
+        RefreshUnitFramesTabAfterToggle(refreshFunc)
+        return
+    end
+
+    local function CopyValue(value)
+        if type(addon.DeepCopy) == "function" then
+            return addon.DeepCopy(value)
+        end
+        if type(value) ~= "table" then
+            return value
+        end
+
+        local copy = {}
+        for k, v in pairs(value) do
+            copy[k] = CopyValue(v)
+        end
+        return copy
+    end
+
+    profile.unitframe = profile.unitframe or {}
+    profile.unitframe[unitKey] = CopyValue(defaults.unitframe[unitKey])
+
+    if defaults.widgets and defaults.widgets[unitKey] then
+        profile.widgets = profile.widgets or {}
+        profile.widgets[unitKey] = CopyValue(defaults.widgets[unitKey])
+    end
+
+    RefreshUnitFramesTabAfterToggle(refreshFunc)
+end
+
 -- ============================================================================
 -- ACTIVE SUB-TAB STATE
 -- ============================================================================
@@ -499,10 +534,7 @@ local function BuildToTSection(scroll)
         width = 200,
         disabled = function() return not C:GetDBValue("unitframe.tot.override") end,
         callback = function()
-            if addon.TargetOfTarget and addon.TargetOfTarget.Reset then
-                addon.TargetOfTarget.Reset()
-            end
-            Panel:SelectTab("unitframes")
+            ResetDetachedFrameToDatabaseDefaults("tot", refreshToT)
         end,
     })
 
@@ -565,10 +597,7 @@ local function BuildToTSection(scroll)
         width = 200,
         disabled = function() return not C:GetDBValue("unitframe.fot.override") end,
         callback = function()
-            if addon.TargetOfFocus and addon.TargetOfFocus.Reset then
-                addon.TargetOfFocus.Reset()
-            end
-            Panel:SelectTab("unitframes")
+            ResetDetachedFrameToDatabaseDefaults("fot", refreshToF)
         end,
     })
 end
