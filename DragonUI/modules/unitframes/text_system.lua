@@ -95,6 +95,8 @@ function TextSystem.CreateDualTextElements(parentFrame, barFrame, prefix, layer,
             centerText:SetPoint("CENTER", barFrame, "CENTER", -2, 0)
         elseif prefix == "FocusFrameMana" then
             centerText:SetPoint("CENTER", barFrame, "CENTER", -3, 0)
+        elseif prefix == "PetFrameMana" then
+            centerText:SetPoint("CENTER", barFrame, "CENTER", 1.5, 0)
         else
             centerText:SetPoint("CENTER", barFrame, "CENTER", 0, 0)
         end

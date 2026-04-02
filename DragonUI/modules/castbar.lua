@@ -477,25 +477,28 @@ end
 -- ============================================================================
 
 local function ForceStatusBarLayer(statusBar)
-    if not statusBar or statusBar._layerForced then
+    if not statusBar then
         return
     end
     
     local texture = statusBar:GetStatusBarTexture()
     if texture and texture.SetDrawLayer then
         texture:SetDrawLayer('BORDER', 0)
-        statusBar._layerForced = true
     end
 end
 
 local function CreateTextureClipping(statusBar)
-    -- Cache for performance
+    -- Cache texture reference to avoid GetStatusBarTexture() every frame
+    local cachedTexture = nil
     local lastProgress = -1
     local lastChanneling = nil
     
     statusBar.UpdateTextureClipping = function(self, progress, isChanneling)
-        local texture = self:GetStatusBarTexture()
-        if not texture then
+        -- Re-fetch only if cached ref is nil (first call or after texture swap)
+        if not cachedTexture then
+            cachedTexture = self:GetStatusBarTexture()
+        end
+        if not cachedTexture then
             return
         end
         
@@ -509,15 +512,17 @@ local function CreateTextureClipping(statusBar)
         local clampedProgress = max(0.01, min(0.99, progress))
         
         if isChanneling then
-            -- CHANNELING: Hide from right
-            texture:SetTexCoord(0, clampedProgress, 0, 1)
+            cachedTexture:SetTexCoord(0, clampedProgress, 0, 1)
         else
-            -- CASTING: Fill from left
-            texture:SetTexCoord(0, clampedProgress, 0, 1)
+            cachedTexture:SetTexCoord(0, clampedProgress, 0, 1)
         end
-        
-        texture:ClearAllPoints()
-        texture:SetAllPoints(self)
+    end
+    
+    -- Invalidate cached texture when the statusbar texture is swapped
+    statusBar.InvalidateTextureCache = function(self)
+        cachedTexture = nil
+        lastProgress = -1
+        lastChanneling = nil
     end
 end
 
@@ -1048,7 +1053,7 @@ local function CreateCastbar(unitType)
     iconBorder:Hide()
     frames.icon.Border = iconBorder
     
-    -- Shield (for target/focus)
+    -- Shield (for target/focus only — player casts are always interruptible in 3.3.5a)
     if unitType ~= "player" then
         frames.shield = CreateShield(frames.castbar, frames.icon, frameName, 20)
     end
@@ -1072,12 +1077,12 @@ end
 -- ============================================================================
 
 function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
-    local spell, icon, startTime, endTime
+    local spell, icon, startTime, endTime, notInterruptible
     
     if isChanneling then
-        spell, _, _, icon, startTime, endTime = UnitChannelInfo(unit)
+        spell, _, _, icon, startTime, endTime, _, notInterruptible = UnitChannelInfo(unit)
     else
-        spell, _, _, icon, startTime, endTime = UnitCastingInfo(unit)
+        spell, _, _, icon, startTime, endTime, _, _, notInterruptible = UnitCastingInfo(unit)
     end
     
     if not spell then
@@ -1131,22 +1136,15 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
         end
     end
     
-    RestoreCastbarVisibility(unitType)
-    
-    if frames.background and frames.background ~= frames.textBackground then
-        frames.background:Show()
-    end
-    
-    if frames.spark then
-        frames.spark:Show()
-    end
-    if frames.flash then
-        frames.flash:Hide()
-    end
-    
     HideAllTicks(frames.ticks)
     
-    -- Set texture based on type
+    -- Invalidate texture cache before swapping texture
+    if frames.castbar.InvalidateTextureCache then
+        frames.castbar:InvalidateTextureCache()
+    end
+    
+    -- Set texture based on type BEFORE making the bar visible
+    -- to prevent a one-frame flash with stale colors on the first cast
     if isChanneling then
         frames.castbar:SetStatusBarTexture(TEXTURES.channel)
         frames.castbar:SetStatusBarColor(unitType == "player" and 0 or 1, 1, unitType == "player" and 1 or 1, 1)
@@ -1165,7 +1163,39 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
     end
     
     ForceStatusBarLayer(frames.castbar)
+    
+    RestoreCastbarVisibility(unitType)
+    
+    if frames.background and frames.background ~= frames.textBackground then
+        frames.background:Show()
+    end
+    
+    if frames.spark then
+        frames.spark:Show()
+    end
+    if frames.flash then
+        frames.flash:Hide()
+    end
+    
     SetCastText(unitType, spell)
+    
+    -- Non-interruptible visuals (target/focus only — player casts are always interruptible in 3.3.5a)
+    if unitType ~= "player" then
+        castbar.notInterruptible = notInterruptible and true or false
+        local sbTexture = frames.castbar:GetStatusBarTexture()
+        if sbTexture and sbTexture.SetDesaturated then
+            sbTexture:SetDesaturated(castbar.notInterruptible)
+        end
+        if frames.shield then
+            if castbar.notInterruptible then
+                frames.shield:Show()
+            else
+                frames.shield:Hide()
+            end
+        end
+    else
+        castbar.notInterruptible = false
+    end
     
     -- Configure icon
     local cfg = GetConfig(unitType)
@@ -1181,6 +1211,10 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
         end
         if frames.icon and frames.icon.Border then
             frames.icon.Border:Hide()
+        end
+        -- Hide shield when icon is hidden (shield anchors to icon)
+        if frames.shield then
+            frames.shield:Hide()
         end
     end
     
@@ -1231,23 +1265,40 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     -- Clear casting/channeling flags
     castbar.castingEx = false
     castbar.channelingEx = false
+    -- Keep notInterruptible and desaturation alive through flash+fade;
+    -- they are reset by HandleCastStart_Simple (new cast) or HideCastbar (cleanup).
     
-    -- Only treat as self-interrupt if channel was stopped EARLY (user moved/cancelled),
-    -- not when it completed naturally. Natural completion: currentTime >= endTime.
-    if isChannelStop and not wasInterrupted then
+    -- Detect interrupted casts:
+    -- 1. Channel stopped early (self-interrupt / CC) — same as before
+    -- 2. For target/focus: UNIT_SPELLCAST_INTERRUPTED does NOT fire in 3.3.5a,
+    --    so detect interrupted casts by checking if UNIT_SPELLCAST_STOP fired
+    --    before the cast was expected to finish.
+    if not wasInterrupted then
         local currentTime = GetTime()
-        castbar.selfInterrupt = currentTime < (castbar.endTime or 0) - 0.1
+        local endedEarly = currentTime < (castbar.endTime or 0) - 0.1
+        
+        if isChannelStop then
+            castbar.selfInterrupt = endedEarly
+        elseif unitType ~= "player" and endedEarly then
+            -- Target/focus cast stopped before completion = interrupted (CC, counterspell, fake cast)
+            castbar.selfInterrupt = true
+        else
+            castbar.selfInterrupt = false
+        end
     else
         castbar.selfInterrupt = false
     end
     
     if wasInterrupted or castbar.selfInterrupt then
         -- Show interrupted state
-        if frames.shield then frames.shield:Hide() end
+        -- Shield stays visible and fades out with the container
         if frames.spark then frames.spark:Hide() end
         if frames.flash then frames.flash:Hide() end
         HideAllTicks(frames.ticks)
         
+        if castbar.InvalidateTextureCache then
+            castbar:InvalidateTextureCache()
+        end
         castbar:SetStatusBarTexture(TEXTURES.interrupted)
         castbar:SetStatusBarColor(1, 0, 0, 1)
         castbar:SetValue(1.0)
@@ -1262,7 +1313,7 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     else
         -- Normal completion - show success flash
         if frames.spark then frames.spark:Hide() end
-        if frames.shield then frames.shield:Hide() end
+        -- Shield stays visible and fades out with the container
         HideAllTicks(frames.ticks)
         
         local texture = castbar:GetStatusBarTexture()
@@ -1669,9 +1720,15 @@ function CastbarModule:HideCastbar(unitType)
         castbar.channelingEx = false
         castbar.fadeOutEx = false
         castbar.selfInterrupt = false
+        castbar.notInterruptible = false
         castbar.startTime = 0
         castbar.endTime = 0
         castbar.unit = nil
+    end
+    
+    -- Ensure shield and desaturation are cleaned up
+    if frames.shield then
+        frames.shield:Hide()
     end
 end
 
@@ -1730,6 +1787,45 @@ function CastbarModule:HandleCastingEvent(event, unit)
         self:HandleCastStop_Simple(unitType, true)
     elseif event == 'UNIT_SPELLCAST_DELAYED' or event == 'UNIT_SPELLCAST_CHANNEL_UPDATE' then
         self:HandleCastDelayed_Simple(unitType, unit)
+    elseif event == 'UNIT_SPELLCAST_NOT_INTERRUPTIBLE' then
+        self:HandleInterruptibleChanged(unitType, unit, true)
+    elseif event == 'UNIT_SPELLCAST_INTERRUPTIBLE' then
+        self:HandleInterruptibleChanged(unitType, unit, false)
+    end
+end
+
+function CastbarModule:HandleInterruptibleChanged(unitType, unit, isNotInterruptible)
+    -- Only applies to target/focus castbars (player casts are always interruptible in 3.3.5a)
+    if unitType == "player" then
+        return
+    end
+    
+    local frames = self.frames[unitType]
+    if not frames or not frames.castbar then
+        return
+    end
+    
+    local castbar = frames.castbar
+    if not (castbar.castingEx or castbar.channelingEx) then
+        return
+    end
+    
+    castbar.notInterruptible = isNotInterruptible
+    
+    -- Update desaturation on the status bar texture
+    local sbTexture = castbar:GetStatusBarTexture()
+    if sbTexture and sbTexture.SetDesaturated then
+        sbTexture:SetDesaturated(isNotInterruptible and true or false)
+    end
+    
+    -- Update shield visibility (only if icon is shown)
+    local cfg = GetConfig(unitType)
+    if frames.shield then
+        if isNotInterruptible and frames.icon and frames.icon:IsShown() then
+            frames.shield:Show()
+        else
+            frames.shield:Hide()
+        end
     end
 end
 
@@ -2109,6 +2205,8 @@ local events = {
     'UNIT_SPELLCAST_CHANNEL_START',
     'UNIT_SPELLCAST_CHANNEL_STOP',
     'UNIT_SPELLCAST_CHANNEL_UPDATE',
+    'UNIT_SPELLCAST_NOT_INTERRUPTIBLE',
+    'UNIT_SPELLCAST_INTERRUPTIBLE',
     'UNIT_TARGET',
     'PLAYER_TARGET_CHANGED',
     'PLAYER_FOCUS_CHANGED'

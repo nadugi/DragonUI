@@ -278,24 +278,22 @@ local function LibEventCallback(self, event, ...)
 	local unitGUID = UnitGUID(self.unit);
 	if not unitGUID then return end
 
+	-- HealComm heal events: (casterGUID, spellID, bitType, endTime, ...targets) → arg5=first target
+	-- Must be checked BEFORE arg1 because for self-casts arg1 (caster) == arg5 (target) == unitGUID,
+	-- and arg1 matching would incorrectly route to the AbsorbsMonitor branch.
+	if ( event == "HealComm_HealStarted" or event == "HealComm_HealUpdated"
+		or event == "HealComm_HealDelayed" or event == "HealComm_HealStopped" ) then
+		if ( arg5 == unitGUID ) then
+			UnitFrameHealPredictionBars_Update(self);
+		end
+
 	-- AbsorbsMonitor events: EffectApplied(srcGUID, srcName, dstGUID, ...) → arg3=dstGUID
-	if ( (event == "EffectApplied") and arg3 == unitGUID ) then
+	elseif ( event == "EffectApplied" and arg3 == unitGUID ) then
 		UnitFrameHealPredictionBars_Update(self);
 
-	-- AbsorbsMonitor events where arg1=guid: EffectUpdated, UnitUpdated, EffectRemoved, UnitCleared, AreaCleared
+	-- Remaining events where arg1=guid: AbsorbsMonitor + HealComm_ModifierChanged/GUIDDisappeared
 	elseif ( arg1 == unitGUID ) then
-		if ( event == "UnitUpdated" or event == "EffectUpdated" or event == "EffectRemoved"
-			or event == "UnitCleared" or event == "AreaCreated" or event == "AreaCleared"
-			or event == "HealComm_ModifierChanged" or event == "HealComm_GUIDDisappeared" ) then
-			UnitFrameHealPredictionBars_Update(self);
-		end
-
-	-- HealComm events: (casterGUID, spellID, bitType, endTime, ...targets) → arg5=first target
-	elseif ( arg5 == unitGUID ) then
-		if ( event == "HealComm_HealUpdated" or event == "HealComm_HealStarted"
-			or event == "HealComm_HealDelayed" or event == "HealComm_HealStopped" ) then
-			UnitFrameHealPredictionBars_Update(self);
-		end
+		UnitFrameHealPredictionBars_Update(self);
 	end
 end
 
