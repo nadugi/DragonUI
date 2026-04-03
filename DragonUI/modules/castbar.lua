@@ -697,7 +697,7 @@ local function CreateShield(parent, icon, frameName, iconSize)
     texture:SetVertexColor(1, 1, 1, 1)
     
     shield:ClearAllPoints()
-    shield:SetPoint("CENTER", icon, "CENTER", 0, -4)
+    shield:SetPoint("CENTER", icon, "CENTER", 0, -2)
     shield:Hide()
     
     return shield
