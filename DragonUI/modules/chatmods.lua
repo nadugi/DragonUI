@@ -462,8 +462,8 @@ local function ApplyEditBoxPosition()
             eb:SetHeight(EDITBOX_HEIGHT)
 
             if pos == "middle" then
-                eb:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", -200 - (CHATBG_LEFT_PAD - 1), 180)
-                eb:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOM", 200, 180)
+                eb:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", -200 - (CHATBG_LEFT_PAD - 1), 150)
+                eb:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOM", 200, 150)
             elseif pos == "top" then
                 eb:SetPoint("BOTTOMLEFT", cf, "TOPLEFT", 2 - (CHATBG_LEFT_PAD - 0), 20)
                 eb:SetPoint("BOTTOMRIGHT", cf, "TOPRIGHT", -2, 20)
