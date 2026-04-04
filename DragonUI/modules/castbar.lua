@@ -1226,7 +1226,7 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
     end
 end
 
-function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannelStop)
+function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannelStop, overrideText)
     local frames = self.frames[unitType]
     local castbar = frames.castbar
     
@@ -1241,8 +1241,8 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
         end
     end
     
-    if not (castbar.castingEx or castbar.channelingEx) and not wasInterrupted then
-        return
+    if not (castbar.castingEx or castbar.channelingEx) then
+        return  -- cast already ended (e.g. FAILED already fired and cleared flags), don't override
     end
     
     local cfg = GetConfig(unitType)
@@ -1301,7 +1301,7 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
             texture:SetVertexColor(1, 1, 1, 1)
         end
         
-        SetCastText(unitType, INTERRUPTED)
+        SetCastText(unitType, overrideText or INTERRUPTED)
         FadeOutCastbar(unitType, (cfg and cfg.holdTimeInterrupt) or 0.8)
     else
         -- Normal completion - show success flash
@@ -1325,7 +1325,13 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
 end
 
 function CastbarModule:HandleCastFailed_Simple(unitType)
-    -- Failed events do nothing - let cast continue normally
+    -- UNIT_SPELLCAST_FAILED → show "Failed" text for all units, same as Blizzard/DragonflightUI.
+    -- Only act if a cast is actually in progress (prevents showing on bars that aren't visible).
+    local frames = self.frames[unitType]
+    if not frames or not frames.castbar then return end
+    local castbar = frames.castbar
+    if not (castbar.castingEx or castbar.channelingEx) then return end
+    self:HandleCastStop_Simple(unitType, true, nil, FAILED)
 end
 
 function CastbarModule:HandleCastDelayed_Simple(unitType, unit)
