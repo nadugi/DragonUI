@@ -233,6 +233,7 @@ L["Top"] = true
 L["Bottom"] = true
 L["Middle"] = true
 L["Tab & Button Fade"] = true
+L["How visible chat tabs are when not hovered. 0 = fully hidden, 1 = fully visible."] = true
 L["Opacity of tabs, buttons and chat background when not hovered. 0 = hidden, 1 = always visible."] = true
 L["Style Min Opacity"] = true
 L["Minimum opacity of the chat and text box skin. At 0 it fades in sync with tabs; above 0 it stays partially visible even when idle."] = true

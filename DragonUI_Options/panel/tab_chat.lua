@@ -105,15 +105,19 @@ local function BuildChatTab(scroll)
 
     C:AddSlider(appearanceSection, {
         label   = LO["Tab & Button Fade"],
-        desc    = LO["Opacity of tabs, buttons and chat background when not hovered. 0 = hidden, 1 = always visible."],
+        desc    = LO["How visible chat tabs are when not hovered. 0 = fully hidden, 1 = fully visible."],
         min     = 0, max = 1, step = 0.05,
         dbPath  = "modules.chatmods.tabIdleAlpha",
         callback = function()
-            local cfg = addon.db.profile.modules and addon.db.profile.modules.chatmods
-            local alpha = (cfg and cfg.tabIdleAlpha ~= nil) and cfg.tabIdleAlpha or 0
-            for i = 1, 10 do
-                local tab = _G["ChatFrame" .. i .. "Tab"]
-                if tab then tab.noMouseAlpha = alpha end
+            if addon.RefreshChatFadeState then
+                addon.RefreshChatFadeState()
+            else
+                local cfg = addon.db.profile.modules and addon.db.profile.modules.chatmods
+                local alpha = (cfg and cfg.tabIdleAlpha ~= nil) and cfg.tabIdleAlpha or 0
+                for i = 1, 10 do
+                    local tab = _G["ChatFrame" .. i .. "Tab"]
+                    if tab then tab.noMouseAlpha = alpha end
+                end
             end
         end,
     })
@@ -123,6 +127,11 @@ local function BuildChatTab(scroll)
         desc    = LO["Minimum opacity of the chat and text box skin. At 0 it fades in sync with tabs; above 0 it stays partially visible even when idle."],
         min     = 0, max = 1, step = 0.05,
         dbPath  = "modules.chatmods.chatBgIdleAlpha",
+        callback = function()
+            if addon.RefreshChatFadeState then
+                addon.RefreshChatFadeState()
+            end
+        end,
     })
 
 end

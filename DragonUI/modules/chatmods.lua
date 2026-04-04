@@ -90,6 +90,12 @@
 end
 
 local function SetChatHoverButtonsAlpha(i, alpha)
+        local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
+        if bf then
+            bf:Show()
+            bf:EnableMouse(alpha >= 0.95)
+        end
+
     for _, button in ipairs(GetChatHoverButtons(i)) do
         SetButtonAlpha(button, alpha)
     end
@@ -204,6 +210,54 @@ local function IsTabHoverActive(tab)
     return tab:GetAlpha() > ((tab.noMouseAlpha or 0) + 0.02)
 end
 
+    local function GetTabIdleAlpha(config)
+        return (config and config.tabIdleAlpha ~= nil) and config.tabIdleAlpha or 0
+    end
+
+    local function GetStyleIdleAlpha(config)
+        return (config and config.chatBgIdleAlpha ~= nil) and config.chatBgIdleAlpha or 0
+    end
+
+    local function RefreshChatFadeState()
+        if not ChatModsModule.applied then return end
+
+        local cfg = GetModuleConfig()
+        local tabIdleAlpha = GetTabIdleAlpha(cfg)
+        local styleIdleAlpha = GetStyleIdleAlpha(cfg)
+
+        for i = 1, 10 do
+            local cf = _G["ChatFrame" .. i]
+            local tab = _G["ChatFrame" .. i .. "Tab"]
+            local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
+            local eb = _G["ChatFrame" .. i .. "EditBox"]
+
+            local hovered = (tab and tab:IsMouseOver())
+                or (cf and cf:IsMouseOver())
+                or (bf and bf:IsMouseOver())
+                or (eb and eb:IsMouseOver())
+
+            local tabAlpha = hovered and 1 or tabIdleAlpha
+            if tab then
+                tab.noMouseAlpha = tabIdleAlpha
+                tab:SetAlpha(tabAlpha)
+            end
+
+            SetChatHoverButtonsAlpha(i, tabAlpha)
+
+            if cf and cf._dragonUIBgFrame and cf._dragonUIBgFrame:IsShown() then
+                cf._dragonUIBgFrame:SetAlpha(math.max(styleIdleAlpha, tabAlpha))
+            end
+
+            if eb then
+                if eb:GetBackdrop() then
+                    eb:SetAlpha(eb:HasFocus() and 1 or styleIdleAlpha)
+                else
+                    eb:SetAlpha(1)
+                end
+            end
+        end
+    end
+
 local function EnsureChatButtonsHoverUpdater()
     if ChatModsModule.hooks.chatButtonsHoverUpdater then
         return
@@ -223,7 +277,7 @@ local function EnsureChatButtonsHoverUpdater()
 
         -- Cache config once per tick, outside the loop
         local cfg = GetModuleConfig()
-        local idleAlpha = (cfg and cfg.chatBgIdleAlpha ~= nil) and cfg.chatBgIdleAlpha or 0
+        local idleAlpha = GetStyleIdleAlpha(cfg)
 
         for _, entry in ipairs(entries) do
             -- StripButtonFrameBackground is NOT called here — it's handled by the
@@ -243,7 +297,7 @@ local function EnsureChatButtonsHoverUpdater()
             -- Sync editbox style backdrop: visible only when typing.
             local eb = _G["ChatFrame" .. entry.index .. "EditBox"]
             if eb and eb:GetBackdrop() then
-                eb:SetAlpha(eb:HasFocus() and 1 or 0)
+                eb:SetAlpha(eb:HasFocus() and 1 or idleAlpha)
             end
         end
     end)
@@ -262,8 +316,7 @@ local function ApplyChatFrameTweaks()
             -- Fix tab fading
             local tab = _G["ChatFrame" .. i .. "Tab"]
             if tab then
-                local config = GetModuleConfig()
-                local idleAlpha = (config and config.tabIdleAlpha ~= nil) and config.tabIdleAlpha or 0
+                local idleAlpha = GetTabIdleAlpha(GetModuleConfig())
                 tab:SetAlpha(1)
                 tab.noMouseAlpha = idleAlpha
             end
@@ -394,11 +447,13 @@ local function ApplyChatStyle()
                 else
                     bg:SetBackdropBorderColor(0, 0, 0, 0)
                 end
-                bg:SetAlpha(1)
+                bg:SetAlpha(GetStyleIdleAlpha(config))
                 bg:Show()
             end
         end
     end
+
+    RefreshChatFadeState()
 end
 
 -- Editbox backdrop: slightly larger insets so the skin fills the full editbox
@@ -414,14 +469,15 @@ local function ApplyEditboxStyle()
     local config = GetModuleConfig()
     local style = (config and config.editboxStyle) or "none"
     local def = CHAT_STYLES[style]
+        local idleAlpha = GetStyleIdleAlpha(config)
 
     for i = 1, 10 do
         local eb = _G["ChatFrame" .. i .. "EditBox"]
         if eb then
             -- Focus textures (Left/Mid/Right) render a solid black input indicator.
             -- When our custom style is active they overlap it, so we hide them;
-            -- when no custom style is set we restore the default 0.8 alpha.
-            local focusAlpha = def and 0 or 0.8
+                -- when no custom style is set we keep them hidden to avoid a stale dark line.
+                local focusAlpha = 0
             for _, part in ipairs({"Left", "Mid", "Right"}) do
                 local focus = _G["ChatFrame" .. i .. "EditBoxFocus" .. part]
                 if focus then focus:SetTexture(0, 0, 0, focusAlpha) end
@@ -429,6 +485,7 @@ local function ApplyEditboxStyle()
 
             if not def then
                 eb:SetBackdrop(nil)
+                    eb:SetAlpha(1)
             else
                 eb:SetBackdrop(BD_EDITBOX)
                 local r, g, b, a = unpack(def.bg)
@@ -439,9 +496,12 @@ local function ApplyEditboxStyle()
                 else
                     eb:SetBackdropBorderColor(0, 0, 0, 0)
                 end
+                    eb:SetAlpha(eb:HasFocus() and 1 or idleAlpha)
             end
         end
     end
+
+        RefreshChatFadeState()
 end
 
 -- ============================================================================
@@ -910,6 +970,7 @@ local function OnProfileChanged()
         ApplyEditBoxPosition()
         ApplyChatStyle()
         ApplyEditboxStyle()
+        RefreshChatFadeState()
     else
         if addon:ShouldDeferModuleDisable("chatmods", ChatModsModule) then
             return
@@ -925,11 +986,24 @@ addon.ApplyChatStyle = function()
     end
 end
 
+    addon.ApplyEditBoxPosition = function()
+        if ChatModsModule.applied then
+            ApplyEditBoxPosition()
+            RefreshChatFadeState()
+        end
+    end
+
 addon.ApplyEditboxStyle = function()
     if ChatModsModule.applied then
         ApplyEditboxStyle()
     end
 end
+
+    addon.RefreshChatFadeState = function()
+        if ChatModsModule.applied then
+            RefreshChatFadeState()
+        end
+    end
 
 -- ============================================================================
 -- INITIALIZATION
@@ -959,15 +1033,7 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
         -- by Blizzard's FCFManager_UpdateChatFrameListAlpha which fires after PEW.
         addon:After(1, function()
             if not ChatModsModule.applied then return end
-            local cfg = GetModuleConfig()
-            local idleAlpha = (cfg and cfg.tabIdleAlpha ~= nil) and cfg.tabIdleAlpha or 0
-            for i = 1, 10 do
-                local tab = _G["ChatFrame" .. i .. "Tab"]
-                if tab then
-                    tab.noMouseAlpha = idleAlpha
-                    tab:SetAlpha(idleAlpha)
-                end
-            end
+            RefreshChatFadeState()
         end)
     end
 end)
