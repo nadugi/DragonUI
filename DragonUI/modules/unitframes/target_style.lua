@@ -359,13 +359,13 @@ function UF.TargetStyle.Create(opts)
             HealthBar:ClearAllPoints()
             HealthBar:SetSize(125, 20)
             HealthBar:SetPoint("RIGHT", Portrait, "LEFT", -1, 0)
-            HealthBar:SetFrameLevel(math.max(1, BlizzFrame:GetFrameLevel() - 1))
+            HealthBar:SetFrameLevel(BlizzFrame:GetFrameLevel())
         end
         if ManaBar then
             ManaBar:ClearAllPoints()
             ManaBar:SetSize(132, 9.5)
             ManaBar:SetPoint("RIGHT", Portrait, "LEFT", 6.5, -16.5)
-            ManaBar:SetFrameLevel(math.max(1, BlizzFrame:GetFrameLevel() - 1))
+            ManaBar:SetFrameLevel(BlizzFrame:GetFrameLevel())
         end
         if NameText then
             NameText:ClearAllPoints()
@@ -703,19 +703,32 @@ function UF.TargetStyle.Create(opts)
                 "TOPLEFT", BlizzFrame, "TOPLEFT", 0, -8)
         end
 
-        -- ---- Create border texture ----
+        -- ---- Create border+elite frame (above health/mana bars) ----
+        -- Bars are child frames at BlizzFrame level (+0), so they render above
+        -- BlizzFrame's own textures. Border sits at +1, elite at +2 on top of border.
+        if not frameElements.borderFrame then
+            local bf = CreateFrame("Frame", nil, BlizzFrame)
+            bf:SetAllPoints(BlizzFrame)
+            bf:SetFrameLevel(BlizzFrame:GetFrameLevel() + 1)
+            frameElements.borderFrame = bf
+        end
         if not frameElements.border then
-            frameElements.border = BlizzFrame:CreateTexture(
+            frameElements.border = frameElements.borderFrame:CreateTexture(
                 "DragonUI_" .. namePrefix .. "Border", "OVERLAY", nil, 5)
             frameElements.border:SetTexture(TEXTURES.BORDER)
             frameElements.border:SetPoint(
                 "TOPLEFT", frameElements.background, "TOPLEFT", 0, 0)
         end
 
-        -- ---- Create elite decoration ----
+        -- ---- Create elite decoration (above border) ----
+        if not frameElements.eliteFrame then
+            local ef = CreateFrame("Frame", nil, BlizzFrame)
+            ef:SetAllPoints(BlizzFrame)
+            ef:SetFrameLevel(BlizzFrame:GetFrameLevel() + 2)
+            frameElements.eliteFrame = ef
+        end
         if not frameElements.elite then
-            local textureFrame = _G[namePrefix .. "FrameTextureFrame"]
-            frameElements.elite = (textureFrame or BlizzFrame):CreateTexture(
+            frameElements.elite = frameElements.eliteFrame:CreateTexture(
                 "DragonUI_" .. namePrefix .. "Elite", "ARTWORK", nil, 1)
             frameElements.elite:SetTexture(TEXTURES.BOSS)
             frameElements.elite:Hide()
@@ -729,6 +742,13 @@ function UF.TargetStyle.Create(opts)
         local pvpIcon = _G[namePrefix .. "FrameTextureFramePVPIcon"]
         if pvpIcon and pvpIcon.SetDrawLayer then
             pvpIcon:SetDrawLayer("OVERLAY", 7)
+        end
+
+        -- Raise FrameTextureFrame above eliteFrame (+2) so raid markers and PVP icon
+        -- always render on top of all decorations.
+        local textureFrame = _G[namePrefix .. "FrameTextureFrame"]
+        if textureFrame and textureFrame.SetFrameLevel then
+            textureFrame:SetFrameLevel(BlizzFrame:GetFrameLevel() + 3)
         end
 
         -- ---- Create threat numeric indicator ----
@@ -781,13 +801,13 @@ function UF.TargetStyle.Create(opts)
         HealthBar:ClearAllPoints()
         HealthBar:SetSize(125, 20)
         HealthBar:SetPoint("RIGHT", Portrait, "LEFT", -1, 0)
-        HealthBar:SetFrameLevel(math.max(1, BlizzFrame:GetFrameLevel() - 1))
+        HealthBar:SetFrameLevel(BlizzFrame:GetFrameLevel())
 
         -- ---- Configure power bar ----
         ManaBar:ClearAllPoints()
         ManaBar:SetSize(132, 9.5)
         ManaBar:SetPoint("RIGHT", Portrait, "LEFT", 6.5, -16.5)
-        ManaBar:SetFrameLevel(math.max(1, BlizzFrame:GetFrameLevel() - 1))
+        ManaBar:SetFrameLevel(BlizzFrame:GetFrameLevel())
 
         -- ---- Configure text elements ----
         if NameText then
