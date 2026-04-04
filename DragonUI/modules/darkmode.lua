@@ -897,6 +897,7 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
             self:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
             self:RegisterEvent("SPELL_UPDATE_USABLE")
             self:RegisterEvent("ACTIONBAR_UPDATE_STATE")
+            self:RegisterEvent("PLAYER_REGEN_DISABLED")
             DarkModeModule.hooks.barEventsRegistered = true
         end
 
@@ -939,10 +940,23 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
 
     elseif event == "SPELL_UPDATE_USABLE" or event == "ACTIONBAR_UPDATE_STATE" then
         -- These fire frequently during shapeshift/flight when Blizzard resets
-        -- button textures. Re-apply darkening to catch any that were reset.
+        -- button textures. Delay so Blizzard finishes its own vertex color changes first.
         if not DarkModeModule.applied then return end
-        local tint = GetTintValues()
-        DarkenActionButtonBorders(tint)
+        addon:After(0.05, function()
+            if not DarkModeModule.applied then return end
+            local tint = GetTintValues()
+            DarkenActionButtonBorders(tint)
+        end)
+
+    elseif event == "PLAYER_REGEN_DISABLED" then
+        -- Combat entry: Blizzard calls ActionButton_UpdateUsable for all buttons,
+        -- which resets NormalTexture vertex color. Re-apply after it finishes.
+        if not DarkModeModule.applied then return end
+        addon:After(0.1, function()
+            if not DarkModeModule.applied then return end
+            local tint = GetTintValues()
+            DarkenActionButtonBorders(tint)
+        end)
     end
 end)
 
