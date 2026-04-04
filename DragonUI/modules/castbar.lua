@@ -1268,26 +1268,11 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     -- Keep notInterruptible and desaturation alive through flash+fade;
     -- they are reset by HandleCastStart_Simple (new cast) or HideCastbar (cleanup).
     
-    -- Detect interrupted casts:
-    -- 1. Channel stopped early (self-interrupt / CC) — same as before
-    -- 2. For target/focus: UNIT_SPELLCAST_INTERRUPTED does NOT fire in 3.3.5a,
-    --    so detect interrupted casts by checking if UNIT_SPELLCAST_STOP fired
-    --    before the cast was expected to finish.
-    if not wasInterrupted then
-        local currentTime = GetTime()
-        local endedEarly = currentTime < (castbar.endTime or 0) - 0.1
-        
-        if isChannelStop then
-            castbar.selfInterrupt = endedEarly
-        elseif unitType ~= "player" and endedEarly then
-            -- Target/focus cast stopped before completion = interrupted (CC, counterspell, fake cast)
-            castbar.selfInterrupt = true
-        else
-            castbar.selfInterrupt = false
-        end
-    else
-        castbar.selfInterrupt = false
-    end
+    -- Channels always use the success flash on stop, even if stopped early.
+    -- Blizzard behavior: an interrupted channel fills the bar and plays the hold animation.
+    -- For normal casts, rely on the explicit UNIT_SPELLCAST_INTERRUPTED event (wasInterrupted=true)
+    -- to detect real interrupts; timing-based endedEarly detection caused false positives under lag.
+    castbar.selfInterrupt = false
     
     if wasInterrupted or castbar.selfInterrupt then
         -- Show interrupted state
@@ -1316,9 +1301,15 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
         -- Shield stays visible and fades out with the container
         HideAllTicks(frames.ticks)
         
+        -- Force bar to 100% fill before flash (handles lag case where STOP fires before bar reaches 1.0)
+        castbar:SetValue(1.0)
+        if castbar.InvalidateTextureCache then
+            castbar:InvalidateTextureCache()
+        end
         local texture = castbar:GetStatusBarTexture()
         if texture then
             texture:SetTexCoord(0, 1, 0, 1)
+            texture:SetVertexColor(1, 1, 1, 1)
         end
         
         ShowSuccessFlash(unitType)
