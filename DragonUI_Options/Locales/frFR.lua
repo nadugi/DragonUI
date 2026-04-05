@@ -77,6 +77,13 @@ L["Midnight"] = "Minuit"
 L["Chat"] = "Chat"
 L["Appearance"] = "Apparence"
 
+-- Auras tab
+L["Positions"] = "Positions"
+L["Reset Buff Frame Position"] = "Réinitialiser la position des auras"
+L["Buff frame position reset."] = "Position du cadre d'auras réinitialisée."
+L["Reset Weapon Enchant Position"] = "Réinitialiser la position des enchantements d'arme"
+L["Weapon enchant position reset."] = "Position des enchantements d'arme réinitialisée."
+
 -- Latency indicator (player only)
 L["Latency Indicator"] = "Indicateur de latence"
 L["Enable Latency Indicator"] = "Activer l'indicateur de latence"

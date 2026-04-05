@@ -55,6 +55,24 @@ local function BuildAurasTab(scroll)
     local resetSection = C:AddSection(scroll, LO["Positions"])
 
     C:AddButton(resetSection, {
+        label = LO["Reset Buff Frame Position"],
+        width = 220,
+        callback = function()
+            if addon.db.profile.widgets and addon.db.profile.widgets.buffs then
+                local w = addon.db.profile.widgets.buffs
+                w.anchor = "TOPRIGHT"
+                w.posX = -270
+                w.posY = -15
+                w.custom_position = false
+            end
+            if addon.BuffFrameModule then
+                addon.BuffFrameModule:UpdatePosition()
+            end
+            print("|cFF00FF00[DragonUI]|r " .. LO["Buff frame position reset."])
+        end,
+    })
+
+    C:AddButton(resetSection, {
         label = LO["Reset Weapon Enchant Position"],
         width = 220,
         callback = function()

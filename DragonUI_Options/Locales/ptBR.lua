@@ -76,7 +76,12 @@ L["DragonUI Style"] = "Estilo DragonUI"
 L["Midnight"] = "Meia-noite"
 L["Chat"] = "Chat"
 L["Appearance"] = "Apar\u00eancia"
-
+-- Auras tab
+L["Positions"] = "Posições"
+L["Reset Buff Frame Position"] = "Redefinir posição das auras"
+L["Buff frame position reset."] = "Posição do quadro de auras redefinida."
+L["Reset Weapon Enchant Position"] = "Redefinir posição dos encantamentos de arma"
+L["Weapon enchant position reset."] = "Posição dos encantamentos de arma redefinida."
 -- Latency indicator (player only)
 L["Latency Indicator"] = "Indicador de Lat\195\170ncia"
 L["Enable Latency Indicator"] = "Ativar Indicador de Lat\195\170ncia"
