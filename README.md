@@ -78,6 +78,7 @@ DragonUI combines original work with adapted ideas, ports, and implementation re
 - [oGlow](https://github.com/haste) by haste
 - [ElvUI-WotLK](https://github.com/ElvUI-WotLK/) as a pattern reference in selected areas.
 - [CrimsonHollow](https://github.com/CrimsonHollow) for Fat Health Bar contribution
+- [Quartz](https://github.com/Nevcairiel/Quartz) by Hendrik Leppkes - latency indicator concept inspiration
 - [RovBot](https://github.com/RovxBot) for action bar grid/preset system
 - [Raz0r](https://github.com/Raz0r1337) for German localization
 - [nadugi](https://github.com/nadugi) for Korean localization

@@ -72,6 +72,15 @@ end
 local MAX_TICKS = 15
 
 -- ============================================================================
+-- LATENCY TRACKING STATE (player only, SENT → START delta)
+-- ============================================================================
+
+local latencyState = {
+    sentTime = nil,        -- GetTime() at UNIT_SPELLCAST_SENT for player
+    latencySeconds = 0,    -- last measured SENT→START delta
+}
+
+-- ============================================================================
 -- MODULE STATE
 -- ============================================================================
 
@@ -123,6 +132,11 @@ end
 local function IsEnabled(unitType)
     local cfg = GetConfig(unitType)
     return cfg and cfg.enabled
+end
+
+local function GetLatencyConfig()
+    local cfg = addon.db and addon.db.profile and addon.db.profile.castbar
+    return cfg and cfg.latency
 end
 
 local function IsCompanionDetached(unitType)
@@ -1061,6 +1075,18 @@ local function CreateCastbar(unitType)
     -- Apply texture clipping system
     CreateTextureClipping(frames.castbar)
     
+    -- ================================================================
+    -- LATENCY INDICATOR VISUAL (player only — classic Quartz-style)
+    -- ================================================================
+    if unitType == "player" then
+        local latOverlay = frames.castbar:CreateTexture(nil, 'ARTWORK', nil, 2)
+        latOverlay:SetTexture(TEXTURES.standard)
+        latOverlay:SetBlendMode('ADD')
+        latOverlay:SetVertexColor(0.9, 0.5, 0.2, 0.45)
+        latOverlay:Hide()
+        frames.latencyOverlay = latOverlay
+    end
+
     -- OnUpdate handler 
     frames.castbar:SetScript('OnUpdate', function(self, elapsed)
         CastbarModule:OnUpdate(unitType, self, elapsed)
@@ -1069,6 +1095,60 @@ local function CreateCastbar(unitType)
     -- Notify dark mode to re-darken borders on this new castbar
     if addon.RefreshDarkModeCastbars then
         addon.RefreshDarkModeCastbars()
+    end
+end
+
+-- ============================================================================
+-- LATENCY INDICATOR — SHOW / HIDE / UPDATE
+-- ============================================================================
+
+local MAX_LATENCY_RATIO = 0.4  -- never show more than 40% of the bar
+
+local function HideLatencyIndicator()
+    local frames = CastbarModule.frames.player
+    if not frames then return end
+    if frames.latencyOverlay then frames.latencyOverlay:Hide() end
+end
+
+local function ShowLatencyIndicator(castDuration)
+    local frames = CastbarModule.frames.player
+    if not frames or not frames.castbar then return end
+
+    local lcfg = GetLatencyConfig()
+    if not lcfg or not lcfg.enabled then
+        HideLatencyIndicator()
+        return
+    end
+
+    local latency = latencyState.latencySeconds
+    if not latency or latency <= 0 then
+        HideLatencyIndicator()
+        return
+    end
+
+    local barWidth = frames.castbar:GetWidth()
+    local barHeight = frames.castbar:GetHeight()
+    if barWidth <= 0 or castDuration <= 0 then
+        HideLatencyIndicator()
+        return
+    end
+
+    -- Clamp ratio to avoid absurd visuals from lag spikes
+    local ratio = min(latency / castDuration, MAX_LATENCY_RATIO)
+    local pxWidth = max(1, barWidth * ratio)
+
+    local overlay = frames.latencyOverlay
+    if overlay then
+        local c = lcfg.color or { r = 0.9, g = 0.5, b = 0.2 }
+        local a = lcfg.alpha or 0.45
+        overlay:SetVertexColor(c.r or 0.9, c.g or 0.5, c.b or 0.2, a)
+        overlay:ClearAllPoints()
+        overlay:SetPoint("RIGHT", frames.castbar, "RIGHT", 0, 0)
+        overlay:SetSize(pxWidth, barHeight)
+        -- Crop TexCoord so the texture gradient matches bar position
+        local leftUV = 1 - ratio
+        overlay:SetTexCoord(leftUV, 1, 0, 1)
+        overlay:Show()
     end
 end
 
@@ -1165,6 +1245,18 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
     ForceStatusBarLayer(frames.castbar)
     
     RestoreCastbarVisibility(unitType)
+
+    -- LATENCY: measure SENT→START delta and show indicator (player normal casts only)
+    if unitType == "player" and not isChanneling then
+        if latencyState.sentTime then
+            latencyState.latencySeconds = GetTime() - latencyState.sentTime
+            latencyState.sentTime = nil  -- consumed
+        end
+        ShowLatencyIndicator(duration)
+    elseif unitType == "player" and isChanneling then
+        -- First version: hide latency for channels to avoid artifacts
+        HideLatencyIndicator()
+    end
     
     if frames.background and frames.background ~= frames.textBackground then
         frames.background:Show()
@@ -1267,6 +1359,11 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     castbar.channelingEx = false
     -- Keep notInterruptible and desaturation alive through flash+fade;
     -- they are reset by HandleCastStart_Simple (new cast) or HideCastbar (cleanup).
+
+    -- Hide latency indicator on cast end (player only)
+    if unitType == "player" then
+        HideLatencyIndicator()
+    end
 
     -- Channels always use the success flash on stop — Blizzard behavior.
     -- Player always uses UNIT_SPELLCAST_INTERRUPTED (wasInterrupted=true) — reliable in 3.3.5a.
@@ -1412,6 +1509,7 @@ function CastbarModule:OnUpdate(unitType, castbar, elapsed)
                 -- No new cast started, safe to fade
                 castbar.castingEx = false
                 castbar.channelingEx = false
+                if unitType == "player" then HideLatencyIndicator() end
                 ShowSuccessFlash(unitType)
             end
             -- If new cast started, flags stay true and we skip fadeout
@@ -1687,6 +1785,19 @@ function CastbarModule:RefreshCastbar(unitType)
             end
         end
     end
+
+    -- Refresh latency indicator visuals on config/size change (player only)
+    if unitType == "player" then
+        local castbar = frames.castbar
+        if castbar and (castbar.castingEx and not castbar.channelingEx) then
+            local duration = (castbar.endTime or 0) - (castbar.startTime or 0)
+            if duration > 0 then
+                ShowLatencyIndicator(duration)
+            end
+        else
+            HideLatencyIndicator()
+        end
+    end
     
     -- Set text mode
     if unitType ~= "player" then
@@ -1734,6 +1845,11 @@ function CastbarModule:HideCastbar(unitType)
     -- Ensure shield and desaturation are cleaned up
     if frames.shield then
         frames.shield:Hide()
+    end
+
+    -- Clean up latency visuals
+    if unitType == "player" then
+        HideLatencyIndicator()
     end
 end
 
@@ -2180,6 +2296,11 @@ local function OnEvent(self, event, unit, ...)
                 HideBlizzardCastbar("focus")
             end
         end
+    elseif event == 'UNIT_SPELLCAST_SENT' then
+        -- Latency tracking: record send time for player only
+        if unit == "player" then
+            latencyState.sentTime = GetTime()
+        end
     else
         CastbarModule:HandleCastingEvent(event, unit)
     end
@@ -2202,6 +2323,7 @@ end
 local eventFrame = CreateFrame('Frame', 'DragonUICastbarEventHandler')
 local events = {
     'PLAYER_ENTERING_WORLD',
+    'UNIT_SPELLCAST_SENT',
     'UNIT_SPELLCAST_START',
     'UNIT_SPELLCAST_DELAYED',
     'UNIT_SPELLCAST_STOP',

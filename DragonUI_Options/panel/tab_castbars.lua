@@ -167,6 +167,43 @@ local function BuildPlayerCastbar(scroll)
             print("|cFF00FF00[DragonUI]|r " .. LO["Player castbar position reset."])
         end,
     })
+
+    -- ================================================================
+    -- LATENCY INDICATOR SECTION
+    -- ================================================================
+    local lat = C:AddSection(scroll, LO["Latency Indicator"])
+
+    C:AddToggle(lat, {
+        label = LO["Enable Latency Indicator"],
+        desc  = LO["Show a safe-zone overlay based on real cast latency."],
+        dbPath = "castbar.latency.enabled",
+        callback = function()
+            refresh()
+            Panel:SelectTab("castbars")
+        end,
+    })
+
+    C:AddColorPicker(lat, {
+        label = LO["Latency Color"],
+        dbPath = "castbar.latency.color",
+        hasAlpha = false,
+        disabled = function()
+            return not C:GetDBValue("castbar.latency.enabled")
+        end,
+        callback = refresh,
+    })
+
+    C:AddSlider(lat, {
+        label = LO["Latency Alpha"],
+        desc  = LO["Opacity of the latency indicator."],
+        dbPath = "castbar.latency.alpha",
+        min = 0.1, max = 1.0, step = 0.05,
+        width = 200,
+        disabled = function()
+            return not C:GetDBValue("castbar.latency.enabled")
+        end,
+        callback = refresh,
+    })
 end
 
 local function BuildTargetCastbar(scroll)

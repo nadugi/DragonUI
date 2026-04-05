@@ -381,6 +381,13 @@ local defaults = {
             holdTime = 0.3,
             holdTimeInterrupt = 0.8,
 
+            -- LATENCY INDICATOR (PLAYER ONLY)
+            latency = {
+                enabled = false,
+                color = { r = 0.9, g = 0.5, b = 0.2 },
+                alpha = 0.45,
+            },
+
             -- TARGET CASTBAR SETTINGS
             target = {
                 enabled = true,

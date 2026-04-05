@@ -559,6 +559,14 @@ L["Show the spell icon next to the focus castbar"] = "Zauber-Icon neben der Foku
 L["Time to show the castbar after successful cast completion"] = "Anzeigezeit nach erfolgreichem Zauberabschluss"
 L["Time to show the castbar after cast interruption"] = "Anzeigezeit nach Zauberunterbrechung"
 
+-- Latency indicator (player only)
+L["Latency Indicator"] = "Latenzindikator"
+L["Enable Latency Indicator"] = "Latenzindikator aktivieren"
+L["Show a safe-zone overlay based on real cast latency."] = "Zeigt eine sichere Zone basierend auf der realen Zauberlatenz."
+L["Latency Color"] = "Latenzfarbe"
+L["Latency Alpha"] = "Latenz-Deckkraft"
+L["Opacity of the latency indicator."] = "Deckkraft des Latenzindikators."
+
 -- ============================================================================
 -- ENHANCEMENTS TAB
 -- ============================================================================

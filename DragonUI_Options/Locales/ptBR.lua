@@ -74,3 +74,11 @@ L["DragonUI Style"] = "Estilo DragonUI"
 L["Midnight"] = "Meia-noite"
 L["Chat"] = "Chat"
 L["Appearance"] = "Apar\u00eancia"
+
+-- Latency indicator (player only)
+L["Latency Indicator"] = "Indicador de Lat\195\170ncia"
+L["Enable Latency Indicator"] = "Ativar Indicador de Lat\195\170ncia"
+L["Show a safe-zone overlay based on real cast latency."] = "Mostra uma zona segura baseada na lat\195\170ncia real da conjura\195\167\195\163o."
+L["Latency Color"] = "Cor da Lat\195\170ncia"
+L["Latency Alpha"] = "Opacidade da Lat\195\170ncia"
+L["Opacity of the latency indicator."] = "Opacidade do indicador de lat\195\170ncia."

@@ -559,6 +559,14 @@ L["Show the spell icon next to the focus castbar"] = "Mostrar el icono del hechi
 L["Time to show the castbar after successful cast completion"] = "Tiempo para mostrar la barra tras completar exitosamente"
 L["Time to show the castbar after cast interruption"] = "Tiempo para mostrar la barra tras interrupción"
 
+-- Latency indicator (player only)
+L["Latency Indicator"] = "Indicador de Latencia"
+L["Enable Latency Indicator"] = "Activar Indicador de Latencia"
+L["Show a safe-zone overlay based on real cast latency."] = "Muestra una zona segura basada en la latencia real del casteo."
+L["Latency Color"] = "Color de Latencia"
+L["Latency Alpha"] = "Opacidad de Latencia"
+L["Opacity of the latency indicator."] = "Opacidad del indicador de latencia."
+
 -- ============================================================================
 -- ENHANCEMENTS TAB
 -- ============================================================================

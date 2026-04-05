@@ -580,6 +580,14 @@ L["Show the spell icon next to the focus castbar"] = true
 L["Time to show the castbar after successful cast completion"] = true
 L["Time to show the castbar after cast interruption"] = true
 
+-- Latency indicator (player only)
+L["Latency Indicator"] = true
+L["Enable Latency Indicator"] = true
+L["Show a safe-zone overlay based on real cast latency."] = true
+L["Latency Color"] = true
+L["Latency Alpha"] = true
+L["Opacity of the latency indicator."] = true
+
 -- ============================================================================
 -- ENHANCEMENTS TAB
 -- ============================================================================
