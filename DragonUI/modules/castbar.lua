@@ -1181,9 +1181,10 @@ function CastbarModule:HandleCastStart_Simple(unitType, unit, isChanneling)
     
     local start, finish, duration = ParseCastTimes(startTime, endTime)
     
-    -- Store times directly in statusBar frame
+    -- Store cast info for event matching
     castbar.startTime = start
     castbar.endTime = finish
+    castbar.spellName = spell
     
     -- Cancel any active fade
     castbar.fadeOutEx = false
@@ -1334,7 +1335,7 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     end
     
     if not (castbar.castingEx or castbar.channelingEx) then
-        return  -- cast already ended (e.g. FAILED already fired and cleared flags), don't override
+        return  -- Already handled by FAILED/INTERRUPTED event that fired before STOP
     end
     
     local cfg = GetConfig(unitType)
@@ -1365,23 +1366,24 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
         HideLatencyIndicator()
     end
 
-    -- Channels always use the success flash on stop — Blizzard behavior.
-    -- Player always uses UNIT_SPELLCAST_INTERRUPTED (wasInterrupted=true) — reliable in 3.3.5a.
-    -- Target/focus: UNIT_SPELLCAST_INTERRUPTED does NOT fire in 3.3.5a, so UNIT_SPELLCAST_STOP
-    -- is used for both success and interrupt. Use timing to distinguish them, but with a 400ms
-    -- grace window so normal lag (< 200ms) never causes false positives.
+    -- Timing heuristic for non-player, non-self target/focus:
+    -- As a fallback for cases where FAILED/INTERRUPTED events don't fire,
+    -- detect early-ending casts and treat them as interrupted.
+    -- Skipped for self-targets (INTERRUPTED fires reliably when target=player)
+    -- and /stopcasting (should show success).
     castbar.selfInterrupt = false
     if not wasInterrupted and not isChannelStop and unitType ~= "player" then
-        local currentTime = GetTime()
-        local endedEarly = currentTime < (castbar.endTime or 0) - 0.4
-        if endedEarly then
-            castbar.selfInterrupt = true
+        local isTargetingSelf = UnitIsUnit(unitType, "player")
+        if not isTargetingSelf then
+            local endedEarly = GetTime() < (castbar.endTime or 0) - 0.4
+            if endedEarly then
+                castbar.selfInterrupt = true
+            end
         end
     end
 
     if wasInterrupted or castbar.selfInterrupt then
-        -- Show interrupted state
-        -- Shield stays visible and fades out with the container
+        -- Show interrupted/failed state
         if frames.spark then frames.spark:Hide() end
         if frames.flash then frames.flash:Hide() end
         HideAllTicks(frames.ticks)
@@ -1398,15 +1400,28 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
             texture:SetVertexColor(1, 1, 1, 1)
         end
         
-        SetCastText(unitType, overrideText or INTERRUPTED)
+        -- Text display:
+        --   INTERRUPTED event → "Interrupted" (player or target/focus)
+        --   FAILED event (via overrideText) → "Failed"
+        --   Timing heuristic (selfInterrupt) → "Failed" (non-self target only)
+        local displayText = overrideText
+        if not displayText then
+            if castbar.selfInterrupt then
+                -- Timing heuristic path: non-self target, always "Failed"
+                displayText = FAILED
+            else
+                -- Event-driven path: INTERRUPTED event → "Interrupted"
+                displayText = INTERRUPTED
+            end
+        end
+        SetCastText(unitType, displayText)
         FadeOutCastbar(unitType, (cfg and cfg.holdTimeInterrupt) or 0.8)
     else
         -- Normal completion - show success flash
         if frames.spark then frames.spark:Hide() end
-        -- Shield stays visible and fades out with the container
         HideAllTicks(frames.ticks)
         
-        -- Force bar to 100% fill before flash (handles lag case where STOP fires before bar reaches 1.0)
+        -- Force bar to 100% fill before flash
         castbar:SetValue(1.0)
         if castbar.InvalidateTextureCache then
             castbar:InvalidateTextureCache()
@@ -1421,13 +1436,22 @@ function CastbarModule:HandleCastStop_Simple(unitType, wasInterrupted, isChannel
     end
 end
 
-function CastbarModule:HandleCastFailed_Simple(unitType)
-    -- UNIT_SPELLCAST_FAILED → show "Failed" text for all units, same as Blizzard/DragonflightUI.
-    -- Only act if a cast is actually in progress (prevents showing on bars that aren't visible).
+function CastbarModule:HandleCastFailed_Simple(unitType, eventSpell)
+    -- UNIT_SPELLCAST_FAILED fires in two cases:
+    --   1) A spell failed to START (pressed another ability while casting) → ignore
+    --   2) The current cast was externally interrupted (CC/kick on target) → show "Failed"
+    -- Distinguish by comparing the event's spell name with the tracked cast:
+    --   same spell = real interruption; different spell = queued spell failure.
     local frames = self.frames[unitType]
     if not frames or not frames.castbar then return end
     local castbar = frames.castbar
     if not (castbar.castingEx or castbar.channelingEx) then return end
+
+    -- If the event spell doesn't match our tracked cast, it's a queued spell failure
+    if eventSpell and castbar.spellName and eventSpell ~= castbar.spellName then
+        return
+    end
+
     self:HandleCastStop_Simple(unitType, true, nil, FAILED)
 end
 
@@ -1839,6 +1863,7 @@ function CastbarModule:HideCastbar(unitType)
         castbar.notInterruptible = false
         castbar.startTime = 0
         castbar.endTime = 0
+        castbar.spellName = nil
         castbar.unit = nil
     end
     
@@ -1857,7 +1882,7 @@ end
 -- EVENT HANDLERS
 -- ============================================================================
 
-function CastbarModule:HandleCastingEvent(event, unit)
+function CastbarModule:HandleCastingEvent(event, unit, ...)
     local unitType
     if unit == "player" then
         unitType = "player"
@@ -1901,7 +1926,7 @@ function CastbarModule:HandleCastingEvent(event, unit)
     elseif event == 'UNIT_SPELLCAST_CHANNEL_STOP' then
         self:HandleCastStop_Simple(unitType, false, true)
     elseif event == 'UNIT_SPELLCAST_FAILED' then
-        self:HandleCastFailed_Simple(unitType)
+        self:HandleCastFailed_Simple(unitType, ...)
     elseif event == 'UNIT_SPELLCAST_INTERRUPTED' then
         self:HandleCastStop_Simple(unitType, true)
     elseif event == 'UNIT_SPELLCAST_CHANNEL_INTERRUPTED' then
@@ -2302,7 +2327,7 @@ local function OnEvent(self, event, unit, ...)
             latencyState.sentTime = GetTime()
         end
     else
-        CastbarModule:HandleCastingEvent(event, unit)
+        CastbarModule:HandleCastingEvent(event, unit, ...)
     end
 end
 
