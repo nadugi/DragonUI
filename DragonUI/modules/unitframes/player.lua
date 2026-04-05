@@ -1953,17 +1953,12 @@ local function UpdatePlayerClassPortrait()
     local config = GetPlayerConfig()
     if not config then return end
 
-    local bigDebuffsActive = addon.compatibility
-        and addon.compatibility.IsBigDebuffsPortraitActive
-        and addon.compatibility:IsBigDebuffsPortraitActive("player")
-
     local useClassPortrait = config.classPortrait
     local useAlternative = config.alternativeClassIcons
 
     -- In vehicle: NEVER show class portrait — Blizzard handles vehicle portrait
     if IsInVehicle() then
         useClassPortrait = false
-        bigDebuffsActive = false
     end
 
     if useClassPortrait then
@@ -2005,12 +2000,7 @@ local function UpdatePlayerClassPortrait()
             classPortraitIcon:SetPoint("CENTER", classPortraitFrame, "CENTER", 0, 0)
             classPortraitIcon:SetSize(56, 56)
             UF.ApplyClassPortraitIcon(classPortraitIcon, classFileName, useAlternative)
-            if bigDebuffsActive then
-                -- BigDebuffs showing: hide our icon, keep bg as black backdrop
-                classPortraitIcon:Hide()
-            else
-                classPortraitIcon:Show()
-            end
+            classPortraitIcon:Show()
 
             -- Hide the original portrait model
             PlayerPortrait:SetAlpha(0)
@@ -2021,18 +2011,13 @@ local function UpdatePlayerClassPortrait()
         if classPortraitBg then classPortraitBg:Hide() end
         if classPortraitIcon then classPortraitIcon:Hide() end
 
-        if bigDebuffsActive then
-            -- BigDebuffs active without class portrait: keep portrait alpha 0
-            PlayerPortrait:SetAlpha(0)
-        else
-            -- Restore normal portrait (skip in vehicle — Blizzard sets vehicle portrait)
-            if not IsInVehicle() then
-                PlayerPortrait:SetDrawLayer("ARTWORK", 2)
-                SetPortraitTexture(PlayerPortrait, "player")
-                PlayerPortrait:SetTexCoord(0, 1, 0, 1)
-            end
-            PlayerPortrait:SetAlpha(1)
+        -- Restore normal portrait (skip in vehicle — Blizzard sets vehicle portrait)
+        if not IsInVehicle() then
+            PlayerPortrait:SetDrawLayer("ARTWORK", 2)
+            SetPortraitTexture(PlayerPortrait, "player")
+            PlayerPortrait:SetTexCoord(0, 1, 0, 1)
         end
+        PlayerPortrait:SetAlpha(1)
     end
 end
 

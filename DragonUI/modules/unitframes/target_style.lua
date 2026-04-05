@@ -165,31 +165,23 @@ function UF.TargetStyle.Create(opts)
         local config = GetConfig()
         if not config then return end
 
-        local bigDebuffsActive = addon.compatibility
-            and addon.compatibility.IsBigDebuffsPortraitActive
-            and addon.compatibility:IsBigDebuffsPortraitActive(unitToken)
-
         if config.classPortrait and UnitExists(unitToken)
            and UnitIsPlayer(unitToken) then
             local _, classFileName = UnitClass(unitToken)
             if classFileName and CLASS_ICON_TCOORDS
                and CLASS_ICON_TCOORDS[classFileName] then
-                local shouldShowClassIcon = not bigDebuffsActive
-
                 -- Skip if already showing the correct class portrait
                 if updateCache.lastPortraitClass == classFileName
                    and classPortraitFrame and classPortraitFrame:IsShown()
                    and classPortraitIcon
-                   and classPortraitIcon:IsShown() == shouldShowClassIcon then
+                   and classPortraitIcon:IsShown() then
                     return
                 end
                 updateCache.lastPortraitClass = classFileName
 
                 local useAlternative = config.alternativeClassIcons
 
-                -- Lazy-create portrait overlay frame (child of BlizzFrame,
-                -- same frame level so BigDebuffs at the same level renders
-                -- its icon on top via higher draw layer)
+                -- Lazy-create portrait overlay frame (child of BlizzFrame)
                 if not classPortraitFrame then
                     classPortraitFrame = CreateFrame("Frame", nil, BlizzFrame)
                     classPortraitFrame:SetFrameStrata(BlizzFrame:GetFrameStrata())
@@ -225,13 +217,7 @@ function UF.TargetStyle.Create(opts)
                 classPortraitIcon:SetPoint("CENTER", classPortraitFrame, "CENTER", 0, 1)
                 classPortraitIcon:SetSize(54, 54)
                 UF.ApplyClassPortraitIcon(classPortraitIcon, classFileName, useAlternative)
-                if bigDebuffsActive then
-                    -- BigDebuffs is showing a debuff icon on the portrait.
-                    -- Hide our class icon so BD's icon is visible above the bg.
-                    classPortraitIcon:Hide()
-                else
-                    classPortraitIcon:Show()
-                end
+                classPortraitIcon:Show()
 
                 -- Hide vanilla portrait model — class icon replaces it
                 Portrait:SetAlpha(0)
@@ -252,17 +238,12 @@ function UF.TargetStyle.Create(opts)
             if frameElements.classPortraitFrame then frameElements.classPortraitFrame:Hide() end
             if classPortraitFrame then classPortraitFrame:Hide() end
 
-            if bigDebuffsActive and UnitExists(unitToken) then
-                -- BigDebuffs active without class portrait: BD manages the portrait
-                Portrait:SetAlpha(0)
-            else
-                if UnitExists(unitToken) then
-                    Portrait:SetDrawLayer("ARTWORK", 0)
-                    SetPortraitTexture(Portrait, unitToken)
-                    Portrait:SetTexCoord(0, 1, 0, 1)
-                end
-                Portrait:SetAlpha(1)
+            if UnitExists(unitToken) then
+                Portrait:SetDrawLayer("ARTWORK", 0)
+                SetPortraitTexture(Portrait, unitToken)
+                Portrait:SetTexCoord(0, 1, 0, 1)
             end
+            Portrait:SetAlpha(1)
         end
     end
 
