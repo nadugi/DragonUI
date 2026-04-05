@@ -25,5 +25,16 @@ L["Use DragonUI: disable external UnitFrameLayers and enable DragonUI layers."] 
 L["Disable Both: disable external UnitFrameLayers and keep DragonUI layers disabled."] = true
 L["Use DragonUI"] = true
 L["Disable Both"] = true
+L["DragonUI - D3D9Ex Warning"] = "DragonUI - D3D9Ex 警告"
+L["DragonUI detected that your client is using D3D9Ex."] = "DragonUI 偵測到你的客戶端正在使用 D3D9Ex。"
+L["DragonUI's action bar system is not compatible with D3D9Ex."] = "DragonUI 的動作條系統與 D3D9Ex 不相容。"
+L["Some DragonUI action bar textures will be missing while this mode is active."] = "啟用此模式時，部分 DragonUI 動作條材質會缺失。"
+L["If you want to disable this mode, open WTF\\Config.wtf."] = "如果你想停用這個模式，請打開 WTF\\Config.wtf。"
+L["Delete this line:"] = "刪除這一行："
+L["Or replace it with:"] = "或改成這一行："
+L["Hide Gryphons"] = "隱藏獅鷲"
+L["Understood"] = "知道了"
+L["Buttons"] = "按鈕"
+L["Main Bars"] = "主動作條"
 
 L["Copy Text"] = "複製文字"

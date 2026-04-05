@@ -430,6 +430,7 @@ L["Gryphons"] = true
 L["Gryphon Style"] = true
 L["Display style for the action bar end-cap gryphons."] = true
 L["End-cap ornaments flanking the main action bar."] = true
+L["Gryphon previews are hidden while D3D9Ex is active to avoid client crashes."] = true
 L["Style"] = true
 L["Old"] = true
 L["New"] = true

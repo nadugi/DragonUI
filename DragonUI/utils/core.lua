@@ -57,9 +57,33 @@ addon.functions.atlas_unpack = function(atlas)
 	return unpack(addon.atlasinfo[atlas])
 end
 
+local legacyActionBarAtlasBypassed = nil
+
+local function ShouldBypassLegacyActionBarAtlas(atlas)
+	if type(atlas) ~= 'string' then
+		return false
+	end
+
+	if legacyActionBarAtlasBypassed == nil then
+		legacyActionBarAtlasBypassed = GetCVar and GetCVar('gxApi') == 'd3d9ex'
+	end
+
+	if not legacyActionBarAtlasBypassed then
+		return false
+	end
+
+	return atlas:find('ui%-hud%-actionbar') ~= nil
+		or atlas:find('_ui%-hud%-actionbar') ~= nil
+		or atlas:find('!ui%-hud%-actionbar') ~= nil
+end
+
 addon.api.set_atlas = function(self, atlas, size)
 	if not atlas then
 		self:SetTexture(nil)
+		return
+	end
+
+	if ShouldBypassLegacyActionBarAtlas(atlas) then
 		return
 	end
 	

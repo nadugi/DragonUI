@@ -52,6 +52,7 @@ L["Not a valid DragonUI preset string."] = "Ce n'est pas un texte de préréglag
 L["Failed to export preset."] = "Échec de l'exportation du préréglage."
 L["Show Buff/Debuff on Focus"] = "Afficher les buffs/debuffs sur la focalisation"
 L["Uses the native large focus frame mode to show buffs and debuffs on the focus frame."] = "Utilise le mode natif de grand cadre de focalisation pour afficher les buffs et debuffs sur le cadre de focalisation."
+L["Gryphon previews are hidden while D3D9Ex is active to avoid client crashes."] = "Les aperçus de griffons sont masqués lorsque D3D9Ex est actif pour éviter les plantages du client."
 
 -- Chat Mods
 L["Enable Chat Mods"] = "Activer les mods de chat"
