@@ -1963,6 +1963,30 @@ local function UpdatePlayerClassPortrait()
     end
 end
 
+local function RefreshPlayerPortraitState(unit)
+    local portraitUnit = unit == "vehicle" and "vehicle" or "player"
+
+    UpdatePlayerClassPortrait()
+
+    local dragonFrame = _G["DragonUIUnitframeFrame"]
+    if dragonFrame and dragonFrame.PortraitOverlayTexture
+       and dragonFrame.PortraitOverlay
+       and dragonFrame.PortraitOverlay:IsShown() then
+        local pConfig = GetPlayerConfig()
+        if pConfig and pConfig.classPortrait and not IsInVehicle() and portraitUnit ~= "vehicle" then
+            if not UF.ApplyClassPortraitToTexture(
+                "player",
+                dragonFrame.PortraitOverlayTexture,
+                pConfig.alternativeClassIcons
+            ) then
+                SetPortraitTexture(dragonFrame.PortraitOverlayTexture, portraitUnit)
+            end
+        else
+            SetPortraitTexture(dragonFrame.PortraitOverlayTexture, portraitUnit)
+        end
+    end
+end
+
 -- Main frame configuration function
 local function ChangePlayerframe()
     CreatePlayerFrameTextures()
@@ -2334,29 +2358,14 @@ local function InitializePlayerFrame()
         SafeHookSecureFunc("PlayerFrame_UpdateArt", ChangePlayerframe)
         SafeHookSecureFunc("UnitFramePortrait_Update", function(frame, unit)
             if frame == PlayerFrame and (unit == "player" or unit == "vehicle") then
-                UpdatePlayerClassPortrait()
-                -- Also refresh the fat-mode portrait overlay texture.
-                -- WeakAuras (and other addons that create PlayerModel objects)
-                -- can invalidate portrait textures during async loading;
-                -- re-applying SetPortraitTexture ensures the overlay stays valid.
-                local dragonFrame = _G["DragonUIUnitframeFrame"]
-                if dragonFrame and dragonFrame.PortraitOverlayTexture
-                   and dragonFrame.PortraitOverlay
-                   and dragonFrame.PortraitOverlay:IsShown() then
-                    local pConfig = GetPlayerConfig()
-                    if pConfig and pConfig.classPortrait and not IsInVehicle() and unit ~= "vehicle" then
-                        if not UF.ApplyClassPortraitToTexture(
-                            "player",
-                            dragonFrame.PortraitOverlayTexture,
-                            pConfig.alternativeClassIcons
-                        ) then
-                            SetPortraitTexture(dragonFrame.PortraitOverlayTexture, unit or "player")
-                        end
-                    else
-                        SetPortraitTexture(dragonFrame.PortraitOverlayTexture, unit or "player")
-                    end
-                end
+                RefreshPlayerPortraitState(unit)
             end
+        end)
+        SafeHookSecureFunc("ShowHelm", function()
+            RefreshPlayerPortraitState("player")
+        end)
+        SafeHookSecureFunc("HideHelm", function()
+            RefreshPlayerPortraitState("player")
         end)
         Module.blizzardHooksRegistered = true
     end
@@ -2674,6 +2683,22 @@ local function SetupPlayerEvents()
             if unit == "player" then
                 UpdateBothBars()
             end
+        end,
+
+        UNIT_MODEL_CHANGED = function(unit)
+            if unit == "player" or unit == "vehicle" then
+                RefreshPlayerPortraitState(unit)
+            end
+        end,
+
+        UNIT_PORTRAIT_UPDATE = function(unit)
+            if unit == "player" or unit == "vehicle" then
+                RefreshPlayerPortraitState(unit)
+            end
+        end,
+
+        PLAYER_EQUIPMENT_CHANGED = function()
+            RefreshPlayerPortraitState("player")
         end,
 
         -- Vehicle events for proper unit switching
