@@ -1447,6 +1447,16 @@ function CastbarModule:HandleCastFailed_Simple(unitType, eventSpell)
     local castbar = frames.castbar
     if not (castbar.castingEx or castbar.channelingEx) then return end
 
+    local unit = (unitType == "player") and "player" or unitType
+
+    -- Ignore FAILED spam produced by re-pressing the same channel while it is still active.
+    if castbar.channelingEx then
+        local activeChannelSpell = UnitChannelInfo(unit)
+        if activeChannelSpell and castbar.spellName and activeChannelSpell == castbar.spellName then
+            return
+        end
+    end
+
     -- If the event spell doesn't match our tracked cast, it's a queued spell failure
     if eventSpell and castbar.spellName and eventSpell ~= castbar.spellName then
         return
