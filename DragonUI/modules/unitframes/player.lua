@@ -1440,39 +1440,23 @@ local function UpdatePlayerDragonDecoration()
             dragonFrame.BorderOverlayTexture:SetPoint('LEFT', PlayerFrameHealthBar, 'LEFT', borderX, borderY)
             dragonFrame.BorderOverlayTexture:Show()
 
-            -- Handle class portrait: if enabled, show class icon on the portrait overlay frame
+            -- Keep class portraits on the same render plane as the active portrait texture.
             local pConfig = GetPlayerConfig()
-            if pConfig and pConfig.classPortrait then
-                local useAlternative = pConfig.alternativeClassIcons
-                -- Hide the model portrait and show class icon instead
-                dragonFrame.PortraitOverlay:SetAlpha(0)
-                if not dragonFrame.ClassPortraitOverlay then
-                    local cpf = CreateFrame("Frame", nil, PlayerFrame)
-                    cpf:SetSize(56, 56)
-                    cpf.bg = cpf:CreateTexture(nil, "BACKGROUND", nil, 2)
-                    cpf.bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-                    cpf.bg:SetVertexColor(0, 0, 0, 1)
-                    cpf.bg:SetAllPoints()
-                    cpf.icon = cpf:CreateTexture(nil, "OVERLAY", nil, 7)
-                    cpf.icon:SetSize(56, 56)
-                    cpf.icon:SetPoint("CENTER", cpf, "CENTER", 0, 0)
-                    dragonFrame.ClassPortraitOverlay = cpf
-                end
-                dragonFrame.ClassPortraitOverlay:SetFrameLevel(PlayerFrame:GetFrameLevel() + 2)
-                dragonFrame.ClassPortraitOverlay:ClearAllPoints()
-                dragonFrame.ClassPortraitOverlay:SetPoint("CENTER", PlayerPortrait, "CENTER", 0, 0)
-                dragonFrame.ClassPortraitOverlay:Show()
-                local _, classFileName = UnitClass("player")
-                if classFileName and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName] then
-                    UF.ApplyClassPortraitIcon(dragonFrame.ClassPortraitOverlay.icon, classFileName, useAlternative)
-                    dragonFrame.ClassPortraitOverlay.icon:Show()
-                    dragonFrame.ClassPortraitOverlay.bg:Show()
+            if pConfig and pConfig.classPortrait and not IsInVehicle() then
+                if not UF.ApplyClassPortraitToTexture(
+                    "player",
+                    dragonFrame.PortraitOverlayTexture,
+                    pConfig.alternativeClassIcons
+                ) then
+                    SetPortraitTexture(dragonFrame.PortraitOverlayTexture, "player")
                 end
             else
-                dragonFrame.PortraitOverlay:SetAlpha(1)
-                if dragonFrame.ClassPortraitOverlay then
-                    dragonFrame.ClassPortraitOverlay:Hide()
-                end
+                SetPortraitTexture(dragonFrame.PortraitOverlayTexture, "player")
+            end
+
+            dragonFrame.PortraitOverlay:SetAlpha(1)
+            if dragonFrame.ClassPortraitOverlay then
+                dragonFrame.ClassPortraitOverlay:Hide()
             end
 
             -- Fat + decoration: use the same fat mana anchor system as non-decoration
@@ -1943,81 +1927,39 @@ end
 -- Class icon texture coordinates (matches WoW's CLASS_ICON_TCOORDS)
 -- NOTE: CLASS_ICON_TEXTURE is declared at top of file (before UpdatePlayerDragonDecoration)
 
--- Class portrait textures (created once, reused)
-local classPortraitBg = nil
-local classPortraitIcon = nil
-local classPortraitFrame = nil
+local function RestorePlayerPortraitTexture()
+    -- Skip in vehicle mode: Blizzard controls the vehicle portrait texture.
+    if not IsInVehicle() then
+        PlayerPortrait:SetDrawLayer("ARTWORK", 2)
+        SetPortraitTexture(PlayerPortrait, "player")
+        PlayerPortrait:SetTexCoord(0, 1, 0, 1)
+    end
+    PlayerPortrait:SetAlpha(1)
+end
 
 -- Apply class portrait if enabled in config
 local function UpdatePlayerClassPortrait()
     local config = GetPlayerConfig()
     if not config then return end
 
-    local useClassPortrait = config.classPortrait
-    local useAlternative = config.alternativeClassIcons
-
-    -- In vehicle: NEVER show class portrait — Blizzard handles vehicle portrait
-    if IsInVehicle() then
-        useClassPortrait = false
+    local useClassPortrait = config.classPortrait and not IsInVehicle()
+    if useClassPortrait and UF.ApplyClassPortraitToTexture(
+        "player",
+        PlayerPortrait,
+        config.alternativeClassIcons
+    ) then
+        local dragonFrame = _G["DragonUIUnitframeFrame"]
+        if dragonFrame and dragonFrame.ClassPortraitOverlay then
+            dragonFrame.ClassPortraitOverlay:Hide()
+        end
+        return
     end
 
-    if useClassPortrait then
-        -- Get player's class
-        local _, classFileName = UnitClass("player")
-        if classFileName and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName] then
+    RestorePlayerPortraitTexture()
 
-            if not classPortraitFrame then
-                classPortraitFrame = CreateFrame("Frame", nil, PlayerFrame)
-                classPortraitFrame:SetFrameStrata(PlayerFrame:GetFrameStrata())
-                classPortraitFrame:SetFrameLevel(PlayerFrame:GetFrameLevel())
-                classPortraitFrame:EnableMouse(false)
-            end
-
-            -- Create black background circle if it doesn't exist
-            if not classPortraitBg then
-                classPortraitBg = classPortraitFrame:CreateTexture(nil, "BACKGROUND", nil, 0)
-                classPortraitBg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-                classPortraitBg:SetVertexColor(0, 0, 0, 1)
-            end
-
-            -- Create class icon texture if it doesn't exist (separate from portrait)
-            if not classPortraitIcon then
-                classPortraitIcon = classPortraitFrame:CreateTexture(nil, "ARTWORK", nil, 0)
-            end
-
-            classPortraitFrame:ClearAllPoints()
-            classPortraitFrame:SetAllPoints(PlayerPortrait)
-            classPortraitFrame:Show()
-
-            -- Position and size the background (full size)
-            classPortraitBg:ClearAllPoints()
-            classPortraitBg:SetPoint("CENTER", classPortraitFrame, "CENTER", 0, 0)
-            classPortraitBg:SetSize(56, 56)
-            classPortraitBg:Show()
-
-            -- Position and size the icon
-            classPortraitIcon:ClearAllPoints()
-            classPortraitIcon:SetPoint("CENTER", classPortraitFrame, "CENTER", 0, 0)
-            classPortraitIcon:SetSize(56, 56)
-            UF.ApplyClassPortraitIcon(classPortraitIcon, classFileName, useAlternative)
-            classPortraitIcon:Show()
-
-            -- Hide the original portrait model
-            PlayerPortrait:SetAlpha(0)
-        end
-    else
-        -- Hide class portrait elements
-        if classPortraitFrame then classPortraitFrame:Hide() end
-        if classPortraitBg then classPortraitBg:Hide() end
-        if classPortraitIcon then classPortraitIcon:Hide() end
-
-        -- Restore normal portrait (skip in vehicle — Blizzard sets vehicle portrait)
-        if not IsInVehicle() then
-            PlayerPortrait:SetDrawLayer("ARTWORK", 2)
-            SetPortraitTexture(PlayerPortrait, "player")
-            PlayerPortrait:SetTexCoord(0, 1, 0, 1)
-        end
-        PlayerPortrait:SetAlpha(1)
+    local dragonFrame = _G["DragonUIUnitframeFrame"]
+    if dragonFrame and dragonFrame.ClassPortraitOverlay then
+        dragonFrame.ClassPortraitOverlay:Hide()
     end
 end
 
@@ -2397,10 +2339,22 @@ local function InitializePlayerFrame()
                 -- WeakAuras (and other addons that create PlayerModel objects)
                 -- can invalidate portrait textures during async loading;
                 -- re-applying SetPortraitTexture ensures the overlay stays valid.
+                local dragonFrame = _G["DragonUIUnitframeFrame"]
                 if dragonFrame and dragonFrame.PortraitOverlayTexture
                    and dragonFrame.PortraitOverlay
                    and dragonFrame.PortraitOverlay:IsShown() then
-                    SetPortraitTexture(dragonFrame.PortraitOverlayTexture, unit or "player")
+                    local pConfig = GetPlayerConfig()
+                    if pConfig and pConfig.classPortrait and not IsInVehicle() and unit ~= "vehicle" then
+                        if not UF.ApplyClassPortraitToTexture(
+                            "player",
+                            dragonFrame.PortraitOverlayTexture,
+                            pConfig.alternativeClassIcons
+                        ) then
+                            SetPortraitTexture(dragonFrame.PortraitOverlayTexture, unit or "player")
+                        end
+                    else
+                        SetPortraitTexture(dragonFrame.PortraitOverlayTexture, unit or "player")
+                    end
                 end
             end
         end)

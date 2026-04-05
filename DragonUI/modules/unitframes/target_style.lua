@@ -65,12 +65,9 @@ function UF.TargetStyle.Create(opts)
         lastThreatUpdate  = 0,
         lastFamousMessage = 0,
         lastFamousTarget  = nil,
+        lastPortraitClass = nil,
+        lastPortraitAlt   = nil,
     }
-
-    -- Class portrait overlays (lazy-created on a child frame)
-    local classPortraitFrame = nil
-    local classPortraitBg    = nil
-    local classPortraitIcon  = nil
 
     -- ================================================================
     -- CONFIG
@@ -161,90 +158,48 @@ function UF.TargetStyle.Create(opts)
     -- CLASS PORTRAIT
     -- ================================================================
 
+    local function RestoreNativePortrait()
+        if UnitExists(unitToken) then
+            Portrait:SetDrawLayer("ARTWORK", 0)
+            SetPortraitTexture(Portrait, unitToken)
+            Portrait:SetTexCoord(0, 1, 0, 1)
+        end
+        Portrait:SetAlpha(1)
+    end
+
     local function UpdateClassPortrait()
         local config = GetConfig()
         if not config then return end
 
-        if config.classPortrait and UnitExists(unitToken)
-           and UnitIsPlayer(unitToken) then
+        local useAlternative = config.alternativeClassIcons and true or false
+
+        if config.classPortrait and UnitExists(unitToken) and UnitIsPlayer(unitToken) then
             local _, classFileName = UnitClass(unitToken)
-            if classFileName and CLASS_ICON_TCOORDS
-               and CLASS_ICON_TCOORDS[classFileName] then
-                -- Skip if already showing the correct class portrait
-                if updateCache.lastPortraitClass == classFileName
-                   and classPortraitFrame and classPortraitFrame:IsShown()
-                   and classPortraitIcon
-                   and classPortraitIcon:IsShown() then
-                    return
-                end
+            if classFileName
+               and updateCache.lastPortraitClass == classFileName
+               and updateCache.lastPortraitAlt == useAlternative then
+                return
+            end
+
+            if UF.UpdateClassPortrait(
+                unitToken,
+                Portrait,
+                BlizzFrame,
+                frameElements,
+                true,
+                useAlternative
+            ) then
                 updateCache.lastPortraitClass = classFileName
-
-                local useAlternative = config.alternativeClassIcons
-
-                -- Lazy-create portrait overlay frame (child of BlizzFrame)
-                if not classPortraitFrame then
-                    classPortraitFrame = CreateFrame("Frame", nil, BlizzFrame)
-                    classPortraitFrame:SetFrameStrata(BlizzFrame:GetFrameStrata())
-                    classPortraitFrame:SetFrameLevel(BlizzFrame:GetFrameLevel())
-                    classPortraitFrame:EnableMouse(false)
-                end
-                -- Suppress the older uf_core portrait frame if it exists
-                if frameElements.classPortraitFrame then
-                    frameElements.classPortraitFrame:Hide()
-                end
-
-                if not classPortraitBg then
-                    classPortraitBg = classPortraitFrame:CreateTexture(nil, "BACKGROUND", nil, 0)
-                    classPortraitBg:SetTexture(
-                        "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-                    classPortraitBg:SetVertexColor(0, 0, 0, 1)
-                end
-
-                if not classPortraitIcon then
-                    classPortraitIcon = classPortraitFrame:CreateTexture(nil, "ARTWORK", nil, 0)
-                end
-
-                classPortraitFrame:ClearAllPoints()
-                classPortraitFrame:SetAllPoints(Portrait)
-                classPortraitFrame:Show()
-
-                classPortraitBg:ClearAllPoints()
-                classPortraitBg:SetPoint("CENTER", classPortraitFrame, "CENTER", 0, 1)
-                classPortraitBg:SetSize(54, 54)
-                classPortraitBg:Show()
-
-                classPortraitIcon:ClearAllPoints()
-                classPortraitIcon:SetPoint("CENTER", classPortraitFrame, "CENTER", 0, 1)
-                classPortraitIcon:SetSize(54, 54)
-                UF.ApplyClassPortraitIcon(classPortraitIcon, classFileName, useAlternative)
-                classPortraitIcon:Show()
-
-                -- Hide vanilla portrait model — class icon replaces it
-                Portrait:SetAlpha(0)
-            else
-                -- Non-player or unknown class: restore native portrait
-                updateCache.lastPortraitClass = nil
-                if classPortraitFrame then classPortraitFrame:Hide() end
-                if UnitExists(unitToken) then
-                    Portrait:SetDrawLayer("ARTWORK", 0)
-                    SetPortraitTexture(Portrait, unitToken)
-                    Portrait:SetTexCoord(0, 1, 0, 1)
-                end
-                Portrait:SetAlpha(1)
+                updateCache.lastPortraitAlt = useAlternative
+                return
             end
-        else
-            -- Class portrait disabled: hide overlay, restore native portrait
-            updateCache.lastPortraitClass = nil
-            if frameElements.classPortraitFrame then frameElements.classPortraitFrame:Hide() end
-            if classPortraitFrame then classPortraitFrame:Hide() end
-
-            if UnitExists(unitToken) then
-                Portrait:SetDrawLayer("ARTWORK", 0)
-                SetPortraitTexture(Portrait, unitToken)
-                Portrait:SetTexCoord(0, 1, 0, 1)
-            end
-            Portrait:SetAlpha(1)
         end
+
+        -- Disabled, non-player, or fallback: restore the native portrait texture.
+        updateCache.lastPortraitClass = nil
+        updateCache.lastPortraitAlt = nil
+        UF.UpdateClassPortrait(unitToken, Portrait, BlizzFrame, frameElements, false, useAlternative)
+        RestoreNativePortrait()
     end
 
     -- ================================================================

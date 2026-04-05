@@ -173,7 +173,7 @@ local function ConfigureCombatMode()
     texture:SetAlpha(0.8)  -- Fixed alpha
     texture:SetDrawLayer("OVERLAY", 9)
     texture:ClearAllPoints()
-    texture:SetPoint('CENTER', PetFrame, 'CENTER', -7, -2)
+    texture:SetPoint('CENTER', PetFrame, 'CENTER', -7, -1)
     texture:SetSize(114, 47)
     
     --  RESET TIMER
@@ -215,7 +215,7 @@ local function ConfigurePetThreatGlow()
     
     -- Position relative to pet frame
     threatFlash:ClearAllPoints()
-    threatFlash:SetPoint("CENTER", PetFrame, "CENTER", -7, -2)  
+    threatFlash:SetPoint("CENTER", PetFrame, "CENTER", -7, -1)  
     threatFlash:SetSize(114, 47)  
 end
 -- ===============================================================
@@ -322,7 +322,7 @@ local function ReplaceBlizzardPetFrame()
             'DragonUIPetFrameBackground',
             {'BACKGROUND', 1},
             TEXTURE_PATH .. TOT_BASE .. 'BACKGROUND',
-            {'LEFT', portrait, 'CENTER', -24, -10}
+            {'LEFT', portrait, 'CENTER', -24, -9}
         )
     end
     
@@ -332,14 +332,14 @@ local function ReplaceBlizzardPetFrame()
             'DragonUIPetFrameBorder',
             {'OVERLAY', 6},
             TEXTURE_PATH .. TOT_BASE .. 'BORDER',
-            {'LEFT', portrait, 'CENTER', -24, -10}
+            {'LEFT', portrait, 'CENTER', -24, -9}
         )
     end
     
     -- Setup health bar
     SetupStatusBar(
         PetFrameHealthBar,
-        {'LEFT', portrait, 'RIGHT', 2, 0},
+        {'LEFT', portrait, 'RIGHT', 2, 1},
         {70.5, 10},
         UNITFRAME_PATH .. TOT_BASE .. 'Bar-Health'
     )
@@ -361,7 +361,7 @@ local function ReplaceBlizzardPetFrame()
     -- Setup mana bar
     SetupStatusBar(
         PetFrameManaBar,
-        {'LEFT', portrait, 'RIGHT', -1, -10},
+        {'LEFT', portrait, 'RIGHT', -1, -9},
         {74, 7.5}
     )
     UpdatePowerBarTexture()

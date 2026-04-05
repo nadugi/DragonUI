@@ -176,6 +176,15 @@ function UF.SmallFrame.Create(opts)
     -- CLASS PORTRAIT
     -- ========================================================================
 
+    local function RestoreSmallFramePortrait(portrait)
+        if not portrait then return end
+        if UnitExists(opts.unitToken) then
+            SetPortraitTexture(portrait, opts.unitToken)
+            portrait:SetTexCoord(0, 1, 0, 1)
+        end
+        portrait:SetAlpha(1)
+    end
+
     local function UpdateSmallFrameClassPortrait()
         local config = GetConfig()
         if not config then return end
@@ -185,75 +194,23 @@ function UF.SmallFrame.Create(opts)
         if not portrait or not frames.main then return end
 
         if not enabled then
-            if frameElements.classPortraitFrame then frameElements.classPortraitFrame:Hide() end
-            if frameElements.classPortraitBg then frameElements.classPortraitBg:Hide() end
-            if frameElements.classPortraitIcon then frameElements.classPortraitIcon:Hide() end
-            if portrait then
-                portrait:SetAlpha(1)
-            end
+            UF.UpdateClassPortrait(opts.unitToken, portrait, frames.main, frameElements, false)
+            RestoreSmallFramePortrait(portrait)
             return
         end
 
-        if not UnitExists(opts.unitToken) or not UnitIsPlayer(opts.unitToken) then
-            if frameElements.classPortraitFrame then frameElements.classPortraitFrame:Hide() end
-            if frameElements.classPortraitBg then frameElements.classPortraitBg:Hide() end
-            if frameElements.classPortraitIcon then frameElements.classPortraitIcon:Hide() end
-            if portrait then portrait:SetAlpha(1) end
-            return
-        end
-
-        local _, classFileName = UnitClass(opts.unitToken)
-        if not classFileName or not CLASS_ICON_TCOORDS or not CLASS_ICON_TCOORDS[classFileName] then
-            if frameElements.classPortraitFrame then frameElements.classPortraitFrame:Hide() end
-            if frameElements.classPortraitBg then frameElements.classPortraitBg:Hide() end
-            if frameElements.classPortraitIcon then frameElements.classPortraitIcon:Hide() end
-            if portrait then portrait:SetAlpha(1) end
-            return
-        end
-
-        local portraitSize = portrait:GetWidth()
-        if portraitSize < 1 then portraitSize = 32 end
         local useAlternative = config.alternativeClassIcons
 
-        if not frameElements.classPortraitFrame then
-            frameElements.classPortraitFrame = CreateFrame("Frame", nil, frames.main)
-            frameElements.classPortraitFrame:SetFrameStrata(frames.main:GetFrameStrata())
-            frameElements.classPortraitFrame:SetFrameLevel(frames.main:GetFrameLevel())
-            frameElements.classPortraitFrame:EnableMouse(false)
+        if not UF.UpdateClassPortrait(
+            opts.unitToken,
+            portrait,
+            frames.main,
+            frameElements,
+            true,
+            useAlternative
+        ) then
+            RestoreSmallFramePortrait(portrait)
         end
-
-        -- Lazy-create background circle
-        if not frameElements.classPortraitBg then
-            frameElements.classPortraitBg = frameElements.classPortraitFrame:CreateTexture(nil, "BACKGROUND", nil, 0)
-            frameElements.classPortraitBg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-            frameElements.classPortraitBg:SetVertexColor(0, 0, 0, 1)
-        end
-
-        -- Lazy-create class icon
-        if not frameElements.classPortraitIcon then
-            frameElements.classPortraitIcon = frameElements.classPortraitFrame:CreateTexture(nil, "ARTWORK", nil, 0)
-        end
-
-        frameElements.classPortraitFrame:ClearAllPoints()
-        frameElements.classPortraitFrame:SetAllPoints(portrait)
-        frameElements.classPortraitFrame:Show()
-
-        -- Position & show  (small vertical offset aligns with border circle)
-        frameElements.classPortraitBg:ClearAllPoints()
-        frameElements.classPortraitBg:SetPoint("CENTER", frameElements.classPortraitFrame, "CENTER", 0, -2)
-        frameElements.classPortraitBg:SetSize(portraitSize, portraitSize)
-        frameElements.classPortraitBg:Show()
-
-        frameElements.classPortraitIcon:ClearAllPoints()
-        frameElements.classPortraitIcon:SetPoint("CENTER", frameElements.classPortraitFrame, "CENTER", 0, -2)
-        frameElements.classPortraitIcon:SetSize(portraitSize, portraitSize)
-        if UF.ApplyClassPortraitIcon(frameElements.classPortraitIcon, classFileName, useAlternative) then
-            frameElements.classPortraitIcon:Show()
-        else
-            frameElements.classPortraitIcon:Hide()
-        end
-
-        portrait:SetAlpha(0)
     end
 
 
@@ -548,7 +505,7 @@ function UF.SmallFrame.Create(opts)
         if not frameElements.background then
             frameElements.background = frames.main:CreateTexture(opts.namePrefix .. "BG", "BACKGROUND", nil, 0)
             frameElements.background:SetTexture(UF.TEXTURES.smallStyle.BACKGROUND)
-            frameElements.background:SetPoint("LEFT", frames.portrait, "CENTER", -25 + 1, -10)
+            frameElements.background:SetPoint("LEFT", frames.portrait, "CENTER", -25 + 1, -9)
         end
 
         -- Create custom border texture
@@ -561,7 +518,7 @@ function UF.SmallFrame.Create(opts)
         if not frameElements.border then
             frameElements.border = frameElements.borderFrame:CreateTexture(opts.namePrefix .. "Border", "OVERLAY", nil, 1)
             frameElements.border:SetTexture(UF.TEXTURES.smallStyle.BORDER)
-            frameElements.border:SetPoint("LEFT", frames.portrait, "CENTER", -25 + 1, -10)
+            frameElements.border:SetPoint("LEFT", frames.portrait, "CENTER", -25 + 1, -9)
             frameElements.border:Show()
             frameElements.border:SetAlpha(1)
         end
@@ -605,7 +562,7 @@ function UF.SmallFrame.Create(opts)
         end)
         frames.healthBar:GetStatusBarTexture():SetVertexColor(1, 1, 1, 1)
         frames.healthBar:SetSize(70.5, 10)
-        frames.healthBar:SetPoint("LEFT", frames.portrait, "RIGHT", 1 + 1, 0)
+        frames.healthBar:SetPoint("LEFT", frames.portrait, "RIGHT", 1 + 1, 1)
         frames.healthBar:Show()
 
         if frameElements.borderFrame then

@@ -166,6 +166,10 @@ addon.unitframe.famous = UF.FAMOUS_NPCS
 
 UF.DEFAULT_FONT = addon.Fonts and addon.Fonts.PRIMARY or "Fonts\\FRIZQT__.TTF"
 
+-- Fine-tune for non-alternative class portrait apparent size.
+-- 0.000 = smallest (native atlas crop), higher values zoom in slightly.
+UF.CLASSIC_CLASS_ICON_INSET = 0.012
+
 
 -- ============================================================================
 -- CONFIG ACCESS
@@ -256,6 +260,13 @@ function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
         return false
     end
 
+    local function ClampInset(value)
+        local inset = tonumber(value) or 0
+        if inset < 0 then return 0 end
+        if inset > 0.03 then return 0.03 end
+        return inset
+    end
+
     if useAlternative then
         icon:SetTexture(
             UF.TEXTURES.CLASS_ICON_ALTERNATIVE_PREFIX
@@ -270,7 +281,7 @@ function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
         return false
     end
 
-    local inset = 0.02
+    local inset = ClampInset(UF.CLASSIC_CLASS_ICON_INSET)
     icon:SetTexture(UF.TEXTURES.CLASS_ICON)
     icon:SetTexCoord(
         coords[1] + inset, coords[2] - inset,
@@ -278,54 +289,45 @@ function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
     return true
 end
 
-function UF.UpdateClassPortrait(unit, portrait, parentFrame, elements, enabled)
-    -- If disabled, hide portrait overlay and return
-    if not enabled then
-        if elements.classPortraitFrame then elements.classPortraitFrame:Hide() end
-        if elements.classPortraitBg then elements.classPortraitBg:Hide() end
-        if elements.classPortraitIcon then elements.classPortraitIcon:Hide() end
+function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
+    if not portraitTexture or not unit then
         return false
     end
 
-    if not UnitExists(unit) then return false end
-
-    local _, class = UnitClass(unit)
-    if not class then return false end
-
-    if not elements.classPortraitFrame then
-        local overlay = CreateFrame("Frame", nil, parentFrame)
-        overlay:SetFrameStrata(parentFrame:GetFrameStrata())
-        overlay:SetFrameLevel(parentFrame:GetFrameLevel())
-        overlay:EnableMouse(false)
-        elements.classPortraitFrame = overlay
+    if not UnitExists(unit) or not UnitIsPlayer(unit) then
+        return false
     end
 
-    elements.classPortraitFrame:ClearAllPoints()
-    elements.classPortraitFrame:SetAllPoints(portrait)
-
-    -- Lazy-create portrait elements on first call
-    if not elements.classPortraitBg then
-        local bg = elements.classPortraitFrame:CreateTexture(nil, "BACKGROUND", nil, 0)
-        bg:SetAllPoints(elements.classPortraitFrame)
-        bg:SetTexture(0, 0, 0, 1)
-        bg:SetTexCoord(0.15, 0.85, 0.15, 0.85)
-        elements.classPortraitBg = bg
-
-        local icon = elements.classPortraitFrame:CreateTexture(nil, "ARTWORK", nil, 0)
-        icon:SetPoint("CENTER", elements.classPortraitFrame, "CENTER", 0, 0)
-        icon:SetSize(portrait:GetWidth() * 0.75, portrait:GetHeight() * 0.75)
-        elements.classPortraitIcon = icon
+    local _, classFileName = UnitClass(unit)
+    if not classFileName then
+        return false
     end
 
-    local useAlternative = parentFrame and parentFrame.unitKey and UF.UseAlternativeClassIcons(parentFrame.unitKey) or false
-    if elements.classPortraitIcon and UF.ApplyClassPortraitIcon(elements.classPortraitIcon, class, useAlternative) then
-        elements.classPortraitFrame:Show()
-        elements.classPortraitBg:Show()
-        elements.classPortraitIcon:Show()
+    if UF.ApplyClassPortraitIcon(portraitTexture, classFileName, useAlternative) then
+        portraitTexture:SetAlpha(1)
         return true
     end
 
     return false
+end
+
+function UF.UpdateClassPortrait(unit, portrait, parentFrame, elements, enabled, useAlternative)
+    -- Legacy cleanup: old implementations used dedicated overlay frames.
+    if elements then
+        if elements.classPortraitFrame then elements.classPortraitFrame:Hide() end
+        if elements.classPortraitBg then elements.classPortraitBg:Hide() end
+        if elements.classPortraitIcon then elements.classPortraitIcon:Hide() end
+    end
+
+    if not enabled then
+        return false
+    end
+
+    if useAlternative == nil and parentFrame and parentFrame.unitKey then
+        useAlternative = UF.UseAlternativeClassIcons(parentFrame.unitKey)
+    end
+
+    return UF.ApplyClassPortraitToTexture(unit, portrait, useAlternative)
 end
 
 
