@@ -81,23 +81,22 @@
     local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
     if bf then
         bf:Show()
+        bf:SetAlpha(visible and 1 or 0)
         bf:EnableMouse(visible)
     end
 
-    for _, button in ipairs(GetChatHoverButtons(i)) do
-        SetButtonVisible(button, visible)
-    end
-end
+    -- BF-child buttons: parent frame alpha handles fade, just toggle mouse
+    local upBtn = _G["ChatFrame" .. i .. "ButtonFrameUpButton"]
+    local downBtn = _G["ChatFrame" .. i .. "ButtonFrameDownButton"]
+    local bottomBtn = _G["ChatFrame" .. i .. "ButtonFrameBottomButton"]
+    if upBtn then upBtn:Show(); upBtn:EnableMouse(visible) end
+    if downBtn then downBtn:Show(); downBtn:EnableMouse(visible) end
+    if bottomBtn then bottomBtn:Show(); bottomBtn:EnableMouse(visible) end
 
-local function SetChatHoverButtonsAlpha(i, alpha)
-        local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
-        if bf then
-            bf:Show()
-            bf:EnableMouse(alpha >= 0.95)
-        end
-
-    for _, button in ipairs(GetChatHoverButtons(i)) do
-        SetButtonAlpha(button, alpha)
+    -- Non-child buttons need independent control
+    if i == 1 then
+        SetButtonVisible(_G.ChatFrameMenuButton, visible)
+        SetButtonVisible(_G.FriendsMicroButton, visible)
     end
 end
 
@@ -111,17 +110,37 @@ local function StripButtonFrameBackground(buttonFrame)
         end
     end
 
-    if buttonFrame.GetBackdropColor and buttonFrame.SetBackdropColor then
-        local r, g, b = buttonFrame:GetBackdropColor()
-        buttonFrame:SetBackdropColor(r or 0, g or 0, b or 0, 0)
+    if buttonFrame.SetBackdropColor then
+        buttonFrame:SetBackdropColor(0, 0, 0, 0)
     end
-
-    if buttonFrame.GetBackdropBorderColor and buttonFrame.SetBackdropBorderColor then
-        local r, g, b = buttonFrame:GetBackdropBorderColor()
-        buttonFrame:SetBackdropBorderColor(r or 0, g or 0, b or 0, 0)
+    if buttonFrame.SetBackdropBorderColor then
+        buttonFrame:SetBackdropBorderColor(0, 0, 0, 0)
     end
 
     buttonFrame.DragonUIBackgroundStripped = true
+end
+
+local function SetChatHoverButtonsAlpha(i, alpha)
+        local bf = _G["ChatFrame" .. i .. "ButtonFrame"]
+        if bf then
+            bf:Show()
+            bf:SetAlpha(alpha)
+            bf:EnableMouse(alpha >= 0.95)
+        end
+
+    -- BF-child buttons: parent frame alpha handles fade, just toggle mouse
+    local upBtn = _G["ChatFrame" .. i .. "ButtonFrameUpButton"]
+    local downBtn = _G["ChatFrame" .. i .. "ButtonFrameDownButton"]
+    local bottomBtn = _G["ChatFrame" .. i .. "ButtonFrameBottomButton"]
+    if upBtn then upBtn:EnableMouse(alpha >= 0.95) end
+    if downBtn then downBtn:EnableMouse(alpha >= 0.95) end
+    if bottomBtn then bottomBtn:EnableMouse(alpha >= 0.95) end
+
+    -- Non-child buttons need independent alpha control
+    if i == 1 then
+        SetButtonAlpha(_G.ChatFrameMenuButton, alpha)
+        SetButtonAlpha(_G.FriendsMicroButton, alpha)
+    end
 end
 
 local function MoveCopyTextButtonToTop()
@@ -218,12 +237,17 @@ end
         return (config and config.chatBgIdleAlpha ~= nil) and config.chatBgIdleAlpha or 0
     end
 
+    local function GetEditboxIdleAlpha(config)
+        return (config and config.editboxIdleAlpha ~= nil) and config.editboxIdleAlpha or 0
+    end
+
     local function RefreshChatFadeState()
         if not ChatModsModule.applied then return end
 
         local cfg = GetModuleConfig()
         local tabIdleAlpha = GetTabIdleAlpha(cfg)
         local styleIdleAlpha = GetStyleIdleAlpha(cfg)
+        local ebIdleAlpha = GetEditboxIdleAlpha(cfg)
 
         for i = 1, 10 do
             local cf = _G["ChatFrame" .. i]
@@ -250,7 +274,7 @@ end
 
             if eb then
                 if eb:GetBackdrop() then
-                    eb:SetAlpha(eb:HasFocus() and 1 or styleIdleAlpha)
+                    eb:SetAlpha(eb:HasFocus() and 1 or ebIdleAlpha)
                 else
                     eb:SetAlpha(1)
                 end
@@ -278,6 +302,7 @@ local function EnsureChatButtonsHoverUpdater()
         -- Cache config once per tick, outside the loop
         local cfg = GetModuleConfig()
         local idleAlpha = GetStyleIdleAlpha(cfg)
+        local ebIdleAlpha = GetEditboxIdleAlpha(cfg)
 
         for _, entry in ipairs(entries) do
             -- StripButtonFrameBackground is NOT called here — it's handled by the
@@ -294,10 +319,10 @@ local function EnsureChatButtonsHoverUpdater()
                 cf._dragonUIBgFrame:SetAlpha(math.max(idleAlpha, tabAlpha))
             end
 
-            -- Sync editbox style backdrop: visible only when typing.
+            -- Sync editbox style backdrop: independent from hover.
             local eb = _G["ChatFrame" .. entry.index .. "EditBox"]
             if eb and eb:GetBackdrop() then
-                eb:SetAlpha(eb:HasFocus() and 1 or idleAlpha)
+                eb:SetAlpha(eb:HasFocus() and 1 or ebIdleAlpha)
             end
         end
     end)
@@ -469,7 +494,7 @@ local function ApplyEditboxStyle()
     local config = GetModuleConfig()
     local style = (config and config.editboxStyle) or "none"
     local def = CHAT_STYLES[style]
-        local idleAlpha = GetStyleIdleAlpha(config)
+        local ebIdleAlpha = GetEditboxIdleAlpha(config)
 
     for i = 1, 10 do
         local eb = _G["ChatFrame" .. i .. "EditBox"]
@@ -496,7 +521,7 @@ local function ApplyEditboxStyle()
                 else
                     eb:SetBackdropBorderColor(0, 0, 0, 0)
                 end
-                    eb:SetAlpha(eb:HasFocus() and 1 or idleAlpha)
+                    eb:SetAlpha(eb:HasFocus() and 1 or ebIdleAlpha)
             end
         end
     end

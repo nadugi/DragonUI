@@ -123,10 +123,22 @@ local function BuildChatTab(scroll)
     })
 
     C:AddSlider(appearanceSection, {
-        label   = LO["Style Min Opacity"],
-        desc    = LO["Minimum opacity of the chat and text box skin. At 0 it fades in sync with tabs; above 0 it stays partially visible even when idle."],
+        label   = LO["Chat Style Opacity"],
+        desc    = LO["Minimum opacity of the custom chat background. At 0 it fades with tabs; above 0 it stays partially visible when idle."],
         min     = 0, max = 1, step = 0.05,
         dbPath  = "modules.chatmods.chatBgIdleAlpha",
+        callback = function()
+            if addon.RefreshChatFadeState then
+                addon.RefreshChatFadeState()
+            end
+        end,
+    })
+
+    C:AddSlider(appearanceSection, {
+        label   = LO["Text Box Min Opacity"],
+        desc    = LO["Minimum opacity of the text input box when idle. At 0 it fades with tabs; above 0 it stays partially visible."],
+        min     = 0, max = 1, step = 0.05,
+        dbPath  = "modules.chatmods.editboxIdleAlpha",
         callback = function()
             if addon.RefreshChatFadeState then
                 addon.RefreshChatFadeState()

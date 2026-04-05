@@ -641,6 +641,7 @@ local defaults = {
                 tabIdleAlpha = 0, -- Tab opacity when not hovered (0 = hidden, 1 = fully visible)
                 chatStyle = "none", -- Chat frame background style: "none", "dark", "dragon", "midnight"
                 chatBgIdleAlpha = 0, -- Chat style background opacity when idle/mouse away (0 = hidden, 1 = always visible)
+                editboxIdleAlpha = 0, -- Editbox minimum opacity when idle (0 = fades with tabs, 1 = always visible)
                 editboxStyle = "dark", -- Editbox background style: "none", "dark", "dragon", "midnight"
             },
             combuctor = {
